@@ -1,15 +1,28 @@
 # Tasky
 
-Tasky is a online task tracking tool.
+A simple task tracking tool featuring an infinite canvas interface.
 
-## Features
+## Structure
 
-- It has a endless canvas for tasks
-- User can create 
-- Add, edit, and delete tasks
-- Set due dates and priorities
-- Organize tasks with tags or projects
+- `backend` – Express.js API server
+- `frontend` – React + Vite client
 
 ## Getting Started
 
-1. Clone the repository:
+### Backend
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend expects the backend to be running on `http://localhost:3001`.
