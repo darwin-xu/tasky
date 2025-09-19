@@ -89,3 +89,6 @@ typings/
 
 # Mac system files
 .DS_Store
+
+# React build directory
+build/
