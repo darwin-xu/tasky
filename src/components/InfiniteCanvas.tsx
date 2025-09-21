@@ -3,6 +3,7 @@ import { Stage, Layer } from 'react-konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { useViewportState } from '../hooks/useViewportState';
 import { InfiniteCanvasProps } from '../types';
+import GridLayer from './GridLayer';
 import './InfiniteCanvas.css';
 
 const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
@@ -130,6 +131,18 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         onTouchEnd={handleTouchEnd}
         draggable={false} // We handle dragging manually
       >
+        {/* Grid layer - rendered behind content */}
+        <Layer>
+          <GridLayer
+            x={viewport.x}
+            y={viewport.y}
+            scale={viewport.scale}
+            width={dimensions.width}
+            height={dimensions.height}
+          />
+        </Layer>
+        
+        {/* Main content layer */}
         <Layer>
           {/* Content will be added here in future stories */}
         </Layer>

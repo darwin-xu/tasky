@@ -16,3 +16,14 @@ export interface InfiniteCanvasProps {
   height?: number;
   className?: string;
 }
+
+export interface GridLayerProps {
+  x: number;
+  y: number;
+  scale: number;
+  width: number;
+  height: number;
+  gridSpacing?: number;
+  dotColor?: string;
+  dotRadius?: number;
+}

@@ -13,6 +13,9 @@ jest.mock('react-konva', () => ({
       {children}
     </div>
   ),
+  Circle: ({ x, y, radius, fill, ...props }: any) => (
+    <div data-testid="konva-circle" data-x={x} data-y={y} data-radius={radius} data-fill={fill} {...props} />
+  ),
 }));
 
 jest.mock('konva/lib/Node', () => ({
@@ -28,14 +31,16 @@ describe('InfiniteCanvas Component', () => {
     container.style.height = '600px';
     document.body.appendChild(container);
 
-    const { getByTestId } = render(<InfiniteCanvas />, { container });
+    const { getByTestId, getAllByTestId } = render(<InfiniteCanvas />, { container });
     
     // Component renders without throwing errors
     const stage = getByTestId('konva-stage');
     expect(stage).toBeInTheDocument();
     
-    const layer = getByTestId('konva-layer');
-    expect(layer).toBeInTheDocument();
+    const layers = getAllByTestId('konva-layer');
+    expect(layers).toHaveLength(2); // Grid layer and content layer
+    expect(layers[0]).toBeInTheDocument(); // Grid layer
+    expect(layers[1]).toBeInTheDocument(); // Content layer
     
     // Clean up
     document.body.removeChild(container);
