@@ -108,6 +108,20 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     setLastPointerPosition(null);
   }, [viewport]);
 
+  // Wheel event handler for trackpad panning
+  const handleWheel = useCallback((e: KonvaEventObject<WheelEvent>) => {
+    // Handle cases where evt might not be available (testing environment)
+    if (e.evt && e.evt.preventDefault) {
+      e.evt.preventDefault(); // Prevent page scrolling
+    }
+    
+    const deltaX = e.evt?.deltaX || 0;
+    const deltaY = e.evt?.deltaY || 0;
+    
+    // Update viewport position by adding the wheel deltas
+    viewport.updatePosition(viewport.x - deltaX, viewport.y - deltaY);
+  }, [viewport]);
+
   return (
     <div 
       ref={containerRef}
@@ -129,6 +143,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
         draggable={false} // We handle dragging manually
       >
         {/* Grid layer - rendered behind content */}
