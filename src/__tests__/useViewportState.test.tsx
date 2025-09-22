@@ -104,4 +104,56 @@ describe('useViewportState Hook', () => {
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
+
+  test('TC2.7: Zoom at Point Functionality (Positive Case)', () => {
+    const { result } = renderHook(() => useViewportState());
+    
+    // Set initial position and scale
+    act(() => { result.current.updatePosition(100, 100); });
+    act(() => { result.current.updateScale(1.0); });
+    
+    // Zoom in at point (200, 200) with 2x scale
+    act(() => { result.current.updateScaleAtPoint(2.0, 200, 200); });
+    
+    expect(result.current.scale).toBe(2.0);
+    // Position should be adjusted to keep point (200, 200) under cursor
+    // newX = centerX - (centerX - oldX) * scaleFactor
+    // newX = 200 - (200 - 100) * 2 = 200 - 200 = 0
+    expect(result.current.x).toBe(0);
+    expect(result.current.y).toBe(0);
+  });
+
+  test('TC2.8: Zoom at Point Scale Validation (Negative Case)', () => {
+    const { result } = renderHook(() => useViewportState());
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+    
+    act(() => { result.current.updatePosition(50, 50); });
+    
+    // Test with invalid scale (too high)
+    act(() => { result.current.updateScaleAtPoint(15.0, 100, 100); });
+    expect(result.current.scale).toBe(10.0); // Should be clamped to maximum
+    
+    // Test with invalid scale (too low)
+    act(() => { result.current.updateScaleAtPoint(0.05, 100, 100); });
+    expect(result.current.scale).toBe(0.1); // Should be clamped to minimum
+    
+    consoleSpy.mockRestore();
+  });
+
+  test('TC2.9: Zoom at Point with Invalid Coordinates (Negative Case)', () => {
+    const { result } = renderHook(() => useViewportState());
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+    
+    act(() => { result.current.updatePosition(100, 100); });
+    
+    // Test with NaN coordinates - they should fallback to 0
+    act(() => { result.current.updateScaleAtPoint(2.0, NaN, NaN); });
+    expect(result.current.scale).toBe(2.0);
+    // Fallback center point is (0, 0)
+    // newX = centerX - (centerX - oldX) * scaleFactor = 0 - (0 - 100) * 2 = 0 + 200 = 200
+    expect(result.current.x).toBe(200);
+    expect(result.current.y).toBe(200);
+    
+    consoleSpy.mockRestore();
+  });
 });

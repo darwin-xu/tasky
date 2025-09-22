@@ -47,6 +47,27 @@ export const useViewportState = (): ViewportState & ViewportActions => {
     }));
   }, []);
 
+  const updateScaleAtPoint = useCallback((scale: number, centerX: number, centerY: number) => {
+    const validScale = validateScale(scale);
+    const validCenterX = validateCoordinate(centerX, 0);
+    const validCenterY = validateCoordinate(centerY, 0);
+    
+    setState(prevState => {
+      const scaleFactor = validScale / prevState.scale;
+      
+      // Calculate new position to keep the point under the cursor
+      const newX = validCenterX - (validCenterX - prevState.x) * scaleFactor;
+      const newY = validCenterY - (validCenterY - prevState.y) * scaleFactor;
+      
+      return {
+        ...prevState,
+        x: validateCoordinate(newX, prevState.x),
+        y: validateCoordinate(newY, prevState.y),
+        scale: validScale,
+      };
+    });
+  }, []);
+
   const setDragging = useCallback((isDragging: boolean) => {
     setState(prevState => ({
       ...prevState,
@@ -59,6 +80,7 @@ export const useViewportState = (): ViewportState & ViewportActions => {
     ...state,
     updatePosition,
     updateScale,
+    updateScaleAtPoint,
     setDragging,
-  }), [state, updatePosition, updateScale, setDragging]);
+  }), [state, updatePosition, updateScale, updateScaleAtPoint, setDragging]);
 };

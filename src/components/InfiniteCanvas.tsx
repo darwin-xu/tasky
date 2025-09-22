@@ -108,6 +108,28 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     setLastPointerPosition(null);
   }, [viewport]);
 
+  // Wheel event handler for zooming
+  const handleWheel = useCallback((e: KonvaEventObject<WheelEvent>) => {
+    // Only zoom if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
+    if (!e.evt.ctrlKey && !e.evt.metaKey) return;
+    
+    e.evt.preventDefault();
+    
+    const stage = e.target.getStage();
+    const pointer = stage?.getPointerPosition();
+    
+    if (!pointer) return;
+    
+    // Determine zoom direction and factor
+    const scaleBy = 1.1;
+    const deltaY = e.evt.deltaY;
+    const direction = deltaY > 0 ? -1 : 1;
+    const newScale = viewport.scale * Math.pow(scaleBy, direction);
+    
+    // Update scale centered on the mouse cursor
+    viewport.updateScaleAtPoint(newScale, pointer.x, pointer.y);
+  }, [viewport]);
+
   return (
     <div 
       ref={containerRef}
@@ -129,6 +151,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onWheel={handleWheel}
         draggable={false} // We handle dragging manually
       >
         {/* Grid layer - rendered behind content */}

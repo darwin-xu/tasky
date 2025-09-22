@@ -8,6 +8,7 @@ export interface ViewportState {
 export interface ViewportActions {
   updatePosition: (x: number, y: number) => void;
   updateScale: (scale: number) => void;
+  updateScaleAtPoint: (scale: number, centerX: number, centerY: number) => void;
   setDragging: (isDragging: boolean) => void;
 }
 
