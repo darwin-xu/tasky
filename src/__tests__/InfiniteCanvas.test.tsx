@@ -1,30 +1,83 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
+import { act } from 'react';
 
 // Mock Konva for testing environment
-jest.mock('react-konva', () => ({
-  Stage: ({ children, width, height, x, y, ...props }: any) => (
-    <div data-testid="konva-stage" data-width={width} data-height={height} data-x={x} data-y={y} {...props}>
-      {children}
-    </div>
-  ),
-  Layer: ({ children, ...props }: any) => (
-    <div data-testid="konva-layer" {...props}>
-      {children}
-    </div>
-  ),
-  Circle: ({ x, y, radius, fill, ...props }: any) => (
-    <div data-testid="konva-circle" data-x={x} data-y={y} data-radius={radius} data-fill={fill} {...props} />
-  ),
-}));
+jest.mock('react-konva', () => {
+  const mockStage = ({ children, width, height, x, y, onMouseDown, onMouseMove, onMouseUp, onMouseLeave, onWheel, ...props }: any) => {
+    const handleMouseDown = (e: any) => onMouseDown && onMouseDown({
+      target: { getStage: () => ({ getPointerPosition: () => ({ x: 100, y: 100 }) }) },
+      evt: e
+    });
+    const handleMouseMove = (e: any) => onMouseMove && onMouseMove({
+      target: { getStage: () => ({ getPointerPosition: () => ({ x: 150, y: 120 }) }) },
+      evt: e
+    });
+    const handleMouseUp = (e: any) => onMouseUp && onMouseUp({
+      target: { getStage: () => ({ getPointerPosition: () => ({ x: 150, y: 120 }) }) },
+      evt: e
+    });
+    const handleMouseLeave = (e: any) => onMouseLeave && onMouseLeave({
+      target: { getStage: () => ({ getPointerPosition: () => ({ x: 100, y: 100 }) }) },
+      evt: e
+    });
+    const handleWheel = (e: any) => onWheel && onWheel({
+      target: { getStage: () => ({ getPointerPosition: () => ({ x: 0, y: 0 }) }) },
+      evt: { ...e, preventDefault: jest.fn() }
+    });
+
+    return (
+      <div 
+        data-testid="konva-stage"
+        data-width={width}
+        data-height={height} 
+        data-x={x}
+        data-y={y}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onWheel={handleWheel}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  };
+
+  return {
+    Stage: mockStage,
+    Layer: ({ children, ...props }: any) => (
+      <div data-testid="konva-layer" {...props}>
+        {children}
+      </div>
+    ),
+    Circle: ({ x, y, radius, fill, ...props }: any) => (
+      <div 
+        data-testid="konva-circle" 
+        data-x={x} 
+        data-y={y} 
+        data-radius={radius} 
+        data-fill={fill} 
+        {...props} 
+      />
+    ),
+  };
+});
 
 jest.mock('konva/lib/Node', () => ({
   KonvaEventObject: {},
 }));
 
+// Mock getPointerPosition for mouse events
+// (this variable is for test organization but not used in mock anymore)
+
 import InfiniteCanvas from '../components/InfiniteCanvas';
 
 describe('InfiniteCanvas Component', () => {
+  beforeEach(() => {
+    // Reset any test state if needed
+  });
   test('TC1.1: Component Initialization (Positive Case)', () => {
     const container = document.createElement('div');
     container.style.width = '800px';
@@ -73,5 +126,96 @@ describe('InfiniteCanvas Component', () => {
     
     // Clean up
     document.body.removeChild(container);
+  });
+
+  // Test Case 1: Verify Mouse Drag Panning
+  test('TC3.1: Basic Mouse Panning (Positive Case)', () => {
+    const { getByTestId } = render(<InfiniteCanvas />);
+    const stage = getByTestId('konva-stage');
+
+    // Simulate mouse drag panning: from (100,100) to (150,120) = delta (50,20)
+    act(() => {
+      fireEvent.mouseDown(stage);
+    });
+
+    act(() => {
+      fireEvent.mouseMove(stage);
+    });
+
+    act(() => {
+      fireEvent.mouseUp(stage);
+    });
+
+    // Verify viewport position changed by delta (50, 20)
+    expect(stage.getAttribute('data-x')).toBe('50');
+    expect(stage.getAttribute('data-y')).toBe('20');
+  });
+
+  // Test Case 2: Verify Trackpad/Wheel Panning
+  test('TC3.2: Wheel/Trackpad Panning (Positive Case)', () => {
+    const { getByTestId } = render(<InfiniteCanvas />);
+    const stage = getByTestId('konva-stage');
+
+    const initialX = parseInt(stage.getAttribute('data-x') || '0');
+    const initialY = parseInt(stage.getAttribute('data-y') || '0');
+
+    // Simulate wheel event with deltaX and deltaY
+    act(() => {
+      fireEvent.wheel(stage, { deltaX: 25, deltaY: -15 });
+    });
+
+    // Verify viewport position updated by delta values
+    const newX = parseInt(stage.getAttribute('data-x') || '0');
+    const newY = parseInt(stage.getAttribute('data-y') || '0');
+    
+    expect(newX).toBe(initialX + 25);
+    expect(newY).toBe(initialY - 15);
+  });
+
+  // Test Case 3: Verify Cursor Changes on Drag
+  test('TC3.3: Cursor Style Changes During Panning (UI Test)', () => {
+    const { getByTestId, container } = render(<InfiniteCanvas />);
+    const stage = getByTestId('konva-stage');
+    const canvasContainer = container.querySelector('.infinite-canvas-container') as HTMLElement;
+
+    // Check initial cursor state
+    expect(canvasContainer.style.cursor).toBe('grab');
+
+    // Simulate mousedown and check cursor changes to grabbing
+    act(() => {
+      fireEvent.mouseDown(stage);
+    });
+
+    expect(canvasContainer.style.cursor).toBe('grabbing');
+
+    // Simulate mouseup and check cursor reverts to grab
+    act(() => {
+      fireEvent.mouseUp(stage);
+    });
+
+    expect(canvasContainer.style.cursor).toBe('grab');
+  });
+
+  // Test Case 4: Panning Stops When Mouse Leaves Canvas
+  test('TC3.4: Panning Stops on Mouse Leave (Edge Case)', () => {
+    const { getByTestId, container } = render(<InfiniteCanvas />);
+    const stage = getByTestId('konva-stage');
+    const canvasContainer = container.querySelector('.infinite-canvas-container') as HTMLElement;
+
+    // Start panning
+    act(() => {
+      fireEvent.mouseDown(stage);
+    });
+
+    // Verify panning started (cursor changed)
+    expect(canvasContainer.style.cursor).toBe('grabbing');
+
+    // Simulate mouse leaving canvas
+    act(() => {
+      fireEvent.mouseLeave(stage);
+    });
+
+    // Verify panning stopped (cursor reverted)
+    expect(canvasContainer.style.cursor).toBe('grab');
   });
 });
