@@ -54,11 +54,34 @@ export const useViewportState = (): ViewportState & ViewportActions => {
     }));
   }, []);
 
+  const zoomToPoint = useCallback((point: { x: number; y: number }, newScale: number) => {
+    const validScale = validateScale(newScale);
+    
+    // Calculate the world position of the point before zoom
+    const worldX = (point.x - state.x) / state.scale;
+    const worldY = (point.y - state.y) / state.scale;
+    
+    // Calculate new viewport position to keep the point in the same screen position
+    const newX = point.x - worldX * validScale;
+    const newY = point.y - worldY * validScale;
+    
+    const validX = validateCoordinate(newX, state.x);
+    const validY = validateCoordinate(newY, state.y);
+    
+    setState(prevState => ({
+      ...prevState,
+      x: validX,
+      y: validY,
+      scale: validScale,
+    }));
+  }, [state.x, state.y, state.scale]);
+
   // Memoize the return object to prevent unnecessary re-renders
   return useMemo(() => ({
     ...state,
     updatePosition,
     updateScale,
     setDragging,
-  }), [state, updatePosition, updateScale, setDragging]);
+    zoomToPoint,
+  }), [state, updatePosition, updateScale, setDragging, zoomToPoint]);
 };

@@ -108,14 +108,32 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
     setLastPointerPosition(null);
   }, [viewport]);
 
-  // Wheel event handler for trackpad panning
+  // Wheel event handler for trackpad panning and zooming
   const handleWheel = useCallback((e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault(); // Prevent page scrolling
     
-    const { deltaX, deltaY } = e.evt;
+    const { deltaX, deltaY, ctrlKey, metaKey } = e.evt;
     
-    // Update viewport position by adding delta values
-    viewport.updatePosition(viewport.x + deltaX, viewport.y + deltaY);
+    // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed for zooming
+    if (ctrlKey || metaKey) {
+      // Zooming
+      const stage = e.target.getStage();
+      const pointerPos = stage?.getPointerPosition();
+      
+      if (pointerPos) {
+        // Calculate zoom factor based on deltaY
+        const scaleBy = 1.05;
+        const direction = deltaY > 0 ? -1 : 1;
+        const newScale = viewport.scale * Math.pow(scaleBy, direction);
+        
+        // Zoom to the pointer position
+        viewport.zoomToPoint(pointerPos, newScale);
+      }
+    } else {
+      // Panning
+      // Update viewport position by adding delta values
+      viewport.updatePosition(viewport.x + deltaX, viewport.y + deltaY);
+    }
   }, [viewport]);
 
   return (

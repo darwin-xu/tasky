@@ -9,6 +9,7 @@ export interface ViewportActions {
   updatePosition: (x: number, y: number) => void;
   updateScale: (scale: number) => void;
   setDragging: (isDragging: boolean) => void;
+  zoomToPoint: (point: { x: number; y: number }, newScale: number) => void;
 }
 
 export interface InfiniteCanvasProps {
