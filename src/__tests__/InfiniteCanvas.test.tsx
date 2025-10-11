@@ -408,4 +408,137 @@ describe('InfiniteCanvas Component', () => {
     expect(newX).not.toBe(initialX)
     expect(newY).not.toBe(initialY)
   })
+
+  // Story 6: Responsive Canvas Layout Tests
+  describe('Story 6: Responsive Canvas Layout', () => {
+    test('TC6.1: Canvas Uses Container Dimensions on Mount (Positive Case)', () => {
+      const { getByTestId } = render(<InfiniteCanvas />)
+      const stage = getByTestId('konva-stage')
+
+      // Canvas should have dimensions (default or from container)
+      const width = stage.getAttribute('data-width')
+      const height = stage.getAttribute('data-height')
+
+      expect(width).toBeTruthy()
+      expect(height).toBeTruthy()
+      expect(parseInt(width || '0')).toBeGreaterThan(0)
+      expect(parseInt(height || '0')).toBeGreaterThan(0)
+    })
+
+    test('TC6.2: Resize Event Listener is Registered (Positive Case)', () => {
+      const addEventListener = jest.spyOn(window, 'addEventListener')
+
+      render(<InfiniteCanvas />)
+
+      // Verify resize listener was added
+      expect(addEventListener).toHaveBeenCalledWith(
+        'resize',
+        expect.any(Function)
+      )
+
+      addEventListener.mockRestore()
+    })
+
+    test('TC6.3: Viewport Position Preserved After Resize (Positive Case)', () => {
+      const { getByTestId } = render(<InfiniteCanvas />)
+      const stage = getByTestId('konva-stage')
+
+      // Pan the canvas
+      act(() => {
+        fireEvent.mouseDown(stage, { clientX: 100, clientY: 100 })
+        fireEvent.mouseMove(stage, { clientX: 150, clientY: 120 })
+        fireEvent.mouseUp(stage)
+      })
+
+      const xAfterPan = parseFloat(stage.getAttribute('data-x') || '0')
+      const yAfterPan = parseFloat(stage.getAttribute('data-y') || '0')
+
+      // Trigger window resize
+      act(() => {
+        window.dispatchEvent(new Event('resize'))
+      })
+
+      // Viewport position should remain the same
+      expect(stage.getAttribute('data-x')).toBe(xAfterPan.toString())
+      expect(stage.getAttribute('data-y')).toBe(yAfterPan.toString())
+    })
+
+    test('TC6.4: Scale Preserved After Resize (Positive Case)', () => {
+      const { getByTestId } = render(<InfiniteCanvas />)
+      const stage = getByTestId('konva-stage')
+
+      // Zoom in
+      act(() => {
+        fireEvent.wheel(stage, { deltaY: -100, ctrlKey: true })
+      })
+
+      const scaleAfterZoom = parseFloat(
+        stage.getAttribute('data-scale-x') || '1'
+      )
+
+      // Trigger window resize
+      act(() => {
+        window.dispatchEvent(new Event('resize'))
+      })
+
+      // Scale should remain the same
+      expect(stage.getAttribute('data-scale-x')).toBe(scaleAfterZoom.toString())
+    })
+
+    test('TC6.5: Custom Width Prop Overrides Container (Positive Case)', () => {
+      const { getByTestId } = render(<InfiniteCanvas width={1000} />)
+      const stage = getByTestId('konva-stage')
+
+      // Should use provided width
+      expect(stage.getAttribute('data-width')).toBe('1000')
+    })
+
+    test('TC6.6: Custom Height Prop Overrides Container (Positive Case)', () => {
+      const { getByTestId } = render(<InfiniteCanvas height={750} />)
+      const stage = getByTestId('konva-stage')
+
+      // Should use provided height
+      expect(stage.getAttribute('data-height')).toBe('750')
+    })
+
+    test('TC6.7: Custom Width and Height Props Override Container (Positive Case)', () => {
+      const { getByTestId } = render(
+        <InfiniteCanvas width={1000} height={750} />
+      )
+      const stage = getByTestId('konva-stage')
+
+      // Should use provided width and height
+      expect(stage.getAttribute('data-width')).toBe('1000')
+      expect(stage.getAttribute('data-height')).toBe('750')
+    })
+
+    test('TC6.8: Resize Event Listener Cleanup on Unmount (Positive Case)', () => {
+      const removeEventListener = jest.spyOn(window, 'removeEventListener')
+
+      const { unmount } = render(<InfiniteCanvas />)
+
+      // Unmount component
+      unmount()
+
+      // Verify resize listener was removed
+      expect(removeEventListener).toHaveBeenCalledWith(
+        'resize',
+        expect.any(Function)
+      )
+
+      removeEventListener.mockRestore()
+    })
+
+    test('TC6.9: Canvas Container Has Correct CSS Classes (Positive Case)', () => {
+      const { container } = render(<InfiniteCanvas className="custom-class" />)
+
+      const canvasContainer = container.querySelector(
+        '.infinite-canvas-container'
+      )
+
+      expect(canvasContainer).toBeInTheDocument()
+      expect(canvasContainer).toHaveClass('infinite-canvas-container')
+      expect(canvasContainer).toHaveClass('custom-class')
+    })
+  })
 })
