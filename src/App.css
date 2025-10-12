@@ -8,20 +8,6 @@
     overflow: hidden;
 }
 
-.App-header {
-    background-color: #282c34;
-    padding: 10px 20px;
-    color: white;
-    flex-shrink: 0;
-    border-bottom: 1px solid #4a5568;
-}
-
-.App-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
 .App-main {
     flex: 1;
     position: relative;

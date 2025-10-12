@@ -1,15 +1,20 @@
-import React from 'react'
-import InfiniteCanvas from './components/InfiniteCanvas'
+import React, { useRef } from 'react'
+import InfiniteCanvas, { InfiniteCanvasRef } from './components/InfiniteCanvas'
+import Taskbar from './components/Taskbar'
 import './App.css'
 
 function App() {
+    const canvasRef = useRef<InfiniteCanvasRef>(null)
+
+    const handleCreateTask = () => {
+        canvasRef.current?.createTask()
+    }
+
     return (
         <div className="App">
-            <header className="App-header">
-                <h1>Tasky - Infinite Canvas</h1>
-            </header>
+            <Taskbar onCreateTask={handleCreateTask} />
             <main className="App-main">
-                <InfiniteCanvas />
+                <InfiniteCanvas ref={canvasRef} />
             </main>
         </div>
     )

@@ -3,9 +3,7 @@ import { render, screen } from '@testing-library/react'
 import GridLayer from '../components/GridLayer'
 
 // Mock Konva for testing environment
-jest.mock('react-konva', () =>
-    jest.requireActual('../testUtils/mockKonva')
-)
+jest.mock('react-konva', () => jest.requireActual('../testUtils/mockKonva'))
 
 describe('GridLayer Component', () => {
     test('TC2.1: Grid is Rendered on the Canvas', () => {

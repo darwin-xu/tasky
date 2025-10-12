@@ -84,10 +84,15 @@ const Stage = React.forwardRef<any, StageLikeProps>((props, forwardedRef) => {
                       pointerRef.current = { ...pointerValue }
                   }
                   const nativeEvent = event?.nativeEvent ?? event
-                  if (nativeEvent && typeof nativeEvent.preventDefault !== 'function') {
+                  if (
+                      nativeEvent &&
+                      typeof nativeEvent.preventDefault !== 'function'
+                  ) {
                       nativeEvent.preventDefault = () => {}
                   }
-                  handler(createKonvaEvent(stageInstanceRef.current, nativeEvent))
+                  handler(
+                      createKonvaEvent(stageInstanceRef.current, nativeEvent)
+                  )
               }
             : undefined
 
