@@ -1,156 +1,13 @@
+/* eslint-disable testing-library/prefer-screen-queries, testing-library/no-unnecessary-act, testing-library/no-container, testing-library/no-node-access */
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react'
 import { act } from 'react'
+import InfiniteCanvas from '../components/InfiniteCanvas'
 
 // Mock Konva for testing environment
-jest.mock('react-konva', () => {
-    const mockStage = ({
-        children,
-        width,
-        height,
-        x,
-        y,
-        scaleX,
-        scaleY,
-        onMouseDown,
-        onMouseMove,
-        onMouseUp,
-        onMouseLeave,
-        onWheel,
-        ...props
-    }: any) => {
-        const stageInstance = {
-            getPointerPosition: () => ({ x: 100, y: 100 }),
-            getStage: function () {
-                return this
-            },
-        }
-
-        const handleMouseDown = (e: any) => {
-            if (onMouseDown) {
-                onMouseDown({
-                    target: stageInstance,
-                    evt: e,
-                })
-            }
-        }
-
-        const handleMouseMove = (e: any) => {
-            if (onMouseMove) {
-                onMouseMove({
-                    target: {
-                        getStage: () => ({
-                            getPointerPosition: () => ({ x: 150, y: 120 }),
-                        }),
-                    },
-                    evt: e,
-                })
-            }
-        }
-
-        const handleMouseUp = (e: any) => {
-            if (onMouseUp) {
-                onMouseUp({
-                    target: {
-                        getStage: () => ({
-                            getPointerPosition: () => ({ x: 150, y: 120 }),
-                        }),
-                    },
-                    evt: e,
-                })
-            }
-        }
-
-        const handleMouseLeave = (e: any) => {
-            if (onMouseLeave) {
-                onMouseLeave({
-                    target: {
-                        getStage: () => ({
-                            getPointerPosition: () => ({ x: 100, y: 100 }),
-                        }),
-                    },
-                    evt: e,
-                })
-            }
-        }
-
-        const handleWheel = (e: any) => {
-            if (onWheel) {
-                onWheel({
-                    target: {
-                        getStage: () => ({
-                            getPointerPosition: () => ({ x: 400, y: 300 }),
-                        }),
-                    },
-                    evt: { ...e, preventDefault: jest.fn() },
-                })
-            }
-        }
-
-        return (
-            <div
-                data-testid="konva-stage"
-                data-width={width}
-                data-height={height}
-                data-x={x}
-                data-y={y}
-                data-scale-x={scaleX}
-                data-scale-y={scaleY}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseLeave}
-                onWheel={handleWheel}
-                {...props}
-            >
-                {children}
-            </div>
-        )
-    }
-
-    return {
-        Stage: mockStage,
-        Layer: ({ children, ...props }: any) => (
-            <div data-testid="konva-layer" {...props}>
-                {children}
-            </div>
-        ),
-        Circle: ({ x, y, radius, fill, ...props }: any) => (
-            <div
-                data-testid="konva-circle"
-                data-x={x}
-                data-y={y}
-                data-radius={radius}
-                data-fill={fill}
-                {...props}
-            />
-        ),
-        Group: ({ children, draggable, x, y, ...props }: any) => (
-            <div
-                data-testid="konva-group"
-                draggable={draggable}
-                data-x={x}
-                data-y={y}
-                {...props}
-            >
-                {children}
-            </div>
-        ),
-        Rect: ({ width, height, fill, stroke, ...props }: any) => (
-            <div
-                data-testid="konva-rect"
-                data-width={width}
-                data-height={height}
-                data-fill={fill}
-                data-stroke={stroke}
-                {...props}
-            />
-        ),
-        Text: ({ text, ...props }: any) => (
-            <div data-testid="konva-text" data-text={text} {...props} />
-        ),
-    }
-})
+jest.mock('react-konva', () =>
+    jest.requireActual('../testUtils/mockKonva')
+)
 
 jest.mock('konva/lib/Node', () => ({
     KonvaEventObject: {},
@@ -162,9 +19,6 @@ jest.mock('konva', () => ({
 
 // Mock getPointerPosition for mouse events
 // (this variable is for test organization but not used in mock anymore)
-
-import InfiniteCanvas from '../components/InfiniteCanvas'
-
 describe('InfiniteCanvas Component', () => {
     beforeEach(() => {
         // Reset any test state if needed

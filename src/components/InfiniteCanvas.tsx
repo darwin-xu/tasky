@@ -189,6 +189,7 @@ const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
         <div
             ref={containerRef}
             className={`infinite-canvas-container ${className}`}
+            data-testid="infinite-canvas-container"
             style={{ cursor: viewport.isDragging ? 'grabbing' : 'grab' }}
         >
             <Stage
