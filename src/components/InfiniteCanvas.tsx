@@ -8,241 +8,248 @@ import DraggableCard from './DraggableCard'
 import './InfiniteCanvas.css'
 
 const InfiniteCanvas: React.FC<InfiniteCanvasProps> = ({
-  width,
-  height,
-  className = '',
+    width,
+    height,
+    className = '',
 }) => {
-  const stageRef = useRef<any>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
-  const [lastPointerPosition, setLastPointerPosition] = useState<{
-    x: number
-    y: number
-  } | null>(null)
+    const stageRef = useRef<any>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
+    const [lastPointerPosition, setLastPointerPosition] = useState<{
+        x: number
+        y: number
+    } | null>(null)
 
-  // Demo cards for testing snap-to-grid
-  const [cards, setCards] = useState([
-    { id: 'card-1', x: 100, y: 100, title: 'Task Card 1' },
-    { id: 'card-2', x: 300, y: 200, title: 'Task Card 2' },
-    { id: 'card-3', x: 500, y: 150, title: 'Task Card 3' },
-  ])
+    // Demo cards for testing snap-to-grid
+    const [cards, setCards] = useState([
+        { id: 'card-1', x: 100, y: 100, title: 'Task Card 1' },
+        { id: 'card-2', x: 300, y: 200, title: 'Task Card 2' },
+        { id: 'card-3', x: 500, y: 150, title: 'Task Card 3' },
+    ])
 
-  const viewport = useViewportState()
+    const viewport = useViewportState()
 
-  // Handle container resize
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
-        setDimensions({
-          width: width || rect.width || 800,
-          height: height || rect.height || 600,
-        })
-      }
-    }
-
-    updateDimensions()
-    window.addEventListener('resize', updateDimensions)
-
-    return () => {
-      window.removeEventListener('resize', updateDimensions)
-    }
-  }, [width, height])
-
-  // Mouse event handlers
-  const handleMouseDown = useCallback(
-    (e: KonvaEventObject<MouseEvent>) => {
-      // Only start panning if we clicked on the stage itself (not a draggable card)
-      const target = e.target
-      if (target === e.target.getStage()) {
-        const pos = e.target.getStage()?.getPointerPosition()
-        if (pos) {
-          setLastPointerPosition(pos)
-          viewport.setDragging(true)
+    // Handle container resize
+    useEffect(() => {
+        const updateDimensions = () => {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect()
+                setDimensions({
+                    width: width || rect.width || 800,
+                    height: height || rect.height || 600,
+                })
+            }
         }
-      }
-    },
-    [viewport]
-  )
 
-  const handleMouseMove = useCallback(
-    (e: KonvaEventObject<MouseEvent>) => {
-      if (!viewport.isDragging || !lastPointerPosition) return
+        updateDimensions()
+        window.addEventListener('resize', updateDimensions)
 
-      const stage = e.target.getStage()
-      const pos = stage?.getPointerPosition()
-
-      if (pos) {
-        const dx = pos.x - lastPointerPosition.x
-        const dy = pos.y - lastPointerPosition.y
-
-        // Update viewport position based on delta movement
-        viewport.updatePosition(viewport.x + dx, viewport.y + dy)
-        setLastPointerPosition(pos)
-      }
-    },
-    [viewport, lastPointerPosition]
-  )
-
-  const handleMouseUp = useCallback(() => {
-    viewport.setDragging(false)
-    setLastPointerPosition(null)
-  }, [viewport])
-
-  const handleMouseLeave = useCallback(() => {
-    viewport.setDragging(false)
-    setLastPointerPosition(null)
-  }, [viewport])
-
-  // Touch event handlers for mobile support
-  const handleTouchStart = useCallback(
-    (e: KonvaEventObject<TouchEvent>) => {
-      e.evt.preventDefault()
-      const target = e.target
-      // Only start panning if we touched the stage itself (not a draggable card)
-      if (target === e.target.getStage()) {
-        const touch = e.evt.touches[0]
-        if (touch) {
-          const stage = e.target.getStage()
-          const pos = stage?.getPointerPosition()
-          if (pos) {
-            setLastPointerPosition(pos)
-            viewport.setDragging(true)
-          }
+        return () => {
+            window.removeEventListener('resize', updateDimensions)
         }
-      }
-    },
-    [viewport]
-  )
+    }, [width, height])
 
-  const handleTouchMove = useCallback(
-    (e: KonvaEventObject<TouchEvent>) => {
-      e.evt.preventDefault()
-      if (!viewport.isDragging || !lastPointerPosition) return
+    // Mouse event handlers
+    const handleMouseDown = useCallback(
+        (e: KonvaEventObject<MouseEvent>) => {
+            // Only start panning if we clicked on the stage itself (not a draggable card)
+            const target = e.target
+            if (target === e.target.getStage()) {
+                const pos = e.target.getStage()?.getPointerPosition()
+                if (pos) {
+                    setLastPointerPosition(pos)
+                    viewport.setDragging(true)
+                }
+            }
+        },
+        [viewport]
+    )
 
-      const stage = e.target.getStage()
-      const pos = stage?.getPointerPosition()
+    const handleMouseMove = useCallback(
+        (e: KonvaEventObject<MouseEvent>) => {
+            if (!viewport.isDragging || !lastPointerPosition) return
 
-      if (pos) {
-        const dx = pos.x - lastPointerPosition.x
-        const dy = pos.y - lastPointerPosition.y
+            const stage = e.target.getStage()
+            const pos = stage?.getPointerPosition()
 
-        viewport.updatePosition(viewport.x + dx, viewport.y + dy)
-        setLastPointerPosition(pos)
-      }
-    },
-    [viewport, lastPointerPosition]
-  )
+            if (pos) {
+                const dx = pos.x - lastPointerPosition.x
+                const dy = pos.y - lastPointerPosition.y
 
-  const handleTouchEnd = useCallback(() => {
-    viewport.setDragging(false)
-    setLastPointerPosition(null)
-  }, [viewport])
+                // Update viewport position based on delta movement
+                viewport.updatePosition(viewport.x + dx, viewport.y + dy)
+                setLastPointerPosition(pos)
+            }
+        },
+        [viewport, lastPointerPosition]
+    )
 
-  // Wheel event handler for trackpad panning and zooming
-  const handleWheel = useCallback(
-    (e: KonvaEventObject<WheelEvent>) => {
-      e.evt.preventDefault() // Prevent page scrolling
+    const handleMouseUp = useCallback(() => {
+        viewport.setDragging(false)
+        setLastPointerPosition(null)
+    }, [viewport])
 
-      const { deltaX, deltaY, ctrlKey, metaKey } = e.evt
+    const handleMouseLeave = useCallback(() => {
+        viewport.setDragging(false)
+        setLastPointerPosition(null)
+    }, [viewport])
 
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed for zooming
-      if (ctrlKey || metaKey) {
-        // Zooming
-        const stage = e.target.getStage()
-        const pointerPos = stage?.getPointerPosition()
+    // Touch event handlers for mobile support
+    const handleTouchStart = useCallback(
+        (e: KonvaEventObject<TouchEvent>) => {
+            e.evt.preventDefault()
+            const target = e.target
+            // Only start panning if we touched the stage itself (not a draggable card)
+            if (target === e.target.getStage()) {
+                const touch = e.evt.touches[0]
+                if (touch) {
+                    const stage = e.target.getStage()
+                    const pos = stage?.getPointerPosition()
+                    if (pos) {
+                        setLastPointerPosition(pos)
+                        viewport.setDragging(true)
+                    }
+                }
+            }
+        },
+        [viewport]
+    )
 
-        if (pointerPos) {
-          // Calculate zoom factor based on deltaY
-          const scaleBy = 1.05
-          const direction = deltaY > 0 ? -1 : 1
-          const newScale = viewport.scale * Math.pow(scaleBy, direction)
+    const handleTouchMove = useCallback(
+        (e: KonvaEventObject<TouchEvent>) => {
+            e.evt.preventDefault()
+            if (!viewport.isDragging || !lastPointerPosition) return
 
-          // Zoom to the pointer position
-          viewport.zoomToPoint(pointerPos, newScale)
-        }
-      } else {
-        // Panning
-        // Update viewport position by adding delta values
-        viewport.updatePosition(viewport.x + deltaX, viewport.y + deltaY)
-      }
-    },
-    [viewport]
-  )
+            const stage = e.target.getStage()
+            const pos = stage?.getPointerPosition()
 
-  const handleCardPositionChange = useCallback(
-    (id: string, x: number, y: number) => {
-      setCards((prevCards) =>
-        prevCards.map((card) => (card.id === id ? { ...card, x, y } : card))
-      )
-    },
-    []
-  )
+            if (pos) {
+                const dx = pos.x - lastPointerPosition.x
+                const dy = pos.y - lastPointerPosition.y
 
-  return (
-    <div
-      ref={containerRef}
-      className={`infinite-canvas-container ${className}`}
-      style={{ cursor: viewport.isDragging ? 'grabbing' : 'grab' }}
-    >
-      <Stage
-        ref={stageRef}
-        width={dimensions.width}
-        height={dimensions.height}
-        x={viewport.x}
-        y={viewport.y}
-        scaleX={viewport.scale}
-        scaleY={viewport.scale}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onWheel={handleWheel}
-        draggable={false} // We handle dragging manually
-      >
-        {/* Grid layer - rendered behind content */}
-        <Layer>
-          <GridLayer
-            x={viewport.x}
-            y={viewport.y}
-            scale={viewport.scale}
-            width={dimensions.width}
-            height={dimensions.height}
-          />
-        </Layer>
+                viewport.updatePosition(viewport.x + dx, viewport.y + dy)
+                setLastPointerPosition(pos)
+            }
+        },
+        [viewport, lastPointerPosition]
+    )
 
-        {/* Main content layer */}
-        <Layer>
-          {cards.map((card) => (
-            <DraggableCard
-              key={card.id}
-              id={card.id}
-              x={card.x}
-              y={card.y}
-              title={card.title}
-              gridSpacing={20}
-              scale={viewport.scale}
-              onPositionChange={handleCardPositionChange}
-            />
-          ))}
-        </Layer>
-      </Stage>
+    const handleTouchEnd = useCallback(() => {
+        viewport.setDragging(false)
+        setLastPointerPosition(null)
+    }, [viewport])
 
-      {/* Development mode coordinate display */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="viewport-debug">
-          <div>
-            Position: ({viewport.x.toFixed(1)}, {viewport.y.toFixed(1)})
-          </div>
-          <div>Scale: {viewport.scale.toFixed(2)}</div>
-          <div>Dragging: {viewport.isDragging ? 'Yes' : 'No'}</div>
+    // Wheel event handler for trackpad panning and zooming
+    const handleWheel = useCallback(
+        (e: KonvaEventObject<WheelEvent>) => {
+            e.evt.preventDefault() // Prevent page scrolling
+
+            const { deltaX, deltaY, ctrlKey, metaKey } = e.evt
+
+            // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed for zooming
+            if (ctrlKey || metaKey) {
+                // Zooming
+                const stage = e.target.getStage()
+                const pointerPos = stage?.getPointerPosition()
+
+                if (pointerPos) {
+                    // Calculate zoom factor based on deltaY
+                    const scaleBy = 1.05
+                    const direction = deltaY > 0 ? -1 : 1
+                    const newScale =
+                        viewport.scale * Math.pow(scaleBy, direction)
+
+                    // Zoom to the pointer position
+                    viewport.zoomToPoint(pointerPos, newScale)
+                }
+            } else {
+                // Panning
+                // Update viewport position by adding delta values
+                viewport.updatePosition(
+                    viewport.x + deltaX,
+                    viewport.y + deltaY
+                )
+            }
+        },
+        [viewport]
+    )
+
+    const handleCardPositionChange = useCallback(
+        (id: string, x: number, y: number) => {
+            setCards((prevCards) =>
+                prevCards.map((card) =>
+                    card.id === id ? { ...card, x, y } : card
+                )
+            )
+        },
+        []
+    )
+
+    return (
+        <div
+            ref={containerRef}
+            className={`infinite-canvas-container ${className}`}
+            style={{ cursor: viewport.isDragging ? 'grabbing' : 'grab' }}
+        >
+            <Stage
+                ref={stageRef}
+                width={dimensions.width}
+                height={dimensions.height}
+                x={viewport.x}
+                y={viewport.y}
+                scaleX={viewport.scale}
+                scaleY={viewport.scale}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseLeave}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onWheel={handleWheel}
+                draggable={false} // We handle dragging manually
+            >
+                {/* Grid layer - rendered behind content */}
+                <Layer>
+                    <GridLayer
+                        x={viewport.x}
+                        y={viewport.y}
+                        scale={viewport.scale}
+                        width={dimensions.width}
+                        height={dimensions.height}
+                    />
+                </Layer>
+
+                {/* Main content layer */}
+                <Layer>
+                    {cards.map((card) => (
+                        <DraggableCard
+                            key={card.id}
+                            id={card.id}
+                            x={card.x}
+                            y={card.y}
+                            title={card.title}
+                            gridSpacing={20}
+                            scale={viewport.scale}
+                            onPositionChange={handleCardPositionChange}
+                        />
+                    ))}
+                </Layer>
+            </Stage>
+
+            {/* Development mode coordinate display */}
+            {process.env.NODE_ENV === 'development' && (
+                <div className="viewport-debug">
+                    <div>
+                        Position: ({viewport.x.toFixed(1)},{' '}
+                        {viewport.y.toFixed(1)})
+                    </div>
+                    <div>Scale: {viewport.scale.toFixed(2)}</div>
+                    <div>Dragging: {viewport.isDragging ? 'Yes' : 'No'}</div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  )
+    )
 }
 
 export default InfiniteCanvas

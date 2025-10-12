@@ -11,6 +11,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** None
 
 **Key Features:**
+
 - Endless (infinite) canvas rendering.
 - Dotted grid background for visual structure.
 - Snap-to-grid functionality for aligning elements.
@@ -27,6 +28,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** EPIC 1
 
 **Key Features:**
+
 - Create, Edit, and Delete Task cards.
 - Task cards have fields: title, description, date, priority.
 - Create, Edit, and Delete State cards.
@@ -44,6 +46,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** EPIC 2
 
 **Key Features:**
+
 - Create visual links (lines/arrows) between a Task and its States.
 - Fork a new state from an existing state, creating a visual link.
 - Links dynamically and automatically update their paths when connected cards are moved.
@@ -59,6 +62,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** EPIC 2
 
 **Key Features:**
+
 - A fixed taskbar at the top of the window.
 - "Create Task" button in the taskbar.
 - "Configuration" menu in the taskbar.
@@ -75,6 +79,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** EPIC 2, EPIC 3
 
 **Key Features:**
+
 - Undo/redo support for major actions (create, delete, move).
 - Search functionality to find cards by name or content.
 - Filter cards based on properties like priority, date, or tags.
@@ -89,6 +94,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** None
 
 **Key Features:**
+
 - User registration (Email/Password).
 - User login and logout.
 - Secure password storage (hashing).
@@ -104,6 +110,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** EPIC 2, EPIC 3, EPIC 6
 
 **Key Features:**
+
 - Backend API (Node.js) to manage data.
 - Persist canvas state (cards, positions, links) to the database.
 - Load the canvas state from the backend when the application starts.
@@ -118,6 +125,7 @@ This document outlines the high-level epics for the project, derived from the re
 **Dependencies:** EPIC 5, EPIC 7
 
 **Key Features:**
+
 - Real-time multi-user collaboration on the same canvas.
 - Export the entire canvas (layout, cards, links) to a JSON file.
 - Import a canvas state from a JSON file.
