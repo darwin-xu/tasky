@@ -222,8 +222,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             if (!stage) return
 
             // Calculate center of visible viewport in world coordinates
-            const centerX = -viewport.x + dimensions.width / 2 / viewport.scale
-            const centerY = -viewport.y + dimensions.height / 2 / viewport.scale
+            const centerX = (dimensions.width / 2 - viewport.x) / viewport.scale
+            const centerY = (dimensions.height / 2 - viewport.y) / viewport.scale
 
             // Snap to grid
             const snapped = snapPositionToGrid(
