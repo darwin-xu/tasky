@@ -16,6 +16,7 @@ export interface InfiniteCanvasProps {
     width?: number
     height?: number
     className?: string
+    onCreateTask?: () => void
 }
 
 export interface GridLayerProps {
@@ -27,4 +28,14 @@ export interface GridLayerProps {
     gridSpacing?: number
     dotColor?: string
     dotRadius?: number
+}
+
+export interface Task {
+    id: string
+    x: number
+    y: number
+    title: string
+    description?: string
+    date?: string
+    priority?: 'Low' | 'Medium' | 'High'
 }

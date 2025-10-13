@@ -3,9 +3,7 @@ import { render, screen } from '@testing-library/react'
 import DraggableCard from '../components/DraggableCard'
 
 // Mock react-konva components with DOM-safe wrappers
-jest.mock('react-konva', () =>
-    jest.requireActual('../testUtils/mockKonva')
-)
+jest.mock('react-konva', () => jest.requireActual('../testUtils/mockKonva'))
 
 // Mock Konva
 jest.mock('konva', () => ({

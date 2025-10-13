@@ -5,9 +5,7 @@ import { act } from 'react'
 import InfiniteCanvas from '../components/InfiniteCanvas'
 
 // Mock Konva for testing environment
-jest.mock('react-konva', () =>
-    jest.requireActual('../testUtils/mockKonva')
-)
+jest.mock('react-konva', () => jest.requireActual('../testUtils/mockKonva'))
 
 jest.mock('konva/lib/Node', () => ({
     KonvaEventObject: {},
