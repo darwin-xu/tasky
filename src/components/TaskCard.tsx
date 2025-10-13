@@ -19,6 +19,7 @@ export interface TaskCardProps {
     isSelected?: boolean
     onPositionChange?: (id: string, x: number, y: number) => void
     onClick?: (id: string) => void
+    onDelete?: (id: string) => void
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -36,6 +37,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     isSelected = false,
     onPositionChange,
     onClick,
+    onDelete,
 }) => {
     const groupRef = useRef<Konva.Group>(null)
     const [isDragging, setIsDragging] = useState(false)
@@ -87,6 +89,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
             onClick(id)
         }
         e.cancelBubble = true
+    }
+
+    const handleDeleteClick = (e: KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true
+        if (onDelete) {
+            onDelete(id)
+        }
     }
 
     // Priority color mapping
@@ -215,6 +224,36 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     fill={getPriorityColor()}
                     fontStyle="bold"
                 />
+
+                {/* Delete button - only visible when selected */}
+                {isSelected && onDelete && (
+                    <>
+                        <Rect
+                            x={width - 30}
+                            y={5}
+                            width={24}
+                            height={24}
+                            fill="#ef4444"
+                            cornerRadius={4}
+                            onClick={handleDeleteClick}
+                            onTap={handleDeleteClick}
+                        />
+                        <Text
+                            text="✕"
+                            x={width - 30}
+                            y={5}
+                            width={24}
+                            height={24}
+                            fontSize={16}
+                            fontFamily="Arial"
+                            fill="white"
+                            align="center"
+                            verticalAlign="middle"
+                            onClick={handleDeleteClick}
+                            onTap={handleDeleteClick}
+                        />
+                    </>
+                )}
             </Group>
         </>
     )

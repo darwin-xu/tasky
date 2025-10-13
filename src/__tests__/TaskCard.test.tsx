@@ -204,4 +204,91 @@ describe('TaskCard Component', () => {
         expect(group).toBeTruthy()
         expect(onPositionChange).not.toHaveBeenCalled()
     })
+
+    test('renders delete button when selected and onDelete is provided', () => {
+        const onDelete = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+                onDelete={onDelete}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const deleteButton = texts.find(
+            (text) => text.getAttribute('data-text') === '✕'
+        )
+        expect(deleteButton).toBeTruthy()
+    })
+
+    test('does not render delete button when not selected', () => {
+        const onDelete = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={false}
+                onDelete={onDelete}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const deleteButton = texts.find(
+            (text) => text.getAttribute('data-text') === '✕'
+        )
+        expect(deleteButton).toBeFalsy()
+    })
+
+    test('does not render delete button when onDelete is not provided', () => {
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const deleteButton = texts.find(
+            (text) => text.getAttribute('data-text') === '✕'
+        )
+        expect(deleteButton).toBeFalsy()
+    })
+
+    test('onDelete callback is provided', () => {
+        const onDelete = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+                onDelete={onDelete}
+            />
+        )
+
+        const group = screen.getByTestId('konva-group')
+        expect(group).toBeTruthy()
+        expect(onDelete).not.toHaveBeenCalled()
+    })
 })
