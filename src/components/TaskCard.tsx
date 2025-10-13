@@ -19,6 +19,7 @@ export interface TaskCardProps {
     isSelected?: boolean
     onPositionChange?: (id: string, x: number, y: number) => void
     onClick?: (id: string) => void
+    onDoubleClick?: (id: string) => void
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -36,6 +37,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     isSelected = false,
     onPositionChange,
     onClick,
+    onDoubleClick,
 }) => {
     const groupRef = useRef<Konva.Group>(null)
     const [isDragging, setIsDragging] = useState(false)
@@ -89,6 +91,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
         e.cancelBubble = true
     }
 
+    const handleDoubleClick = (e: KonvaEventObject<MouseEvent>) => {
+        if (onDoubleClick) {
+            onDoubleClick(id)
+        }
+        e.cancelBubble = true
+    }
+
     // Priority color mapping
     const getPriorityColor = () => {
         switch (priority) {
@@ -130,6 +139,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 onDragMove={handleDragMove}
                 onDragEnd={handleDragEnd}
                 onClick={handleClick}
+                onDblClick={handleDoubleClick}
             >
                 <Rect
                     width={width}

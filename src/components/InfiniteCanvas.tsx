@@ -12,6 +12,7 @@ import { useViewportState } from '../hooks/useViewportState'
 import { InfiniteCanvasProps, Task } from '../types'
 import GridLayer from './GridLayer'
 import TaskCard from './TaskCard'
+import TaskEditorModal, { TaskEditorData } from './TaskEditorModal'
 import { snapPositionToGrid } from '../utils/snapToGrid'
 import './InfiniteCanvas.css'
 
@@ -37,6 +38,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const [selectedTaskId, setSelectedTaskId] = useState<string | null>(
             null
         )
+        const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+        const [editorOpen, setEditorOpen] = useState(false)
 
         const viewport = useViewportState()
 
@@ -205,6 +208,39 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             setSelectedTaskId(id)
         }, [])
 
+        const handleTaskDoubleClick = useCallback((id: string) => {
+            setEditingTaskId(id)
+            setEditorOpen(true)
+        }, [])
+
+        const handleEditorSave = useCallback(
+            (data: TaskEditorData) => {
+                if (editingTaskId) {
+                    setTasks((prevTasks) =>
+                        prevTasks.map((task) =>
+                            task.id === editingTaskId
+                                ? {
+                                      ...task,
+                                      title: data.title,
+                                      description: data.description,
+                                      date: data.date,
+                                      priority: data.priority,
+                                  }
+                                : task
+                        )
+                    )
+                }
+                setEditorOpen(false)
+                setEditingTaskId(null)
+            },
+            [editingTaskId]
+        )
+
+        const handleEditorCancel = useCallback(() => {
+            setEditorOpen(false)
+            setEditingTaskId(null)
+        }, [])
+
         const handleStageClick = useCallback(
             (e: KonvaEventObject<MouseEvent>) => {
                 // Deselect when clicking on stage
@@ -305,10 +341,30 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 isSelected={task.id === selectedTaskId}
                                 onPositionChange={handleCardPositionChange}
                                 onClick={handleTaskClick}
+                                onDoubleClick={handleTaskDoubleClick}
                             />
                         ))}
                     </Layer>
                 </Stage>
+
+                {/* Task Editor Modal */}
+                {editingTaskId && (
+                    <TaskEditorModal
+                        isOpen={editorOpen}
+                        taskData={{
+                            title: tasks.find((t) => t.id === editingTaskId)
+                                ?.title || '',
+                            description: tasks.find((t) => t.id === editingTaskId)
+                                ?.description,
+                            date: tasks.find((t) => t.id === editingTaskId)
+                                ?.date,
+                            priority: tasks.find((t) => t.id === editingTaskId)
+                                ?.priority || 'Medium',
+                        }}
+                        onSave={handleEditorSave}
+                        onCancel={handleEditorCancel}
+                    />
+                )}
 
                 {/* Development mode coordinate display */}
                 {process.env.NODE_ENV === 'development' && (
