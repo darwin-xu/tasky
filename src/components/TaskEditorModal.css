@@ -1,0 +1,115 @@
+.task-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.task-editor-modal {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.task-editor-title {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.task-editor-field {
+    margin-bottom: 16px;
+}
+
+.task-editor-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.task-editor-field .required {
+    color: #ef4444;
+}
+
+.task-editor-field input[type='text'],
+.task-editor-field textarea,
+.task-editor-field select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.task-editor-field input[type='text']:focus,
+.task-editor-field textarea:focus,
+.task-editor-field select:focus {
+    outline: none;
+    border-color: #2196f3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.task-editor-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.task-editor-error {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #ef4444;
+}
+
+.task-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.task-editor-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.task-editor-button-cancel {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.task-editor-button-cancel:hover {
+    background-color: #e5e7eb;
+}
+
+.task-editor-button-save {
+    background-color: #2196f3;
+    color: white;
+}
+
+.task-editor-button-save:hover:not(:disabled) {
+    background-color: #1976d2;
+}
+
+.task-editor-button-save:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
