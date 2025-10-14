@@ -14,6 +14,7 @@ import GridLayer from './GridLayer'
 import TaskCard from './TaskCard'
 import StateCard from './StateCard'
 import TaskEditorModal, { TaskEditorData } from './TaskEditorModal'
+import StateEditorModal, { StateEditorData } from './StateEditorModal'
 import ConfirmDialog from './ConfirmDialog'
 import { snapPositionToGrid } from '../utils/snapToGrid'
 import './InfiniteCanvas.css'
@@ -49,6 +50,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const [selectedStateId, setSelectedStateId] = useState<string | null>(
             null
         )
+        const [editingStateId, setEditingStateId] = useState<string | null>(null)
+        const [stateEditorOpen, setStateEditorOpen] = useState(false)
 
         // Delete confirmation dialog state
         const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -251,6 +254,11 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             setEditorOpen(true)
         }, [])
 
+        const handleStateDoubleClick = useCallback((id: string) => {
+            setEditingStateId(id)
+            setStateEditorOpen(true)
+        }, [])
+
         const handleEditorSave = useCallback(
             (data: TaskEditorData) => {
                 if (editingTaskId) {
@@ -277,6 +285,33 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const handleEditorCancel = useCallback(() => {
             setEditorOpen(false)
             setEditingTaskId(null)
+        }, [])
+
+        const handleStateEditorSave = useCallback(
+            (data: StateEditorData) => {
+                if (editingStateId) {
+                    setStates((prevStates) =>
+                        prevStates.map((state) =>
+                            state.id === editingStateId
+                                ? {
+                                      ...state,
+                                      description: data.description,
+                                      date: data.date,
+                                      priority: data.priority,
+                                  }
+                                : state
+                        )
+                    )
+                }
+                setStateEditorOpen(false)
+                setEditingStateId(null)
+            },
+            [editingStateId]
+        )
+
+        const handleStateEditorCancel = useCallback(() => {
+            setStateEditorOpen(false)
+            setEditingStateId(null)
         }, [])
 
         const handleStageClick = useCallback(
@@ -471,6 +506,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 isSelected={state.id === selectedStateId}
                                 onPositionChange={handleStatePositionChange}
                                 onClick={handleStateClick}
+                                onDoubleClick={handleStateDoubleClick}
                                 onDelete={handleDeleteRequest}
                             />
                         ))}
@@ -493,6 +529,23 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                         }}
                         onSave={handleEditorSave}
                         onCancel={handleEditorCancel}
+                    />
+                )}
+
+                {/* State Editor Modal */}
+                {editingStateId && (
+                    <StateEditorModal
+                        isOpen={stateEditorOpen}
+                        stateData={{
+                            description: states.find((s) => s.id === editingStateId)
+                                ?.description || '',
+                            date: states.find((s) => s.id === editingStateId)
+                                ?.date,
+                            priority: states.find((s) => s.id === editingStateId)
+                                ?.priority || 'Medium',
+                        }}
+                        onSave={handleStateEditorSave}
+                        onCancel={handleStateEditorCancel}
                     />
                 )}
 

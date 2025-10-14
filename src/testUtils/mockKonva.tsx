@@ -14,6 +14,7 @@ type StageEventHandlers = {
     onTouchStart?: (event: any) => void
     onTouchMove?: (event: any) => void
     onTouchEnd?: (event: any) => void
+    onClick?: (event: any) => void
 }
 
 type StageLikeProps = StageEventHandlers & {
@@ -60,6 +61,7 @@ const Stage = React.forwardRef<any, StageLikeProps>((props, forwardedRef) => {
         onTouchStart,
         onTouchMove,
         onTouchEnd,
+        onClick,
     } = props
 
     const pointerRef = React.useRef<Pointer>({ ...defaultPointers.initial })
@@ -116,6 +118,7 @@ const Stage = React.forwardRef<any, StageLikeProps>((props, forwardedRef) => {
             onTouchStart={wrapHandler(onTouchStart, defaultPointers.initial)}
             onTouchMove={wrapHandler(onTouchMove, defaultPointers.move)}
             onTouchEnd={wrapHandler(onTouchEnd, defaultPointers.move)}
+            onClick={wrapHandler(onClick)}
         >
             {children}
         </div>
@@ -142,20 +145,49 @@ const Group = React.forwardRef<
         onDragStart?: (event: any) => void
         onDragEnd?: (event: any) => void
         onDragMove?: (event: any) => void
+        onClick?: (event: any) => void
+        onDblClick?: (event: any) => void
     }
->(({ children, draggable, x, y, onDragStart, onDragEnd }, ref) => (
-    <div
-        ref={ref}
-        data-testid="konva-group"
-        draggable={!!draggable}
-        data-x={x}
-        data-y={y}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-    >
-        {children}
-    </div>
-))
+>(({ children, draggable, x, y, onDragStart, onDragEnd, onClick, onDblClick }, ref) => {
+    const groupRef = React.useRef<any>()
+    
+    if (!groupRef.current) {
+        groupRef.current = {
+            getStage: () => null,
+            position: () => ({ x: x || 0, y: y || 0 }),
+        }
+    }
+
+    const wrapHandler = (handler?: (event: any) => void) =>
+        handler
+            ? (event: any) => {
+                  const nativeEvent = event?.nativeEvent ?? event
+                  if (
+                      nativeEvent &&
+                      typeof nativeEvent.preventDefault !== 'function'
+                  ) {
+                      nativeEvent.preventDefault = () => {}
+                  }
+                  handler(createKonvaEvent(groupRef.current, nativeEvent))
+              }
+            : undefined
+
+    return (
+        <div
+            ref={ref}
+            data-testid="konva-group"
+            draggable={!!draggable}
+            data-x={x}
+            data-y={y}
+            onDragStart={wrapHandler(onDragStart)}
+            onDragEnd={wrapHandler(onDragEnd)}
+            onClick={wrapHandler(onClick)}
+            onDoubleClick={wrapHandler(onDblClick)}
+        >
+            {children}
+        </div>
+    )
+})
 Group.displayName = 'MockGroup'
 
 const Rect = React.forwardRef<
@@ -173,6 +205,8 @@ const Rect = React.forwardRef<
         shadowOpacity?: number
         shadowOffsetX?: number
         shadowOffsetY?: number
+        onClick?: (event: any) => void
+        onTap?: (event: any) => void
     }
 >(
     (
@@ -189,30 +223,49 @@ const Rect = React.forwardRef<
             shadowOpacity,
             shadowOffsetX,
             shadowOffsetY,
+            onClick,
+            onTap,
         },
         ref
-    ) => (
-        <div
-            ref={ref}
-            data-testid="konva-rect"
-            data-width={width}
-            data-height={height}
-            data-fill={fill}
-            data-stroke={stroke}
-            data-stroke-width={strokeWidth}
-            data-dash={dash ? JSON.stringify(dash) : undefined}
-            data-corner-radius={
-                typeof cornerRadius === 'object'
-                    ? JSON.stringify(cornerRadius)
-                    : cornerRadius
-            }
-            data-shadow-color={shadowColor}
-            data-shadow-blur={shadowBlur}
-            data-shadow-opacity={shadowOpacity}
-            data-shadow-offset-x={shadowOffsetX}
-            data-shadow-offset-y={shadowOffsetY}
-        />
-    )
+    ) => {
+        const wrapHandler = (handler?: (event: any) => void) =>
+            handler
+                ? (event: any) => {
+                      const nativeEvent = event?.nativeEvent ?? event
+                      if (
+                          nativeEvent &&
+                          typeof nativeEvent.preventDefault !== 'function'
+                      ) {
+                          nativeEvent.preventDefault = () => {}
+                      }
+                      handler(createKonvaEvent({ getStage: () => null }, nativeEvent))
+                  }
+                : undefined
+
+        return (
+            <div
+                ref={ref}
+                data-testid="konva-rect"
+                data-width={width}
+                data-height={height}
+                data-fill={fill}
+                data-stroke={stroke}
+                data-stroke-width={strokeWidth}
+                data-dash={dash ? JSON.stringify(dash) : undefined}
+                data-corner-radius={
+                    typeof cornerRadius === 'object'
+                        ? JSON.stringify(cornerRadius)
+                        : cornerRadius
+                }
+                data-shadow-color={shadowColor}
+                data-shadow-blur={shadowBlur}
+                data-shadow-opacity={shadowOpacity}
+                data-shadow-offset-x={shadowOffsetX}
+                data-shadow-offset-y={shadowOffsetY}
+                onClick={wrapHandler(onClick || onTap)}
+            />
+        )
+    }
 )
 Rect.displayName = 'MockRect'
 
@@ -226,20 +279,39 @@ const Text = React.forwardRef<
         height?: number
         align?: string
         verticalAlign?: string
+        onClick?: (event: any) => void
+        onTap?: (event: any) => void
     }
->(({ text, x, y, width, height, align, verticalAlign }, ref) => (
-    <div
-        ref={ref}
-        data-testid="konva-text"
-        data-text={text}
-        data-x={x}
-        data-y={y}
-        data-width={width}
-        data-height={height}
-        data-align={align}
-        data-vertical-align={verticalAlign}
-    />
-))
+>(({ text, x, y, width, height, align, verticalAlign, onClick, onTap }, ref) => {
+    const wrapHandler = (handler?: (event: any) => void) =>
+        handler
+            ? (event: any) => {
+                  const nativeEvent = event?.nativeEvent ?? event
+                  if (
+                      nativeEvent &&
+                      typeof nativeEvent.preventDefault !== 'function'
+                  ) {
+                      nativeEvent.preventDefault = () => {}
+                  }
+                  handler(createKonvaEvent({ getStage: () => null }, nativeEvent))
+              }
+            : undefined
+
+    return (
+        <div
+            ref={ref}
+            data-testid="konva-text"
+            data-text={text}
+            data-x={x}
+            data-y={y}
+            data-width={width}
+            data-height={height}
+            data-align={align}
+            data-vertical-align={verticalAlign}
+            onClick={wrapHandler(onClick || onTap)}
+        />
+    )
+})
 Text.displayName = 'MockText'
 
 const Circle = React.forwardRef<
