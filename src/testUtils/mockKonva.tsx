@@ -14,6 +14,7 @@ type StageEventHandlers = {
     onTouchStart?: (event: any) => void
     onTouchMove?: (event: any) => void
     onTouchEnd?: (event: any) => void
+    onClick?: (event: any) => void
 }
 
 type StageLikeProps = StageEventHandlers & {
@@ -60,6 +61,7 @@ const Stage = React.forwardRef<any, StageLikeProps>((props, forwardedRef) => {
         onTouchStart,
         onTouchMove,
         onTouchEnd,
+        onClick,
     } = props
 
     const pointerRef = React.useRef<Pointer>({ ...defaultPointers.initial })
@@ -116,6 +118,7 @@ const Stage = React.forwardRef<any, StageLikeProps>((props, forwardedRef) => {
             onTouchStart={wrapHandler(onTouchStart, defaultPointers.initial)}
             onTouchMove={wrapHandler(onTouchMove, defaultPointers.move)}
             onTouchEnd={wrapHandler(onTouchEnd, defaultPointers.move)}
+            onClick={wrapHandler(onClick)}
         >
             {children}
         </div>
@@ -142,8 +145,11 @@ const Group = React.forwardRef<
         onDragStart?: (event: any) => void
         onDragEnd?: (event: any) => void
         onDragMove?: (event: any) => void
+        onClick?: (event: any) => void
+        onDblClick?: (event: any) => void
+        onTap?: (event: any) => void
     }
->(({ children, draggable, x, y, onDragStart, onDragEnd }, ref) => (
+>(({ children, draggable, x, y, onDragStart, onDragEnd, onClick, onDblClick, onTap }, ref) => (
     <div
         ref={ref}
         data-testid="konva-group"
@@ -152,6 +158,8 @@ const Group = React.forwardRef<
         data-y={y}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onClick={onClick}
+        onDoubleClick={onDblClick}
     >
         {children}
     </div>
