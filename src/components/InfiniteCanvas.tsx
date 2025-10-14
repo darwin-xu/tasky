@@ -13,6 +13,7 @@ import { InfiniteCanvasProps, Task } from '../types'
 import GridLayer from './GridLayer'
 import TaskCard from './TaskCard'
 import TaskEditorModal, { TaskEditorData } from './TaskEditorModal'
+import ConfirmDialog from './ConfirmDialog'
 import { snapPositionToGrid } from '../utils/snapToGrid'
 import './InfiniteCanvas.css'
 
@@ -40,6 +41,15 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         )
         const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
         const [editorOpen, setEditorOpen] = useState(false)
+
+        // Delete confirmation dialog state
+        const [deleteConfirmation, setDeleteConfirmation] = useState<{
+            isOpen: boolean
+            taskId: string | null
+        }>({
+            isOpen: false,
+            taskId: null,
+        })
 
         const viewport = useViewportState()
 
@@ -287,6 +297,35 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             }
         }, [viewport, dimensions, onCreateTask])
 
+        // Handle delete request (opens confirmation dialog)
+        const handleDeleteRequest = useCallback((taskId: string) => {
+            setDeleteConfirmation({
+                isOpen: true,
+                taskId,
+            })
+        }, [])
+
+        // Confirm deletion
+        const handleDeleteConfirm = useCallback(() => {
+            if (deleteConfirmation.taskId) {
+                setTasks((prevTasks) =>
+                    prevTasks.filter(
+                        (task) => task.id !== deleteConfirmation.taskId
+                    )
+                )
+                // Clear selection if deleted task was selected
+                if (selectedTaskId === deleteConfirmation.taskId) {
+                    setSelectedTaskId(null)
+                }
+            }
+            setDeleteConfirmation({ isOpen: false, taskId: null })
+        }, [deleteConfirmation.taskId, selectedTaskId])
+
+        // Cancel deletion
+        const handleDeleteCancel = useCallback(() => {
+            setDeleteConfirmation({ isOpen: false, taskId: null })
+        }, [])
+
         return (
             <div
                 ref={containerRef}
@@ -342,6 +381,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 onPositionChange={handleCardPositionChange}
                                 onClick={handleTaskClick}
                                 onDoubleClick={handleTaskDoubleClick}
+                                onDelete={handleDeleteRequest}
                             />
                         ))}
                     </Layer>
@@ -379,6 +419,17 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                         </div>
                     </div>
                 )}
+
+                {/* Delete confirmation dialog */}
+                <ConfirmDialog
+                    isOpen={deleteConfirmation.isOpen}
+                    title="Delete Task"
+                    message="Are you sure you want to delete this task? This action cannot be undone."
+                    confirmLabel="Delete"
+                    cancelLabel="Cancel"
+                    onConfirm={handleDeleteConfirm}
+                    onCancel={handleDeleteCancel}
+                />
             </div>
         )
     }
