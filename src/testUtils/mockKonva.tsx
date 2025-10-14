@@ -142,8 +142,11 @@ const Group = React.forwardRef<
         onDragStart?: (event: any) => void
         onDragEnd?: (event: any) => void
         onDragMove?: (event: any) => void
+        onClick?: (event: any) => void
+        onDblClick?: (event: any) => void
+        onTap?: (event: any) => void
     }
->(({ children, draggable, x, y, onDragStart, onDragEnd }, ref) => (
+>(({ children, draggable, x, y, onDragStart, onDragEnd, onClick, onDblClick, onTap }, ref) => (
     <div
         ref={ref}
         data-testid="konva-group"
@@ -152,6 +155,8 @@ const Group = React.forwardRef<
         data-y={y}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onClick={onClick}
+        onDoubleClick={onDblClick}
     >
         {children}
     </div>
