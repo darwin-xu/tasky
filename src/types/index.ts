@@ -39,3 +39,12 @@ export interface Task {
     date?: string
     priority?: 'Low' | 'Medium' | 'High'
 }
+
+export interface State {
+    id: string
+    x: number
+    y: number
+    description: string
+    date?: string
+    priority?: 'Low' | 'Medium' | 'High'
+}
