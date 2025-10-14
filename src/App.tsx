@@ -10,9 +10,13 @@ function App() {
         canvasRef.current?.createTask()
     }
 
+    const handleCreateState = () => {
+        canvasRef.current?.createState()
+    }
+
     return (
         <div className="App">
-            <Taskbar onCreateTask={handleCreateTask} />
+            <Taskbar onCreateTask={handleCreateTask} onCreateState={handleCreateState} />
             <main className="App-main">
                 <InfiniteCanvas ref={canvasRef} />
             </main>

@@ -9,9 +9,10 @@ import React, {
 import { Stage, Layer } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { useViewportState } from '../hooks/useViewportState'
-import { InfiniteCanvasProps, Task } from '../types'
+import { InfiniteCanvasProps, Task, State } from '../types'
 import GridLayer from './GridLayer'
 import TaskCard from './TaskCard'
+import StateCard from './StateCard'
 import TaskEditorModal, { TaskEditorData } from './TaskEditorModal'
 import ConfirmDialog from './ConfirmDialog'
 import { snapPositionToGrid } from '../utils/snapToGrid'
@@ -19,6 +20,7 @@ import './InfiniteCanvas.css'
 
 export interface InfiniteCanvasRef {
     createTask: () => void
+    createState: () => void
 }
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
@@ -42,20 +44,29 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
         const [editorOpen, setEditorOpen] = useState(false)
 
+        // States state
+        const [states, setStates] = useState<State[]>([])
+        const [selectedStateId, setSelectedStateId] = useState<string | null>(
+            null
+        )
+
         // Delete confirmation dialog state
         const [deleteConfirmation, setDeleteConfirmation] = useState<{
             isOpen: boolean
-            taskId: string | null
+            itemId: string | null
+            itemType: 'task' | 'state' | null
         }>({
             isOpen: false,
-            taskId: null,
+            itemId: null,
+            itemType: null,
         })
 
         const viewport = useViewportState()
 
-        // Expose createTask function to parent
+        // Expose createTask and createState functions to parent
         useImperativeHandle(ref, () => ({
             createTask,
+            createState,
         }))
 
         // Handle container resize
@@ -214,8 +225,25 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             []
         )
 
+        const handleStatePositionChange = useCallback(
+            (id: string, x: number, y: number) => {
+                setStates((prevStates) =>
+                    prevStates.map((state) =>
+                        state.id === id ? { ...state, x, y } : state
+                    )
+                )
+            },
+            []
+        )
+
         const handleTaskClick = useCallback((id: string) => {
             setSelectedTaskId(id)
+            setSelectedStateId(null)
+        }, [])
+
+        const handleStateClick = useCallback((id: string) => {
+            setSelectedStateId(id)
+            setSelectedTaskId(null)
         }, [])
 
         const handleTaskDoubleClick = useCallback((id: string) => {
@@ -257,6 +285,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 const target = e.target
                 if (target === e.target.getStage()) {
                     setSelectedTaskId(null)
+                    setSelectedStateId(null)
                 }
             },
             []
@@ -297,33 +326,77 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             }
         }, [viewport, dimensions, onCreateTask])
 
+        // Create state function
+        const createState = useCallback(() => {
+            const stage = stageRef.current
+            if (!stage) return
+
+            // Calculate center of visible viewport in world coordinates
+            const centerX = (dimensions.width / 2 - viewport.x) / viewport.scale
+            const centerY = (dimensions.height / 2 - viewport.y) / viewport.scale
+
+            // Snap to grid
+            const snapped = snapPositionToGrid(
+                { x: centerX, y: centerY },
+                20,
+                viewport.scale
+            )
+
+            const newState: State = {
+                id: `state-${Date.now()}`,
+                x: snapped.x,
+                y: snapped.y,
+                description: 'New State',
+                date: '',
+                priority: 'Medium',
+            }
+
+            setStates((prevStates) => [...prevStates, newState])
+            setSelectedStateId(newState.id)
+        }, [viewport, dimensions])
+
         // Handle delete request (opens confirmation dialog)
-        const handleDeleteRequest = useCallback((taskId: string) => {
+        const handleDeleteRequest = useCallback((id: string) => {
+            // Check if it's a task or state based on ID prefix
+            const itemType = id.startsWith('task-') ? 'task' : 'state'
             setDeleteConfirmation({
                 isOpen: true,
-                taskId,
+                itemId: id,
+                itemType,
             })
         }, [])
 
         // Confirm deletion
         const handleDeleteConfirm = useCallback(() => {
-            if (deleteConfirmation.taskId) {
-                setTasks((prevTasks) =>
-                    prevTasks.filter(
-                        (task) => task.id !== deleteConfirmation.taskId
+            if (deleteConfirmation.itemId && deleteConfirmation.itemType) {
+                if (deleteConfirmation.itemType === 'task') {
+                    setTasks((prevTasks) =>
+                        prevTasks.filter(
+                            (task) => task.id !== deleteConfirmation.itemId
+                        )
                     )
-                )
-                // Clear selection if deleted task was selected
-                if (selectedTaskId === deleteConfirmation.taskId) {
-                    setSelectedTaskId(null)
+                    // Clear selection if deleted task was selected
+                    if (selectedTaskId === deleteConfirmation.itemId) {
+                        setSelectedTaskId(null)
+                    }
+                } else if (deleteConfirmation.itemType === 'state') {
+                    setStates((prevStates) =>
+                        prevStates.filter(
+                            (state) => state.id !== deleteConfirmation.itemId
+                        )
+                    )
+                    // Clear selection if deleted state was selected
+                    if (selectedStateId === deleteConfirmation.itemId) {
+                        setSelectedStateId(null)
+                    }
                 }
             }
-            setDeleteConfirmation({ isOpen: false, taskId: null })
-        }, [deleteConfirmation.taskId, selectedTaskId])
+            setDeleteConfirmation({ isOpen: false, itemId: null, itemType: null })
+        }, [deleteConfirmation.itemId, deleteConfirmation.itemType, selectedTaskId, selectedStateId])
 
         // Cancel deletion
         const handleDeleteCancel = useCallback(() => {
-            setDeleteConfirmation({ isOpen: false, taskId: null })
+            setDeleteConfirmation({ isOpen: false, itemId: null, itemType: null })
         }, [])
 
         return (
@@ -381,6 +454,23 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 onPositionChange={handleCardPositionChange}
                                 onClick={handleTaskClick}
                                 onDoubleClick={handleTaskDoubleClick}
+                                onDelete={handleDeleteRequest}
+                            />
+                        ))}
+                        {states.map((state) => (
+                            <StateCard
+                                key={state.id}
+                                id={state.id}
+                                x={state.x}
+                                y={state.y}
+                                description={state.description}
+                                date={state.date}
+                                priority={state.priority}
+                                gridSpacing={20}
+                                scale={viewport.scale}
+                                isSelected={state.id === selectedStateId}
+                                onPositionChange={handleStatePositionChange}
+                                onClick={handleStateClick}
                                 onDelete={handleDeleteRequest}
                             />
                         ))}
