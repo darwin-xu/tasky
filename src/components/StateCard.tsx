@@ -20,6 +20,7 @@ export interface StateCardProps {
     onClick?: (id: string) => void
     onDoubleClick?: (id: string) => void
     onDelete?: (id: string) => void
+    onDuplicate?: (id: string) => void
 }
 
 const StateCard: React.FC<StateCardProps> = ({
@@ -38,6 +39,7 @@ const StateCard: React.FC<StateCardProps> = ({
     onClick,
     onDoubleClick,
     onDelete,
+    onDuplicate,
 }) => {
     const groupRef = useRef<Konva.Group>(null)
     const [isDragging, setIsDragging] = useState(false)
@@ -106,6 +108,13 @@ const StateCard: React.FC<StateCardProps> = ({
         e.cancelBubble = true
         if (onDelete) {
             onDelete(id)
+        }
+    }
+
+    const handleDuplicateClick = (e: KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true
+        if (onDuplicate) {
+            onDuplicate(id)
         }
     }
 
@@ -247,6 +256,36 @@ const StateCard: React.FC<StateCardProps> = ({
                             verticalAlign="middle"
                             onClick={handleDeleteClick}
                             onTap={handleDeleteClick}
+                        />
+                    </>
+                )}
+
+                {/* Duplicate button - only visible when selected */}
+                {isSelected && onDuplicate && (
+                    <>
+                        <Rect
+                            x={width - 60}
+                            y={5}
+                            width={24}
+                            height={24}
+                            fill="#8b5cf6"
+                            cornerRadius={4}
+                            onClick={handleDuplicateClick}
+                            onTap={handleDuplicateClick}
+                        />
+                        <Text
+                            text="⧉"
+                            x={width - 60}
+                            y={5}
+                            width={24}
+                            height={24}
+                            fontSize={16}
+                            fontFamily="Arial"
+                            fill="white"
+                            align="center"
+                            verticalAlign="middle"
+                            onClick={handleDuplicateClick}
+                            onTap={handleDuplicateClick}
                         />
                     </>
                 )}
