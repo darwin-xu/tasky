@@ -48,3 +48,11 @@ export interface State {
     date?: string
     priority?: 'Low' | 'Medium' | 'High'
 }
+
+export interface Link {
+    id: string
+    sourceId: string
+    targetId: string
+    sourceType: 'task' | 'state'
+    targetType: 'task' | 'state'
+}

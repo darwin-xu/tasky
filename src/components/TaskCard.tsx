@@ -23,6 +23,7 @@ export interface TaskCardProps {
     onDoubleClick?: (id: string) => void
     onDelete?: (id: string) => void
     onDuplicate?: (id: string) => void
+    onLinkStart?: (sourceId: string) => void
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -43,6 +44,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     onDoubleClick,
     onDelete,
     onDuplicate,
+    onLinkStart,
 }) => {
     const groupRef = useRef<Konva.Group>(null)
     const [isDragging, setIsDragging] = useState(false)
@@ -118,6 +120,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
         e.cancelBubble = true
         if (onDuplicate) {
             onDuplicate(id)
+        }
+    }
+
+    const handleLinkHandleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true
+        if (onLinkStart) {
+            onLinkStart(id)
+        }
+    }
+
+    const handleLinkHandleTouchStart = (e: KonvaEventObject<TouchEvent>) => {
+        e.cancelBubble = true
+        if (onLinkStart) {
+            onLinkStart(id)
         }
     }
 
@@ -319,6 +335,36 @@ const TaskCard: React.FC<TaskCardProps> = ({
                             verticalAlign="middle"
                             onClick={handleDuplicateClick}
                             onTap={handleDuplicateClick}
+                        />
+                    </>
+                )}
+
+                {/* Link connector handle - only visible when selected */}
+                {isSelected && onLinkStart && (
+                    <>
+                        <Rect
+                            x={width - 15}
+                            y={height / 2 - 12}
+                            width={24}
+                            height={24}
+                            fill="#10b981"
+                            cornerRadius={12}
+                            onMouseDown={handleLinkHandleMouseDown}
+                            onTouchStart={handleLinkHandleTouchStart}
+                        />
+                        <Text
+                            text="→"
+                            x={width - 15}
+                            y={height / 2 - 12}
+                            width={24}
+                            height={24}
+                            fontSize={16}
+                            fontFamily="Arial"
+                            fill="white"
+                            align="center"
+                            verticalAlign="middle"
+                            onMouseDown={handleLinkHandleMouseDown}
+                            onTouchStart={handleLinkHandleTouchStart}
                         />
                     </>
                 )}
