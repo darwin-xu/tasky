@@ -22,6 +22,8 @@ import './InfiniteCanvas.css'
 export interface InfiniteCanvasRef {
     createTask: () => void
     createState: () => void
+    duplicateTask: (taskId: string) => void
+    duplicateState: (stateId: string) => void
 }
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
@@ -72,6 +74,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         useImperativeHandle(ref, () => ({
             createTask,
             createState,
+            duplicateTask,
+            duplicateState,
         }))
 
         // Handle container resize
@@ -394,6 +398,73 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             setSelectedStateId(newState.id)
         }, [viewport, dimensions])
 
+        // Duplicate task function
+        const duplicateTask = useCallback(
+            (taskId: string) => {
+                const taskToDuplicate = tasks.find((task) => task.id === taskId)
+                if (!taskToDuplicate) return
+
+                // Calculate offset position (40px down and right from original)
+                const offsetX = taskToDuplicate.x + 40
+                const offsetY = taskToDuplicate.y + 40
+
+                // Snap to grid
+                const snapped = snapPositionToGrid(
+                    { x: offsetX, y: offsetY },
+                    20,
+                    viewport.scale
+                )
+
+                const newTask: Task = {
+                    id: `task-${Date.now()}`,
+                    x: snapped.x,
+                    y: snapped.y,
+                    title: taskToDuplicate.title,
+                    description: taskToDuplicate.description,
+                    date: taskToDuplicate.date,
+                    priority: taskToDuplicate.priority,
+                }
+
+                setTasks((prevTasks) => [...prevTasks, newTask])
+                setSelectedTaskId(newTask.id)
+            },
+            [tasks, viewport.scale]
+        )
+
+        // Duplicate state function
+        const duplicateState = useCallback(
+            (stateId: string) => {
+                const stateToDuplicate = states.find(
+                    (state) => state.id === stateId
+                )
+                if (!stateToDuplicate) return
+
+                // Calculate offset position (40px down and right from original)
+                const offsetX = stateToDuplicate.x + 40
+                const offsetY = stateToDuplicate.y + 40
+
+                // Snap to grid
+                const snapped = snapPositionToGrid(
+                    { x: offsetX, y: offsetY },
+                    20,
+                    viewport.scale
+                )
+
+                const newState: State = {
+                    id: `state-${Date.now()}`,
+                    x: snapped.x,
+                    y: snapped.y,
+                    description: stateToDuplicate.description,
+                    date: stateToDuplicate.date,
+                    priority: stateToDuplicate.priority,
+                }
+
+                setStates((prevStates) => [...prevStates, newState])
+                setSelectedStateId(newState.id)
+            },
+            [states, viewport.scale]
+        )
+
         // Handle delete request (opens confirmation dialog)
         const handleDeleteRequest = useCallback((id: string) => {
             // Check if it's a task or state based on ID prefix
@@ -451,6 +522,24 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             })
         }, [])
 
+        // Handle keyboard shortcuts
+        useEffect(() => {
+            const handleKeyDown = (e: KeyboardEvent) => {
+                // Ctrl+D (Windows/Linux) or Cmd+D (Mac) to duplicate selected card
+                if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                    e.preventDefault()
+                    if (selectedTaskId) {
+                        duplicateTask(selectedTaskId)
+                    } else if (selectedStateId) {
+                        duplicateState(selectedStateId)
+                    }
+                }
+            }
+
+            document.addEventListener('keydown', handleKeyDown)
+            return () => document.removeEventListener('keydown', handleKeyDown)
+        }, [selectedTaskId, selectedStateId, duplicateTask, duplicateState])
+
         return (
             <div
                 ref={containerRef}
@@ -507,6 +596,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 onClick={handleTaskClick}
                                 onDoubleClick={handleTaskDoubleClick}
                                 onDelete={handleDeleteRequest}
+                                onDuplicate={duplicateTask}
                             />
                         ))}
                         {states.map((state) => (
@@ -525,6 +615,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 onClick={handleStateClick}
                                 onDoubleClick={handleStateDoubleClick}
                                 onDelete={handleDeleteRequest}
+                                onDuplicate={duplicateState}
                             />
                         ))}
                     </Layer>
