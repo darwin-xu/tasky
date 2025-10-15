@@ -25,6 +25,7 @@ export interface InfiniteCanvasRef {
     createState: () => void
     duplicateTask: (taskId: string) => void
     duplicateState: (stateId: string) => void
+    forkState: (stateId: string) => void
 }
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
@@ -90,6 +91,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             createState,
             duplicateTask,
             duplicateState,
+            forkState,
         }))
 
         // Handle container resize
@@ -553,6 +555,51 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             [states, viewport.scale]
         )
 
+        // Fork state function - creates a new state linked from the source
+        const forkState = useCallback(
+            (stateId: string) => {
+                const sourceState = states.find((state) => state.id === stateId)
+                if (!sourceState) return
+
+                // Calculate offset position (40px down and right from original)
+                const offsetX = sourceState.x + 40
+                const offsetY = sourceState.y + 40
+
+                // Snap to grid
+                const snapped = snapPositionToGrid(
+                    { x: offsetX, y: offsetY },
+                    20,
+                    viewport.scale
+                )
+
+                const newState: State = {
+                    id: `state-${Date.now()}`,
+                    x: snapped.x,
+                    y: snapped.y,
+                    description: sourceState.description,
+                    date: sourceState.date,
+                    priority: sourceState.priority,
+                }
+
+                // Create the state
+                setStates((prevStates) => [...prevStates, newState])
+
+                // Create a link from source state to new state
+                const newLink: Link = {
+                    id: `link-${Date.now()}`,
+                    sourceId: stateId,
+                    targetId: newState.id,
+                    sourceType: 'state',
+                    targetType: 'state',
+                }
+                setLinks((prevLinks) => [...prevLinks, newLink])
+
+                // Focus the new state
+                setSelectedStateId(newState.id)
+            },
+            [states, viewport.scale]
+        )
+
         // Handle delete request (opens confirmation dialog)
         const handleDeleteRequest = useCallback((id: string) => {
             // Check if it's a task or state based on ID prefix
@@ -668,13 +715,25 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     {/* Links layer - rendered above grid but behind cards */}
                     <Layer>
                         {links.map((link) => {
-                            const sourceCard = tasks.find(
-                                (t) => t.id === link.sourceId
-                            )
-                            const targetCard = states.find(
-                                (s) => s.id === link.targetId
-                            )
+                            // Find source card (could be Task or State)
+                            const sourceCard =
+                                link.sourceType === 'task'
+                                    ? tasks.find((t) => t.id === link.sourceId)
+                                    : states.find((s) => s.id === link.sourceId)
+
+                            // Find target card (could be Task or State)
+                            const targetCard =
+                                link.targetType === 'task'
+                                    ? tasks.find((t) => t.id === link.targetId)
+                                    : states.find((s) => s.id === link.targetId)
+
                             if (!sourceCard || !targetCard) return null
+
+                            // Determine dimensions based on card type
+                            const sourceWidth = link.sourceType === 'task' ? 200 : 200
+                            const sourceHeight = link.sourceType === 'task' ? 150 : 120
+                            const targetWidth = link.targetType === 'task' ? 200 : 200
+                            const targetHeight = link.targetType === 'task' ? 150 : 120
 
                             return (
                                 <LinkComponent
@@ -682,12 +741,12 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     id={link.id}
                                     sourceX={sourceCard.x}
                                     sourceY={sourceCard.y}
-                                    sourceWidth={200}
-                                    sourceHeight={150}
+                                    sourceWidth={sourceWidth}
+                                    sourceHeight={sourceHeight}
                                     targetX={targetCard.x}
                                     targetY={targetCard.y}
-                                    targetWidth={200}
-                                    targetHeight={120}
+                                    targetWidth={targetWidth}
+                                    targetHeight={targetHeight}
                                     isSelected={link.id === selectedLinkId}
                                     onClick={handleLinkClick}
                                 />
@@ -773,6 +832,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     onDoubleClick={handleStateDoubleClick}
                                     onDelete={handleDeleteRequest}
                                     onDuplicate={duplicateState}
+                                    onFork={forkState}
                                 />
                             )
                         })}
