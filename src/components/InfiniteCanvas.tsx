@@ -50,7 +50,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const [selectedStateId, setSelectedStateId] = useState<string | null>(
             null
         )
-        const [editingStateId, setEditingStateId] = useState<string | null>(null)
+        const [editingStateId, setEditingStateId] = useState<string | null>(
+            null
+        )
         const [stateEditorOpen, setStateEditorOpen] = useState(false)
 
         // Delete confirmation dialog state
@@ -333,7 +335,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
             // Calculate center of visible viewport in world coordinates
             const centerX = (dimensions.width / 2 - viewport.x) / viewport.scale
-            const centerY = (dimensions.height / 2 - viewport.y) / viewport.scale
+            const centerY =
+                (dimensions.height / 2 - viewport.y) / viewport.scale
 
             // Snap to grid
             const snapped = snapPositionToGrid(
@@ -368,7 +371,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
             // Calculate center of visible viewport in world coordinates
             const centerX = (dimensions.width / 2 - viewport.x) / viewport.scale
-            const centerY = (dimensions.height / 2 - viewport.y) / viewport.scale
+            const centerY =
+                (dimensions.height / 2 - viewport.y) / viewport.scale
 
             // Snap to grid
             const snapped = snapPositionToGrid(
@@ -426,12 +430,25 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     }
                 }
             }
-            setDeleteConfirmation({ isOpen: false, itemId: null, itemType: null })
-        }, [deleteConfirmation.itemId, deleteConfirmation.itemType, selectedTaskId, selectedStateId])
+            setDeleteConfirmation({
+                isOpen: false,
+                itemId: null,
+                itemType: null,
+            })
+        }, [
+            deleteConfirmation.itemId,
+            deleteConfirmation.itemType,
+            selectedTaskId,
+            selectedStateId,
+        ])
 
         // Cancel deletion
         const handleDeleteCancel = useCallback(() => {
-            setDeleteConfirmation({ isOpen: false, itemId: null, itemType: null })
+            setDeleteConfirmation({
+                isOpen: false,
+                itemId: null,
+                itemType: null,
+            })
         }, [])
 
         return (
@@ -518,14 +535,17 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     <TaskEditorModal
                         isOpen={editorOpen}
                         taskData={{
-                            title: tasks.find((t) => t.id === editingTaskId)
-                                ?.title || '',
-                            description: tasks.find((t) => t.id === editingTaskId)
-                                ?.description,
+                            title:
+                                tasks.find((t) => t.id === editingTaskId)
+                                    ?.title || '',
+                            description: tasks.find(
+                                (t) => t.id === editingTaskId
+                            )?.description,
                             date: tasks.find((t) => t.id === editingTaskId)
                                 ?.date,
-                            priority: tasks.find((t) => t.id === editingTaskId)
-                                ?.priority || 'Medium',
+                            priority:
+                                tasks.find((t) => t.id === editingTaskId)
+                                    ?.priority || 'Medium',
                         }}
                         onSave={handleEditorSave}
                         onCancel={handleEditorCancel}
@@ -537,12 +557,14 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     <StateEditorModal
                         isOpen={stateEditorOpen}
                         stateData={{
-                            description: states.find((s) => s.id === editingStateId)
-                                ?.description || '',
+                            description:
+                                states.find((s) => s.id === editingStateId)
+                                    ?.description || '',
                             date: states.find((s) => s.id === editingStateId)
                                 ?.date,
-                            priority: states.find((s) => s.id === editingStateId)
-                                ?.priority || 'Medium',
+                            priority:
+                                states.find((s) => s.id === editingStateId)
+                                    ?.priority || 'Medium',
                         }}
                         onSave={handleStateEditorSave}
                         onCancel={handleStateEditorCancel}
@@ -566,10 +588,16 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 {/* Delete confirmation dialog */}
                 <ConfirmDialog
                     isOpen={deleteConfirmation.isOpen}
-                    title={deleteConfirmation.itemType === 'state' ? 'Delete State' : 'Delete Task'}
-                    message={deleteConfirmation.itemType === 'state' 
-                        ? 'Are you sure you want to delete this state? This action cannot be undone.'
-                        : 'Are you sure you want to delete this task? This action cannot be undone.'}
+                    title={
+                        deleteConfirmation.itemType === 'state'
+                            ? 'Delete State'
+                            : 'Delete Task'
+                    }
+                    message={
+                        deleteConfirmation.itemType === 'state'
+                            ? 'Are you sure you want to delete this state? This action cannot be undone.'
+                            : 'Are you sure you want to delete this task? This action cannot be undone.'
+                    }
                     confirmLabel="Delete"
                     cancelLabel="Cancel"
                     onConfirm={handleDeleteConfirm}

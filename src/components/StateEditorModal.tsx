@@ -58,7 +58,9 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
     const handleDateChange = (value: string) => {
         setDate(value)
         if (value && !isValidDate(value)) {
-            setDateError('Invalid date format. Use YYYY-MM-DD (e.g., 2024-12-31)')
+            setDateError(
+                'Invalid date format. Use YYYY-MM-DD (e.g., 2024-12-31)'
+            )
         } else {
             setDateError('')
         }
@@ -100,7 +102,10 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
             onClick={handleBackdropClick}
             data-testid="state-editor-overlay"
         >
-            <div className="state-editor-modal" data-testid="state-editor-modal">
+            <div
+                className="state-editor-modal"
+                data-testid="state-editor-modal"
+            >
                 <h2 className="state-editor-title">Edit State</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="state-editor-field">

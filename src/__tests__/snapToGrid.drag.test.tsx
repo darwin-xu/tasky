@@ -115,7 +115,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             const groups = screen.getAllByTestId('konva-group')
             const mainGroup = groups[groups.length - 1]
-            
+
             expect(mainGroup.getAttribute('data-x')).toBe('40')
             expect(mainGroup.getAttribute('data-y')).toBe('60')
         })
@@ -133,11 +133,11 @@ describe('Snap-to-Grid Drag Behavior', () => {
             )
 
             const rects = screen.getAllByTestId('konva-rect')
-            
+
             // The main card rect should exist
             expect(rects.length).toBeGreaterThan(0)
             const mainRect = rects[0]
-            
+
             // Verify it has the expected dimensions
             expect(mainRect).toHaveAttribute('data-width', '200')
             expect(mainRect).toHaveAttribute('data-height', '150')
@@ -157,7 +157,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             const groups = screen.getAllByTestId('konva-group')
             const mainGroup = groups[groups.length - 1]
-            
+
             // Position should be at 50-unit grid point
             expect(mainGroup.getAttribute('data-x')).toBe('50')
             expect(mainGroup.getAttribute('data-y')).toBe('100')
@@ -179,7 +179,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             const groups = screen.getAllByTestId('konva-group')
             const mainGroup = groups[groups.length - 1]
-            
+
             expect(mainGroup.getAttribute('data-x')).toBe('60')
             expect(mainGroup.getAttribute('data-y')).toBe('80')
         })
@@ -197,11 +197,11 @@ describe('Snap-to-Grid Drag Behavior', () => {
             )
 
             const rects = screen.getAllByTestId('konva-rect')
-            
+
             // The main card rect should exist
             expect(rects.length).toBeGreaterThan(0)
             const mainRect = rects[0]
-            
+
             // Verify it has the expected dimensions
             expect(mainRect).toHaveAttribute('data-width', '200')
             expect(mainRect).toHaveAttribute('data-height', '120')
@@ -222,7 +222,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
             )
 
             const group = screen.getByTestId('konva-group')
-            
+
             // Position should be at the specified coordinates
             expect(group.getAttribute('data-x')).toBe('40')
             expect(group.getAttribute('data-y')).toBe('40')
@@ -243,7 +243,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             const groups = screen.getAllByTestId('konva-group')
             const mainGroup = groups[groups.length - 1]
-            
+
             expect(mainGroup.getAttribute('data-x')).toBe('80')
             expect(mainGroup.getAttribute('data-y')).toBe('80')
         })
@@ -263,7 +263,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             const groups = screen.getAllByTestId('konva-group')
             const mainGroup = groups[groups.length - 1]
-            
+
             expect(mainGroup.getAttribute('data-x')).toBe('30')
             expect(mainGroup.getAttribute('data-y')).toBe('30')
         })
@@ -285,7 +285,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
             // Verify component structure supports visual affordance
             const rects = screen.getAllByTestId('konva-rect')
             expect(rects.length).toBeGreaterThan(0)
-            
+
             // The implementation includes snap preview with rgba color
             // when isDragging is true (tested in component logic)
         })
@@ -367,7 +367,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             const groups = screen.getAllByTestId('konva-group')
             const mainGroup = groups[groups.length - 1]
-            
+
             expect(mainGroup.getAttribute('data-x')).toBe('-40')
             expect(mainGroup.getAttribute('data-y')).toBe('-60')
         })
@@ -386,7 +386,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             const groups = screen.getAllByTestId('konva-group')
             const mainGroup = groups[groups.length - 1]
-            
+
             expect(mainGroup.getAttribute('data-x')).toBe('10000')
             expect(mainGroup.getAttribute('data-y')).toBe('10000')
         })

@@ -146,21 +146,36 @@ const Group = React.forwardRef<
         onDblClick?: (event: React.MouseEvent<HTMLDivElement>) => void
         onTap?: (event: React.TouchEvent<HTMLDivElement>) => void
     }
->(({ children, draggable, x, y, onDragStart, onDragEnd, onClick, onDblClick, onTap }, ref) => (
-    <div
-        ref={ref}
-        data-testid="konva-group"
-        draggable={!!draggable}
-        data-x={x}
-        data-y={y}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onClick={onClick}
-        onDoubleClick={onDblClick}
-    >
-        {children}
-    </div>
-))
+>(
+    (
+        {
+            children,
+            draggable,
+            x,
+            y,
+            onDragStart,
+            onDragEnd,
+            onClick,
+            onDblClick,
+            onTap,
+        },
+        ref
+    ) => (
+        <div
+            ref={ref}
+            data-testid="konva-group"
+            draggable={!!draggable}
+            data-x={x}
+            data-y={y}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onClick={onClick}
+            onDoubleClick={onDblClick}
+        >
+            {children}
+        </div>
+    )
+)
 Group.displayName = 'MockGroup'
 
 const Rect = React.forwardRef<

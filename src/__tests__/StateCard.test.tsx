@@ -54,8 +54,8 @@ describe('StateCard Component', () => {
     test('renders state card without date when not provided', () => {
         render(<StateCard {...defaultProps} date="" />)
         const texts = screen.getAllByTestId('konva-text')
-        const dateText = texts.find(
-            (text) => text.getAttribute('data-text')?.includes('📅')
+        const dateText = texts.find((text) =>
+            text.getAttribute('data-text')?.includes('📅')
         )
         expect(dateText).toBeFalsy()
     })
@@ -108,7 +108,7 @@ describe('StateCard Component', () => {
                 onDelete={handleDelete}
             />
         )
-        
+
         // Check for delete button (✕ text)
         const texts = screen.getAllByTestId('konva-text')
         const deleteButton = texts.find(
@@ -126,7 +126,7 @@ describe('StateCard Component', () => {
                 onDelete={handleDelete}
             />
         )
-        
+
         // Check for delete button (✕ text)
         const texts = screen.getAllByTestId('konva-text')
         const deleteButton = texts.find(
@@ -135,4 +135,3 @@ describe('StateCard Component', () => {
         expect(deleteButton).toBeFalsy()
     })
 })
-

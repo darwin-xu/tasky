@@ -29,7 +29,7 @@ describe('StateCard Drag and Drop', () => {
         )
 
         const group = screen.getByTestId('konva-group')
-        
+
         // Simulate drag start
         fireEvent.dragStart(group)
 
@@ -54,14 +54,14 @@ describe('StateCard Drag and Drop', () => {
         )
 
         const group = screen.getByTestId('konva-group')
-        
+
         // Simulate drag start
         fireEvent.dragStart(group)
 
         // Verify that onClick was called during drag start
         expect(onClick).toHaveBeenCalledTimes(1)
         expect(onClick).toHaveBeenCalledWith('test-state')
-        
+
         // Note: dragEnd handler requires Konva-specific event properties
         // Testing drag end would require more complex mocking
         // The important behavior is that selection happens on drag start
@@ -81,13 +81,14 @@ describe('StateCard Drag and Drop', () => {
         )
 
         const rects = screen.getAllByTestId('konva-rect')
-        
+
         // Find the main card rect (should have stroke color for selected state)
-        const mainRect = rects.find(rect => 
-            rect.getAttribute('data-stroke') === '#8b5cf6' &&
-            rect.getAttribute('data-stroke-width') === '3'
+        const mainRect = rects.find(
+            (rect) =>
+                rect.getAttribute('data-stroke') === '#8b5cf6' &&
+                rect.getAttribute('data-stroke-width') === '3'
         )
-        
+
         expect(mainRect).toBeTruthy()
     })
 
@@ -107,7 +108,7 @@ describe('StateCard Drag and Drop', () => {
         )
 
         const group = screen.getByTestId('konva-group')
-        
+
         // Create a custom event to check cancelBubble
         const dragStartEvent = new Event('dragstart', { bubbles: true })
         Object.defineProperty(dragStartEvent, 'cancelBubble', {
