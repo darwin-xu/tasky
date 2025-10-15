@@ -36,9 +36,10 @@ describe('InfiniteCanvas Component', () => {
         expect(stage).toBeInTheDocument()
 
         const layers = getAllByTestId('konva-layer')
-        expect(layers).toHaveLength(2) // Grid layer and content layer
+        expect(layers).toHaveLength(3) // Grid layer, links layer, and content layer
         expect(layers[0]).toBeInTheDocument() // Grid layer
-        expect(layers[1]).toBeInTheDocument() // Content layer
+        expect(layers[1]).toBeInTheDocument() // Links layer
+        expect(layers[2]).toBeInTheDocument() // Content layer
 
         // Clean up
         document.body.removeChild(container)
