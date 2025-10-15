@@ -1,5 +1,6 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
+import { act } from 'react-dom/test-utils'
 import DraggableCard from '../components/DraggableCard'
 import TaskCard from '../components/TaskCard'
 import StateCard from '../components/StateCard'
@@ -32,7 +33,9 @@ describe('Snap-to-Grid Drag Behavior', () => {
             // Simulate drag start
             const mainGroup = groups[0]
             const dragStartEvent = new Event('dragstart', { bubbles: true })
-            mainGroup.dispatchEvent(dragStartEvent)
+            act(() => {
+                mainGroup.dispatchEvent(dragStartEvent)
+            })
 
             // Note: The snap preview requires handleDragMove to be called with position
             // In the actual implementation, the preview appears during drag
@@ -41,7 +44,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
         })
 
         test('TC8.2: Snap preview uses dashed outline style', () => {
-            const { container } = render(
+            render(
                 <DraggableCard
                     id="test-card"
                     x={15}
