@@ -48,6 +48,10 @@ const StateCard: React.FC<StateCardProps> = ({
 
     const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
         setIsDragging(true)
+        // Select the card when dragging starts
+        if (onClick) {
+            onClick(id)
+        }
         e.cancelBubble = true // Prevent canvas panning
     }
 
