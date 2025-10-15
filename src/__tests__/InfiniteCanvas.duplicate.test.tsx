@@ -143,9 +143,9 @@ describe('InfiniteCanvas - Card Duplication', () => {
         )
         expect(taskTitles).toHaveLength(2)
 
-        // Check priority is inherited (both should show 'Priority: Medium')
+        // Check priority is inherited (both should show '🟡 Medium')
         const priorityTexts = texts.filter(
-            (text) => text.getAttribute('data-text') === 'Priority: Medium'
+            (text) => text.getAttribute('data-text') === '🟡 Medium'
         )
         expect(priorityTexts.length).toBeGreaterThanOrEqual(2)
     })
@@ -178,7 +178,7 @@ describe('InfiniteCanvas - Card Duplication', () => {
 
         // Check priority is inherited
         const priorityTexts = texts.filter(
-            (text) => text.getAttribute('data-text') === 'Priority: Medium'
+            (text) => text.getAttribute('data-text') === '🟡 Medium'
         )
         expect(priorityTexts.length).toBeGreaterThanOrEqual(2)
     })

@@ -3,6 +3,7 @@ import { Rect, Text, Group } from 'react-konva'
 import Konva from 'konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { snapPositionToGrid } from '../utils/snapToGrid'
+import { formatDateForDisplay } from '../utils/dateValidation'
 
 export interface TaskCardProps {
     id: string
@@ -134,6 +135,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
         }
     }
 
+    // Priority icon/label
+    const getPriorityLabel = () => {
+        switch (priority) {
+            case 'High':
+                return '🔴 High'
+            case 'Medium':
+                return '🟡 Medium'
+            case 'Low':
+                return '🟢 Low'
+            default:
+                return `Priority: ${priority}`
+        }
+    }
+
     return (
         <>
             {/* Snap preview indicator */}
@@ -226,7 +241,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {/* Date */}
                 {date && (
                     <Text
-                        text={`📅 ${date}`}
+                        text={`📅 ${formatDateForDisplay(date)}`}
                         x={10}
                         y={height - 35}
                         width={width - 20}
@@ -238,7 +253,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
                 {/* Priority label */}
                 <Text
-                    text={`Priority: ${priority}`}
+                    text={getPriorityLabel()}
                     x={10}
                     y={height - 20}
                     width={width - 20}

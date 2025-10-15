@@ -36,17 +36,19 @@ describe('StateCard Component', () => {
     test('renders state card with date', () => {
         render(<StateCard {...defaultProps} />)
         const texts = screen.getAllByTestId('konva-text')
-        const dateText = texts.find(
-            (text) => text.getAttribute('data-text') === '📅 2024-01-01'
+        // Date should be formatted as human-readable (e.g., "📅 Jan 1, 2024")
+        const dateText = texts.find((text) =>
+            text.getAttribute('data-text')?.includes('Jan')
         )
         expect(dateText).toBeTruthy()
+        expect(dateText?.getAttribute('data-text')).toMatch(/📅.*Jan.*1.*2024/)
     })
 
     test('renders state card with priority', () => {
         render(<StateCard {...defaultProps} />)
         const texts = screen.getAllByTestId('konva-text')
         const priorityText = texts.find(
-            (text) => text.getAttribute('data-text') === 'Priority: Medium'
+            (text) => text.getAttribute('data-text') === '🟡 Medium'
         )
         expect(priorityText).toBeTruthy()
     })
@@ -64,7 +66,7 @@ describe('StateCard Component', () => {
         render(<StateCard {...defaultProps} priority="High" />)
         const texts = screen.getAllByTestId('konva-text')
         const priorityText = texts.find(
-            (text) => text.getAttribute('data-text') === 'Priority: High'
+            (text) => text.getAttribute('data-text') === '🔴 High'
         )
         expect(priorityText).toBeTruthy()
     })
@@ -73,7 +75,7 @@ describe('StateCard Component', () => {
         render(<StateCard {...defaultProps} priority="Low" />)
         const texts = screen.getAllByTestId('konva-text')
         const priorityText = texts.find(
-            (text) => text.getAttribute('data-text') === 'Priority: Low'
+            (text) => text.getAttribute('data-text') === '🟢 Low'
         )
         expect(priorityText).toBeTruthy()
     })
