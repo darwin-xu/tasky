@@ -98,10 +98,12 @@ describe('TaskCard Component', () => {
         )
 
         const texts = screen.getAllByTestId('konva-text')
+        // Date should be formatted as human-readable (e.g., "📅 Jan 15, 2024")
         const dateText = texts.find((text) =>
-            text.getAttribute('data-text')?.includes('2024-01-15')
+            text.getAttribute('data-text')?.includes('Jan')
         )
         expect(dateText).toBeTruthy()
+        expect(dateText?.getAttribute('data-text')).toMatch(/📅.*Jan.*15.*2024/)
     })
 
     test('renders with priority', () => {

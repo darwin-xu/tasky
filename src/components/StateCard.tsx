@@ -3,6 +3,7 @@ import { Rect, Text, Group } from 'react-konva'
 import Konva from 'konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { snapPositionToGrid } from '../utils/snapToGrid'
+import { formatDateForDisplay } from '../utils/dateValidation'
 
 export interface StateCardProps {
     id: string
@@ -132,6 +133,20 @@ const StateCard: React.FC<StateCardProps> = ({
         }
     }
 
+    // Priority icon/label
+    const getPriorityLabel = () => {
+        switch (priority) {
+            case 'High':
+                return '🔴 High'
+            case 'Medium':
+                return '🟡 Medium'
+            case 'Low':
+                return '🟢 Low'
+            default:
+                return `Priority: ${priority}`
+        }
+    }
+
     return (
         <>
             {/* Snap preview indicator */}
@@ -208,7 +223,7 @@ const StateCard: React.FC<StateCardProps> = ({
                 {/* Date */}
                 {date && (
                     <Text
-                        text={`📅 ${date}`}
+                        text={`📅 ${formatDateForDisplay(date)}`}
                         x={10}
                         y={height - 35}
                         width={width - 20}
@@ -220,7 +235,7 @@ const StateCard: React.FC<StateCardProps> = ({
 
                 {/* Priority label */}
                 <Text
-                    text={`Priority: ${priority}`}
+                    text={getPriorityLabel()}
                     x={10}
                     y={height - 20}
                     width={width - 20}

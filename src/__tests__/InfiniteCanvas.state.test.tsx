@@ -84,7 +84,7 @@ describe('InfiniteCanvas - State Card Creation', () => {
 
         // Check default priority
         const priorityText = texts.find(
-            (text) => text.getAttribute('data-text') === 'Priority: Medium'
+            (text) => text.getAttribute('data-text') === '🟡 Medium'
         )
         expect(priorityText).toBeTruthy()
     })
