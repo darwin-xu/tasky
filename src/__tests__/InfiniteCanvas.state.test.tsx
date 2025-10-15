@@ -29,7 +29,7 @@ describe('InfiniteCanvas - State Card Creation', () => {
         const newStateText = texts.find(
             (text) => text.getAttribute('data-text') === 'New State'
         )
-        
+
         expect(newStateText).toBeTruthy()
     })
 
@@ -43,14 +43,14 @@ describe('InfiniteCanvas - State Card Creation', () => {
 
         // State card should be created with coordinates
         const groups = screen.queryAllByTestId('konva-group')
-        
+
         // Find groups that have both x and y coordinates
         const hasCoordinates = Array.from(groups).some((group) => {
             const x = group.getAttribute('data-x')
             const y = group.getAttribute('data-y')
             return x !== null && y !== null
         })
-        
+
         expect(hasCoordinates).toBe(true)
     })
 
@@ -81,7 +81,7 @@ describe('InfiniteCanvas - State Card Creation', () => {
             (text) => text.getAttribute('data-text') === 'New State'
         )
         expect(descriptionText).toBeTruthy()
-        
+
         // Check default priority
         const priorityText = texts.find(
             (text) => text.getAttribute('data-text') === 'Priority: Medium'
@@ -103,11 +103,11 @@ describe('InfiniteCanvas - State Card Creation', () => {
 
         // Count how many "New State" texts exist
         const texts = screen.getAllByTestId('konva-text')
-        
+
         const stateCardCount = texts.filter((text) => {
             return text.getAttribute('data-text') === 'New State'
         }).length
-        
+
         expect(stateCardCount).toBeGreaterThanOrEqual(2)
     })
 
@@ -120,16 +120,16 @@ describe('InfiniteCanvas - State Card Creation', () => {
         })
 
         const groups = screen.queryAllByTestId('konva-group')
-        
+
         // Find the first group with coordinates
         const groupWithCoords = Array.from(groups).find((group) => {
             return group.getAttribute('data-x') && group.getAttribute('data-y')
         })
-        
+
         if (groupWithCoords) {
             const x = parseInt(groupWithCoords.getAttribute('data-x') || '0')
             const y = parseInt(groupWithCoords.getAttribute('data-y') || '0')
-            
+
             // Coordinates should be multiples of grid spacing (20)
             expect(x % 20).toBe(0)
             expect(y % 20).toBe(0)
@@ -158,7 +158,7 @@ describe('InfiniteCanvas - State Card Creation', () => {
         const stateText = texts.find(
             (text) => text.getAttribute('data-text') === 'New State'
         )
-        
+
         expect(taskText).toBeTruthy()
         expect(stateText).toBeTruthy()
     })
@@ -182,4 +182,3 @@ describe('InfiniteCanvas - State Card Creation', () => {
         // State should be deselected (implicit via component logic)
     })
 })
-

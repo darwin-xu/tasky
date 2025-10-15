@@ -28,7 +28,9 @@ describe('TaskEditorModal', () => {
             />
         )
 
-        expect(screen.queryByTestId('task-editor-modal')).not.toBeInTheDocument()
+        expect(
+            screen.queryByTestId('task-editor-modal')
+        ).not.toBeInTheDocument()
     })
 
     test('renders with initial task data when isOpen is true', () => {

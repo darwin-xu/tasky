@@ -16,7 +16,10 @@ function App() {
 
     return (
         <div className="App">
-            <Taskbar onCreateTask={handleCreateTask} onCreateState={handleCreateState} />
+            <Taskbar
+                onCreateTask={handleCreateTask}
+                onCreateState={handleCreateState}
+            />
             <main className="App-main">
                 <InfiniteCanvas ref={canvasRef} />
             </main>

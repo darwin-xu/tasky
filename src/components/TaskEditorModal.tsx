@@ -61,7 +61,9 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     const handleDateChange = (value: string) => {
         setDate(value)
         if (value && !isValidDate(value)) {
-            setDateError('Invalid date format. Use YYYY-MM-DD (e.g., 2024-12-31)')
+            setDateError(
+                'Invalid date format. Use YYYY-MM-DD (e.g., 2024-12-31)'
+            )
         } else {
             setDateError('')
         }
