@@ -566,8 +566,10 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 {/* Delete confirmation dialog */}
                 <ConfirmDialog
                     isOpen={deleteConfirmation.isOpen}
-                    title="Delete Task"
-                    message="Are you sure you want to delete this task? This action cannot be undone."
+                    title={deleteConfirmation.itemType === 'state' ? 'Delete State' : 'Delete Task'}
+                    message={deleteConfirmation.itemType === 'state' 
+                        ? 'Are you sure you want to delete this state? This action cannot be undone.'
+                        : 'Are you sure you want to delete this task? This action cannot be undone.'}
                     confirmLabel="Delete"
                     cancelLabel="Cancel"
                     onConfirm={handleDeleteConfirm}
