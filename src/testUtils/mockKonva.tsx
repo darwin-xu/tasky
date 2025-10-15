@@ -139,11 +139,14 @@ const Group = React.forwardRef<
         draggable?: boolean
         x?: number
         y?: number
-        onDragStart?: (event: any) => void
-        onDragEnd?: (event: any) => void
-        onDragMove?: (event: any) => void
+        onDragStart?: (event: React.DragEvent<HTMLDivElement>) => void
+        onDragEnd?: (event: React.DragEvent<HTMLDivElement>) => void
+        onDragMove?: (event: React.DragEvent<HTMLDivElement>) => void
+        onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onDblClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onTap?: (event: React.TouchEvent<HTMLDivElement>) => void
     }
->(({ children, draggable, x, y, onDragStart, onDragEnd }, ref) => (
+>(({ children, draggable, x, y, onDragStart, onDragEnd, onClick, onDblClick, onTap }, ref) => (
     <div
         ref={ref}
         data-testid="konva-group"
@@ -152,6 +155,8 @@ const Group = React.forwardRef<
         data-y={y}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onClick={onClick}
+        onDoubleClick={onDblClick}
     >
         {children}
     </div>

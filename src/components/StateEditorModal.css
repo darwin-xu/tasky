@@ -1,0 +1,115 @@
+.state-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.state-editor-modal {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.state-editor-title {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.state-editor-field {
+    margin-bottom: 16px;
+}
+
+.state-editor-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.state-editor-field .required {
+    color: #ef4444;
+}
+
+.state-editor-field input[type='text'],
+.state-editor-field textarea,
+.state-editor-field select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.state-editor-field input[type='text']:focus,
+.state-editor-field textarea:focus,
+.state-editor-field select:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.state-editor-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.state-editor-error {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #ef4444;
+}
+
+.state-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.state-editor-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.state-editor-button-cancel {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.state-editor-button-cancel:hover {
+    background-color: #e5e7eb;
+}
+
+.state-editor-button-save {
+    background-color: #8b5cf6;
+    color: white;
+}
+
+.state-editor-button-save:hover:not(:disabled) {
+    background-color: #7c3aed;
+}
+
+.state-editor-button-save:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
