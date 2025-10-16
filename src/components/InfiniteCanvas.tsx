@@ -64,13 +64,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const [selectedLinkId, setSelectedLinkId] = useState<string | null>(
             null
         )
-        const [isCreatingLink, setIsCreatingLink] = useState(false)
-        const [linkSourceId, setLinkSourceId] = useState<string | null>(null)
-        const [linkPreviewEnd, setLinkPreviewEnd] = useState<{
-            x: number
-            y: number
-        } | null>(null)
-        const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
 
         // Delete confirmation dialog state
         const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -133,17 +126,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const handleMouseMove = useCallback(
             (e: KonvaEventObject<MouseEvent>) => {
                 if (!viewport.isDragging || !lastPointerPosition) {
-                    // Update link preview end position if creating a link
-                    if (isCreatingLink) {
-                        const stage = e.target.getStage()
-                        const pos = stage?.getPointerPosition()
-                        if (pos) {
-                            // Convert screen coordinates to world coordinates
-                            const worldX = (pos.x - viewport.x) / viewport.scale
-                            const worldY = (pos.y - viewport.y) / viewport.scale
-                            setLinkPreviewEnd({ x: worldX, y: worldY })
-                        }
-                    }
                     return
                 }
 
@@ -159,7 +141,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     setLastPointerPosition(pos)
                 }
             },
-            [viewport, lastPointerPosition, isCreatingLink]
+            [viewport, lastPointerPosition]
         )
 
         const handleMouseUp = useCallback(() => {
@@ -359,68 +341,66 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     setSelectedTaskId(null)
                     setSelectedStateId(null)
                     setSelectedLinkId(null)
-                    // Cancel link creation if in progress
-                    if (isCreatingLink) {
-                        setIsCreatingLink(false)
-                        setLinkSourceId(null)
-                        setLinkPreviewEnd(null)
-                    }
                 }
             },
-            [isCreatingLink]
+            []
         )
 
-        // Link creation handlers
-        const handleLinkStart = useCallback((sourceId: string) => {
-            setIsCreatingLink(true)
-            setLinkSourceId(sourceId)
-            setLinkPreviewEnd(null)
-        }, [])
+        // Link creation handlers - now creates state and links immediately
+        const handleLinkStart = useCallback(
+            (sourceId: string) => {
+                // Find the source task
+                const sourceTask = tasks.find((t) => t.id === sourceId)
+                if (!sourceTask) return
+
+                const stage = stageRef.current
+                if (!stage) return
+
+                // Calculate offset position (200px to the right of the task)
+                const offsetX = sourceTask.x + 240
+                const offsetY = sourceTask.y
+
+                // Snap to grid
+                const snapped = snapPositionToGrid(
+                    { x: offsetX, y: offsetY },
+                    20,
+                    viewport.scale
+                )
+
+                // Create the new state
+                const newState: State = {
+                    id: `state-${Date.now()}`,
+                    x: snapped.x,
+                    y: snapped.y,
+                    description: 'New State',
+                    date: '',
+                    priority: 'Medium',
+                }
+
+                setStates((prevStates) => [...prevStates, newState])
+
+                // Create the link from task to new state
+                const newLink: Link = {
+                    id: `link-${Date.now()}`,
+                    sourceId: sourceId,
+                    targetId: newState.id,
+                    sourceType: 'task',
+                    targetType: 'state',
+                }
+                setLinks((prevLinks) => [...prevLinks, newLink])
+
+                // Select the new state
+                setSelectedStateId(newState.id)
+                setSelectedTaskId(null)
+            },
+            [tasks, viewport.scale]
+        )
 
         const handleLinkClick = useCallback((linkId: string) => {
             setSelectedLinkId(linkId)
             setSelectedTaskId(null)
             setSelectedStateId(null)
         }, [])
-
-        const handleCardClickForLink = useCallback(
-            (targetId: string) => {
-                if (isCreatingLink && linkSourceId) {
-                    // Validate the link
-                    const sourceCard = tasks.find((t) => t.id === linkSourceId)
-                    const targetCard = states.find((s) => s.id === targetId)
-
-                    // Only allow Task → State links for Story 1
-                    if (sourceCard && targetCard) {
-                        // Check for duplicate links
-                        const isDuplicate = links.some(
-                            (link) =>
-                                link.sourceId === linkSourceId &&
-                                link.targetId === targetId
-                        )
-
-                        if (!isDuplicate) {
-                            // Create the link
-                            const newLink: Link = {
-                                id: `link-${Date.now()}`,
-                                sourceId: linkSourceId,
-                                targetId: targetId,
-                                sourceType: 'task',
-                                targetType: 'state',
-                            }
-                            setLinks((prevLinks) => [...prevLinks, newLink])
-                        }
-                    }
-
-                    // Reset link creation state
-                    setIsCreatingLink(false)
-                    setLinkSourceId(null)
-                    setLinkPreviewEnd(null)
-                    setHoveredCardId(null)
-                }
-            },
-            [isCreatingLink, linkSourceId, tasks, states, links]
-        )
 
         // Create task function
         const createTask = useCallback(() => {
@@ -752,31 +732,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 />
                             )
                         })}
-
-                        {/* Link preview while creating */}
-                        {isCreatingLink && linkSourceId && linkPreviewEnd && (
-                            (() => {
-                                const sourceCard = tasks.find(
-                                    (t) => t.id === linkSourceId
-                                )
-                                if (!sourceCard) return null
-
-                                return (
-                                    <LinkComponent
-                                        id="link-preview"
-                                        sourceX={sourceCard.x}
-                                        sourceY={sourceCard.y}
-                                        sourceWidth={200}
-                                        sourceHeight={150}
-                                        targetX={linkPreviewEnd.x}
-                                        targetY={linkPreviewEnd.y}
-                                        targetWidth={0}
-                                        targetHeight={0}
-                                        isSelected={false}
-                                    />
-                                )
-                            })()
-                        )}
                     </Layer>
 
                     {/* Main content layer */}
@@ -803,15 +758,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             />
                         ))}
                         {states.map((state) => {
-                            const isValidDropTarget =
-                                isCreatingLink &&
-                                linkSourceId &&
-                                tasks.find((t) => t.id === linkSourceId) &&
-                                state.id === hoveredCardId
-                            const handleClick = isCreatingLink
-                                ? () => handleCardClickForLink(state.id)
-                                : handleStateClick
-
                             return (
                                 <StateCard
                                     key={state.id}
@@ -823,12 +769,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     priority={state.priority}
                                     gridSpacing={20}
                                     scale={viewport.scale}
-                                    isSelected={
-                                        state.id === selectedStateId ||
-                                        !!isValidDropTarget
-                                    }
+                                    isSelected={state.id === selectedStateId}
                                     onPositionChange={handleStatePositionChange}
-                                    onClick={handleClick}
+                                    onClick={handleStateClick}
                                     onDoubleClick={handleStateDoubleClick}
                                     onDelete={handleDeleteRequest}
                                     onDuplicate={duplicateState}
