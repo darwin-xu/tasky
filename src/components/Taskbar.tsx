@@ -3,10 +3,9 @@ import './Taskbar.css'
 
 interface TaskbarProps {
     onCreateTask: () => void
-    onCreateState: () => void
 }
 
-const Taskbar: React.FC<TaskbarProps> = ({ onCreateTask, onCreateState }) => {
+const Taskbar: React.FC<TaskbarProps> = ({ onCreateTask }) => {
     return (
         <div className="taskbar">
             <h1 className="taskbar-title">Tasky - Infinite Canvas</h1>
@@ -17,13 +16,6 @@ const Taskbar: React.FC<TaskbarProps> = ({ onCreateTask, onCreateState }) => {
                     aria-label="Create Task"
                 >
                     + Create Task
-                </button>
-                <button
-                    className="taskbar-button create-state-button"
-                    onClick={onCreateState}
-                    aria-label="Create State"
-                >
-                    + Create State
                 </button>
             </div>
         </div>
