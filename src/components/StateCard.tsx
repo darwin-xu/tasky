@@ -22,6 +22,7 @@ export interface StateCardProps {
     onDoubleClick?: (id: string) => void
     onDelete?: (id: string) => void
     onDuplicate?: (id: string) => void
+    onFork?: (id: string) => void
 }
 
 const StateCard: React.FC<StateCardProps> = ({
@@ -41,6 +42,7 @@ const StateCard: React.FC<StateCardProps> = ({
     onDoubleClick,
     onDelete,
     onDuplicate,
+    onFork,
 }) => {
     const groupRef = useRef<Konva.Group>(null)
     const [isDragging, setIsDragging] = useState(false)
@@ -116,6 +118,13 @@ const StateCard: React.FC<StateCardProps> = ({
         e.cancelBubble = true
         if (onDuplicate) {
             onDuplicate(id)
+        }
+    }
+
+    const handleForkClick = (e: KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true
+        if (onFork) {
+            onFork(id)
         }
     }
 
@@ -275,11 +284,41 @@ const StateCard: React.FC<StateCardProps> = ({
                     </>
                 )}
 
+                {/* Fork button - only visible when selected */}
+                {isSelected && onFork && (
+                    <>
+                        <Rect
+                            x={width - 60}
+                            y={5}
+                            width={24}
+                            height={24}
+                            fill="#10b981"
+                            cornerRadius={4}
+                            onClick={handleForkClick}
+                            onTap={handleForkClick}
+                        />
+                        <Text
+                            text="⑂"
+                            x={width - 60}
+                            y={5}
+                            width={24}
+                            height={24}
+                            fontSize={16}
+                            fontFamily="Arial"
+                            fill="white"
+                            align="center"
+                            verticalAlign="middle"
+                            onClick={handleForkClick}
+                            onTap={handleForkClick}
+                        />
+                    </>
+                )}
+
                 {/* Duplicate button - only visible when selected */}
                 {isSelected && onDuplicate && (
                     <>
                         <Rect
-                            x={width - 60}
+                            x={width - 90}
                             y={5}
                             width={24}
                             height={24}
@@ -290,7 +329,7 @@ const StateCard: React.FC<StateCardProps> = ({
                         />
                         <Text
                             text="⧉"
-                            x={width - 60}
+                            x={width - 90}
                             y={5}
                             width={24}
                             height={24}
