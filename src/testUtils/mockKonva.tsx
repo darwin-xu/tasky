@@ -155,6 +155,7 @@ const Group = React.forwardRef<
             y,
             onDragStart,
             onDragEnd,
+            onDragMove,
             onClick,
             onDblClick,
             onTap,
@@ -168,6 +169,7 @@ const Group = React.forwardRef<
             data-x={x}
             data-y={y}
             onDragStart={onDragStart}
+            onDrag={onDragMove}
             onDragEnd={onDragEnd}
             onClick={onClick}
             onDoubleClick={onDblClick}
