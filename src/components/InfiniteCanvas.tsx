@@ -353,9 +353,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 const sourceTask = tasks.find((t) => t.id === sourceId)
                 if (!sourceTask) return
 
-                const stage = stageRef.current
-                if (!stage) return
-
                 // Calculate offset position (200px to the right of the task)
                 const offsetX = sourceTask.x + 240
                 const offsetY = sourceTask.y
