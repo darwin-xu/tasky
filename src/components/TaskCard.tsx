@@ -70,6 +70,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
         const snapped = snapPositionToGrid(pos, gridSpacing, scale)
         setSnapPreview(snapped)
 
+        // Update position in real-time during drag for link updates
+        if (onPositionChange) {
+            onPositionChange(id, pos.x, pos.y)
+        }
+
         e.cancelBubble = true // Prevent canvas panning
     }
 
