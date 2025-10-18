@@ -53,10 +53,8 @@ describe('Link Component Selection and Context Menu', () => {
         expect(arrows[0].getAttribute('data-stroke-width')).toBe('3')
     })
 
-    test('selected link shows action buttons', () => {
-        const onDelete = jest.fn()
-        const onReassignStart = jest.fn()
-        const onReassignEnd = jest.fn()
+    test('selected link shows style toggle button', () => {
+        const onUpdateLinkStyle = jest.fn()
 
         render(
             <LinkComponent
@@ -70,34 +68,26 @@ describe('Link Component Selection and Context Menu', () => {
                 targetWidth={200}
                 targetHeight={120}
                 isSelected={true}
-                onDelete={onDelete}
-                onReassignStart={onReassignStart}
-                onReassignEnd={onReassignEnd}
+                linkStyle="free"
+                onUpdateLinkStyle={onUpdateLinkStyle}
             />
         )
 
-        // Look for action buttons (should have delete and reassign buttons)
+        // Look for style toggle button
         const allTexts = screen.queryAllByTestId('konva-text')
-        const deleteButton = allTexts.find(
-            (text) => text.getAttribute('data-text') === '✕'
-        )
-        const reassignStartButton = allTexts.find(
-            (text) => text.getAttribute('data-text') === '⇤'
-        )
-        const reassignEndButton = allTexts.find(
-            (text) => text.getAttribute('data-text') === '⇥'
+        const styleToggleButton = allTexts.find((text) =>
+            text.getAttribute('data-text')?.includes('⇄')
         )
 
-        // All action buttons should be visible when link is selected
-        expect(deleteButton).toBeTruthy()
-        expect(reassignStartButton).toBeTruthy()
-        expect(reassignEndButton).toBeTruthy()
+        // Style toggle button should be visible when link is selected
+        expect(styleToggleButton).toBeTruthy()
+        expect(styleToggleButton?.getAttribute('data-text')).toBe(
+            'Free ⇄ Ortho'
+        )
     })
 
-    test('action buttons not shown when link is not selected', () => {
-        const onDelete = jest.fn()
-        const onReassignStart = jest.fn()
-        const onReassignEnd = jest.fn()
+    test('selected orthogonal link shows route around checkbox', () => {
+        const onUpdateRouteAround = jest.fn()
 
         render(
             <LinkComponent
@@ -110,32 +100,28 @@ describe('Link Component Selection and Context Menu', () => {
                 targetY={0}
                 targetWidth={200}
                 targetHeight={120}
-                isSelected={false}
-                onDelete={onDelete}
-                onReassignStart={onReassignStart}
-                onReassignEnd={onReassignEnd}
+                isSelected={true}
+                linkStyle="orthogonal"
+                routeAround={false}
+                onUpdateRouteAround={onUpdateRouteAround}
             />
         )
 
-        // Action buttons should NOT be visible when link is not selected
+        // Look for route around checkbox
         const allTexts = screen.queryAllByTestId('konva-text')
-        const deleteButton = allTexts.find(
-            (text) => text.getAttribute('data-text') === '✕'
-        )
-        const reassignStartButton = allTexts.find(
-            (text) => text.getAttribute('data-text') === '⇤'
-        )
-        const reassignEndButton = allTexts.find(
-            (text) => text.getAttribute('data-text') === '⇥'
+        const routeAroundCheckbox = allTexts.find((text) =>
+            text.getAttribute('data-text')?.includes('Route Around')
         )
 
-        expect(deleteButton).toBeUndefined()
-        expect(reassignStartButton).toBeUndefined()
-        expect(reassignEndButton).toBeUndefined()
+        // Route around checkbox should be visible for orthogonal links
+        expect(routeAroundCheckbox).toBeTruthy()
+        expect(routeAroundCheckbox?.getAttribute('data-text')).toBe(
+            '☐ Route Around'
+        )
     })
 
-    test('delete button has correct styling', () => {
-        const onDelete = jest.fn()
+    test('route around checkbox not shown for free style links', () => {
+        const onUpdateRouteAround = jest.fn()
 
         render(
             <LinkComponent
@@ -149,24 +135,24 @@ describe('Link Component Selection and Context Menu', () => {
                 targetWidth={200}
                 targetHeight={120}
                 isSelected={true}
-                onDelete={onDelete}
+                linkStyle="free"
+                routeAround={false}
+                onUpdateRouteAround={onUpdateRouteAround}
             />
         )
 
-        // Find the delete button (red rectangle)
-        const rects = screen.queryAllByTestId('konva-rect')
-        const deleteButton = rects.find(
-            (rect) => rect.getAttribute('data-fill') === '#ef4444'
+        // Look for route around checkbox
+        const allTexts = screen.queryAllByTestId('konva-text')
+        const routeAroundCheckbox = allTexts.find((text) =>
+            text.getAttribute('data-text')?.includes('Route Around')
         )
 
-        expect(deleteButton).toBeTruthy()
-        expect(deleteButton?.getAttribute('data-width')).toBe('24')
-        expect(deleteButton?.getAttribute('data-height')).toBe('24')
+        // Route around checkbox should NOT be visible for free links
+        expect(routeAroundCheckbox).toBeUndefined()
     })
 
-    test('reassign buttons have correct styling', () => {
-        const onReassignStart = jest.fn()
-        const onReassignEnd = jest.fn()
+    test('style toggle button has correct styling', () => {
+        const onUpdateLinkStyle = jest.fn()
 
         render(
             <LinkComponent
@@ -180,21 +166,87 @@ describe('Link Component Selection and Context Menu', () => {
                 targetWidth={200}
                 targetHeight={120}
                 isSelected={true}
-                onReassignStart={onReassignStart}
-                onReassignEnd={onReassignEnd}
+                linkStyle="free"
+                onUpdateLinkStyle={onUpdateLinkStyle}
             />
         )
 
-        // Find the reassign buttons (purple rectangles)
+        // Find the style toggle button (purple rectangle)
         const rects = screen.queryAllByTestId('konva-rect')
-        const purpleButtons = rects.filter(
+        const styleToggleButton = rects.find(
             (rect) => rect.getAttribute('data-fill') === '#8b5cf6'
         )
 
-        expect(purpleButtons.length).toBe(2)
-        purpleButtons.forEach((button) => {
-            expect(button.getAttribute('data-width')).toBe('24')
-            expect(button.getAttribute('data-height')).toBe('24')
-        })
+        expect(styleToggleButton).toBeTruthy()
+        expect(styleToggleButton?.getAttribute('data-width')).toBe('80')
+        expect(styleToggleButton?.getAttribute('data-height')).toBe('24')
+    })
+
+    test('route around checkbox shows checked state correctly', () => {
+        const onUpdateRouteAround = jest.fn()
+
+        const { rerender } = render(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={true}
+                linkStyle="orthogonal"
+                routeAround={false}
+                onUpdateRouteAround={onUpdateRouteAround}
+            />
+        )
+
+        // Unchecked state
+        let allTexts = screen.queryAllByTestId('konva-text')
+        let checkbox = allTexts.find((text) =>
+            text.getAttribute('data-text')?.includes('Route Around')
+        )
+        expect(checkbox?.getAttribute('data-text')).toBe('☐ Route Around')
+
+        // Find unchecked button color (should be gray)
+        let rects = screen.queryAllByTestId('konva-rect')
+        let checkboxRect = rects.find(
+            (rect) => rect.getAttribute('data-fill') === '#6b7280'
+        )
+        expect(checkboxRect).toBeTruthy()
+
+        // Checked state
+        rerender(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={true}
+                linkStyle="orthogonal"
+                routeAround={true}
+                onUpdateRouteAround={onUpdateRouteAround}
+            />
+        )
+
+        allTexts = screen.queryAllByTestId('konva-text')
+        checkbox = allTexts.find((text) =>
+            text.getAttribute('data-text')?.includes('Route Around')
+        )
+        expect(checkbox?.getAttribute('data-text')).toBe('☑ Route Around')
+
+        // Find checked button color (should be green)
+        rects = screen.queryAllByTestId('konva-rect')
+        checkboxRect = rects.find(
+            (rect) => rect.getAttribute('data-fill') === '#10b981'
+        )
+        expect(checkboxRect).toBeTruthy()
     })
 })

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Arrow, Group, Rect, Text } from 'react-konva'
+import { Arrow, Group, Rect, Text, Line } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 
 export interface LinkProps {
@@ -12,11 +12,13 @@ export interface LinkProps {
     targetY: number
     targetWidth: number
     targetHeight: number
+    linkStyle?: 'free' | 'orthogonal'
+    routeAround?: boolean
     isSelected?: boolean
     onClick?: (id: string) => void
-    onDelete?: (id: string) => void
-    onReassignStart?: (id: string) => void
-    onReassignEnd?: (id: string) => void
+    onUpdateLinkStyle?: (id: string, style: 'free' | 'orthogonal') => void
+    onUpdateRouteAround?: (id: string, routeAround: boolean) => void
+    allCards?: Array<{ x: number; y: number; width: number; height: number }>
 }
 
 // Calculate the best anchor point on the edge of a rectangle
@@ -78,6 +80,174 @@ const calculateAnchorPoint = (
     return { x: anchorX, y: anchorY }
 }
 
+// Calculate orthogonal path points
+const calculateOrthogonalPath = (
+    sourceX: number,
+    sourceY: number,
+    sourceWidth: number,
+    sourceHeight: number,
+    targetX: number,
+    targetY: number,
+    targetWidth: number,
+    targetHeight: number,
+    routeAround: boolean,
+    allCards?: Array<{ x: number; y: number; width: number; height: number }>
+): number[] => {
+    const sourceCenterX = sourceX + sourceWidth / 2
+    const sourceCenterY = sourceY + sourceHeight / 2
+    const targetCenterX = targetX + targetWidth / 2
+    const targetCenterY = targetY + targetHeight / 2
+
+    // Start from right edge of source
+    const startX = sourceX + sourceWidth
+    const startY = sourceCenterY
+
+    // End at left edge of target (or appropriate edge)
+    let endX: number
+    let endY: number
+
+    // Determine which edge of target to connect to
+    if (targetCenterX > sourceCenterX) {
+        // Target is to the right, connect to left edge
+        endX = targetX
+        endY = targetCenterY
+    } else if (targetCenterX < sourceCenterX) {
+        // Target is to the left, connect to right edge
+        endX = targetX + targetWidth
+        endY = targetCenterY
+    } else {
+        // Target is aligned vertically
+        if (targetCenterY > sourceCenterY) {
+            // Target is below, connect to top edge
+            endX = targetCenterX
+            endY = targetY
+        } else {
+            // Target is above, connect to bottom edge
+            endX = targetCenterX
+            endY = targetY + targetHeight
+        }
+    }
+
+    if (!routeAround) {
+        // Simple orthogonal path - shortest path
+        const midX = (startX + endX) / 2
+        return [startX, startY, midX, startY, midX, endY, endX, endY]
+    }
+
+    // Route around obstacles
+    const padding = 20 // Padding around cards
+
+    // Check if path intersects with any cards
+    const pathIntersectsCard = (
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
+        card: { x: number; y: number; width: number; height: number }
+    ): boolean => {
+        // Expand card bounds with padding
+        const cardLeft = card.x - padding
+        const cardRight = card.x + card.width + padding
+        const cardTop = card.y - padding
+        const cardBottom = card.y + card.height + padding
+
+        // Check if horizontal line intersects
+        if (y1 === y2) {
+            const minX = Math.min(x1, x2)
+            const maxX = Math.max(x1, x2)
+            return (
+                y1 >= cardTop &&
+                y1 <= cardBottom &&
+                maxX >= cardLeft &&
+                minX <= cardRight
+            )
+        }
+
+        // Check if vertical line intersects
+        if (x1 === x2) {
+            const minY = Math.min(y1, y2)
+            const maxY = Math.max(y1, y2)
+            return (
+                x1 >= cardLeft &&
+                x1 <= cardRight &&
+                maxY >= cardTop &&
+                minY <= cardBottom
+            )
+        }
+
+        return false
+    }
+
+    // Simple routing: go around by adding waypoints
+    const midX = (startX + endX) / 2
+    let points = [startX, startY, midX, startY, midX, endY, endX, endY]
+
+    // Check if any segment intersects a card and route around if needed
+    if (allCards) {
+        for (const card of allCards) {
+            // Skip source and target cards
+            if (
+                (card.x === sourceX && card.y === sourceY) ||
+                (card.x === targetX && card.y === targetY)
+            ) {
+                continue
+            }
+
+            // Check if horizontal segment intersects
+            if (
+                pathIntersectsCard(
+                    startX,
+                    startY,
+                    midX,
+                    startY,
+                    card
+                )
+            ) {
+                // Route above or below the card
+                const cardTop = card.y - padding
+                const cardBottom = card.y + card.height + padding
+
+                if (startY < targetCenterY) {
+                    // Going down, route below
+                    points = [
+                        startX,
+                        startY,
+                        startX + 20,
+                        startY,
+                        startX + 20,
+                        cardBottom,
+                        midX,
+                        cardBottom,
+                        midX,
+                        endY,
+                        endX,
+                        endY,
+                    ]
+                } else {
+                    // Going up, route above
+                    points = [
+                        startX,
+                        startY,
+                        startX + 20,
+                        startY,
+                        startX + 20,
+                        cardTop,
+                        midX,
+                        cardTop,
+                        midX,
+                        endY,
+                        endX,
+                        endY,
+                    ]
+                }
+                break
+            }
+        }
+    }
+
+    return points
+}
+
 const Link: React.FC<LinkProps> = ({
     id,
     sourceX,
@@ -88,34 +258,72 @@ const Link: React.FC<LinkProps> = ({
     targetY,
     targetWidth,
     targetHeight,
+    linkStyle = 'free',
+    routeAround = false,
     isSelected = false,
     onClick,
-    onDelete,
-    onReassignStart,
-    onReassignEnd,
+    onUpdateLinkStyle,
+    onUpdateRouteAround,
+    allCards = [],
 }) => {
-    // Calculate anchor points on card edges
-    const sourceAnchor = calculateAnchorPoint(
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-        targetX + targetWidth / 2,
-        targetY + targetHeight / 2
-    )
+    let pathPoints: number[]
+    let arrowPoints: number[]
 
-    const targetAnchor = calculateAnchorPoint(
-        targetX,
-        targetY,
-        targetWidth,
-        targetHeight,
-        sourceX + sourceWidth / 2,
-        sourceY + sourceHeight / 2
-    )
+    if (linkStyle === 'orthogonal') {
+        // Calculate orthogonal path
+        pathPoints = calculateOrthogonalPath(
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            targetX,
+            targetY,
+            targetWidth,
+            targetHeight,
+            routeAround,
+            allCards
+        )
 
-    // Calculate midpoint for action buttons
-    const midX = (sourceAnchor.x + targetAnchor.x) / 2
-    const midY = (sourceAnchor.y + targetAnchor.y) / 2
+        // For arrow, use the last two segments
+        const len = pathPoints.length
+        arrowPoints = [
+            pathPoints[len - 4],
+            pathPoints[len - 3],
+            pathPoints[len - 2],
+            pathPoints[len - 1],
+        ]
+    } else {
+        // Free path - calculate anchor points on card edges
+        const sourceAnchor = calculateAnchorPoint(
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            targetX + targetWidth / 2,
+            targetY + targetHeight / 2
+        )
+
+        const targetAnchor = calculateAnchorPoint(
+            targetX,
+            targetY,
+            targetWidth,
+            targetHeight,
+            sourceX + sourceWidth / 2,
+            sourceY + sourceHeight / 2
+        )
+
+        arrowPoints = [
+            sourceAnchor.x,
+            sourceAnchor.y,
+            targetAnchor.x,
+            targetAnchor.y,
+        ]
+        pathPoints = arrowPoints
+    }
+
+    // Calculate midpoint for control buttons
+    const midX = (pathPoints[0] + pathPoints[pathPoints.length - 2]) / 2
+    const midY = (pathPoints[1] + pathPoints[pathPoints.length - 1]) / 2
 
     const handleClick = () => {
         if (onClick) {
@@ -123,135 +331,118 @@ const Link: React.FC<LinkProps> = ({
         }
     }
 
-    const handleDeleteClick = (e: KonvaEventObject<MouseEvent>) => {
+    const handleStyleToggle = (e: KonvaEventObject<MouseEvent>) => {
         e.cancelBubble = true
-        if (onDelete) {
-            onDelete(id)
+        if (onUpdateLinkStyle) {
+            const newStyle = linkStyle === 'free' ? 'orthogonal' : 'free'
+            onUpdateLinkStyle(id, newStyle)
         }
     }
 
-    const handleReassignStartClick = (e: KonvaEventObject<MouseEvent>) => {
+    const handleRouteAroundToggle = (e: KonvaEventObject<MouseEvent>) => {
         e.cancelBubble = true
-        if (onReassignStart) {
-            onReassignStart(id)
-        }
-    }
-
-    const handleReassignEndClick = (e: KonvaEventObject<MouseEvent>) => {
-        e.cancelBubble = true
-        if (onReassignEnd) {
-            onReassignEnd(id)
+        if (onUpdateRouteAround) {
+            onUpdateRouteAround(id, !routeAround)
         }
     }
 
     return (
         <>
-            <Arrow
-                points={[
-                    sourceAnchor.x,
-                    sourceAnchor.y,
-                    targetAnchor.x,
-                    targetAnchor.y,
-                ]}
-                stroke={isSelected ? '#2196f3' : '#6b7280'}
-                strokeWidth={isSelected ? 3 : 2}
-                fill={isSelected ? '#2196f3' : '#6b7280'}
-                pointerLength={10}
-                pointerWidth={10}
-                onClick={handleClick}
-                onTap={handleClick}
-                hitStrokeWidth={20} // Make it easier to click
-            />
+            {linkStyle === 'orthogonal' ? (
+                <>
+                    <Line
+                        points={pathPoints}
+                        stroke={isSelected ? '#2196f3' : '#6b7280'}
+                        strokeWidth={isSelected ? 3 : 2}
+                        onClick={handleClick}
+                        onTap={handleClick}
+                        hitStrokeWidth={20}
+                    />
+                    <Arrow
+                        points={arrowPoints}
+                        stroke={isSelected ? '#2196f3' : '#6b7280'}
+                        strokeWidth={isSelected ? 3 : 2}
+                        fill={isSelected ? '#2196f3' : '#6b7280'}
+                        pointerLength={10}
+                        pointerWidth={10}
+                        onClick={handleClick}
+                        onTap={handleClick}
+                        hitStrokeWidth={20}
+                    />
+                </>
+            ) : (
+                <Arrow
+                    points={arrowPoints}
+                    stroke={isSelected ? '#2196f3' : '#6b7280'}
+                    strokeWidth={isSelected ? 3 : 2}
+                    fill={isSelected ? '#2196f3' : '#6b7280'}
+                    pointerLength={10}
+                    pointerWidth={10}
+                    onClick={handleClick}
+                    onTap={handleClick}
+                    hitStrokeWidth={20}
+                />
+            )}
 
-            {/* Action buttons - only visible when selected */}
+            {/* Control buttons - only visible when selected */}
             {isSelected && (
                 <Group x={midX} y={midY}>
-                    {/* Delete button */}
-                    {onDelete && (
+                    {/* Link style toggle button */}
+                    {onUpdateLinkStyle && (
                         <>
                             <Rect
-                                x={-12}
+                                x={-40}
                                 y={-36}
-                                width={24}
+                                width={80}
                                 height={24}
-                                fill="#ef4444"
+                                fill="#8b5cf6"
                                 cornerRadius={4}
-                                onClick={handleDeleteClick}
-                                onTap={handleDeleteClick}
+                                onClick={handleStyleToggle}
+                                onTap={handleStyleToggle}
                             />
                             <Text
-                                text="✕"
-                                x={-12}
+                                text={linkStyle === 'free' ? 'Free ⇄ Ortho' : 'Ortho ⇄ Free'}
+                                x={-40}
                                 y={-36}
-                                width={24}
+                                width={80}
                                 height={24}
-                                fontSize={16}
+                                fontSize={12}
                                 fontFamily="Arial"
                                 fill="white"
                                 align="center"
                                 verticalAlign="middle"
-                                onClick={handleDeleteClick}
-                                onTap={handleDeleteClick}
+                                onClick={handleStyleToggle}
+                                onTap={handleStyleToggle}
                             />
                         </>
                     )}
 
-                    {/* Reassign Start button */}
-                    {onReassignStart && (
+                    {/* Route around toggle button - only visible when orthogonal */}
+                    {linkStyle === 'orthogonal' && onUpdateRouteAround && (
                         <>
                             <Rect
-                                x={-42}
-                                y={-36}
-                                width={24}
+                                x={-40}
+                                y={-8}
+                                width={80}
                                 height={24}
-                                fill="#8b5cf6"
+                                fill={routeAround ? '#10b981' : '#6b7280'}
                                 cornerRadius={4}
-                                onClick={handleReassignStartClick}
-                                onTap={handleReassignStartClick}
+                                onClick={handleRouteAroundToggle}
+                                onTap={handleRouteAroundToggle}
                             />
                             <Text
-                                text="⇤"
-                                x={-42}
-                                y={-36}
-                                width={24}
+                                text={routeAround ? '☑ Route Around' : '☐ Route Around'}
+                                x={-40}
+                                y={-8}
+                                width={80}
                                 height={24}
-                                fontSize={16}
+                                fontSize={11}
                                 fontFamily="Arial"
                                 fill="white"
                                 align="center"
                                 verticalAlign="middle"
-                                onClick={handleReassignStartClick}
-                                onTap={handleReassignStartClick}
-                            />
-                        </>
-                    )}
-
-                    {/* Reassign End button */}
-                    {onReassignEnd && (
-                        <>
-                            <Rect
-                                x={18}
-                                y={-36}
-                                width={24}
-                                height={24}
-                                fill="#8b5cf6"
-                                cornerRadius={4}
-                                onClick={handleReassignEndClick}
-                                onTap={handleReassignEndClick}
-                            />
-                            <Text
-                                text="⇥"
-                                x={18}
-                                y={-36}
-                                width={24}
-                                height={24}
-                                fontSize={16}
-                                fontFamily="Arial"
-                                fill="white"
-                                align="center"
-                                verticalAlign="middle"
-                                onClick={handleReassignEndClick}
-                                onTap={handleReassignEndClick}
+                                onClick={handleRouteAroundToggle}
+                                onTap={handleRouteAroundToggle}
                             />
                         </>
                     )}
