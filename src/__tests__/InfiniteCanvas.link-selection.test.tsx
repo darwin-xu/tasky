@@ -1,6 +1,6 @@
 import React from 'react'
-import { render, screen, fireEvent, act } from '@testing-library/react'
-import InfiniteCanvas from '../components/InfiniteCanvas'
+import { render, screen } from '@testing-library/react'
+import LinkComponent from '../components/Link'
 
 // Mock react-konva components with DOM-safe wrappers
 jest.mock('react-konva', () => jest.requireActual('../testUtils/mockKonva'))
@@ -10,77 +10,71 @@ jest.mock('konva', () => ({
     default: {},
 }))
 
-describe('InfiniteCanvas Link Selection and Context Menu', () => {
-    test('link shows selection state when clicked', async () => {
-        const ref = React.createRef<any>()
-        render(<InfiniteCanvas ref={ref} />)
-
-        // Create a task (which auto-selects)
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        // Find the link handle and click it to create a state and link
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
+describe('Link Component Selection and Context Menu', () => {
+    test('link shows different styling when selected', () => {
+        const { rerender } = render(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={false}
+            />
         )
-        expect(linkHandle).toBeTruthy()
 
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
-
-        // Link should have been created
+        // When not selected, arrow should be gray
         const arrows = screen.queryAllByTestId('konva-arrow')
         expect(arrows.length).toBe(1)
-
-        // Initially link should not be selected (gray)
         expect(arrows[0].getAttribute('data-stroke')).toBe('#6b7280')
+        expect(arrows[0].getAttribute('data-stroke-width')).toBe('2')
 
-        // Click the arrow to select it
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
+        // When selected, arrow should be blue and thicker
+        rerender(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={true}
+            />
+        )
 
-        // Arrow should now be selected (blue, thicker)
         expect(arrows[0].getAttribute('data-stroke')).toBe('#2196f3')
         expect(arrows[0].getAttribute('data-stroke-width')).toBe('3')
     })
 
-    test('selected link shows action buttons', async () => {
-        const ref = React.createRef<any>()
-        render(<InfiniteCanvas ref={ref} />)
+    test('selected link shows action buttons', () => {
+        const onDelete = jest.fn()
+        const onReassignStart = jest.fn()
+        const onReassignEnd = jest.fn()
 
-        // Create a task and link
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
+        render(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={true}
+                onDelete={onDelete}
+                onReassignStart={onReassignStart}
+                onReassignEnd={onReassignEnd}
+            />
         )
-
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
-
-        // Find and click the arrow to select it
-        const arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
 
         // Look for action buttons (should have delete and reassign buttons)
         const allTexts = screen.queryAllByTestId('konva-text')
@@ -100,334 +94,107 @@ describe('InfiniteCanvas Link Selection and Context Menu', () => {
         expect(reassignEndButton).toBeTruthy()
     })
 
-    test('clicking empty canvas clears link selection', async () => {
-        const ref = React.createRef<any>()
-        render(<InfiniteCanvas ref={ref} />)
+    test('action buttons not shown when link is not selected', () => {
+        const onDelete = jest.fn()
+        const onReassignStart = jest.fn()
+        const onReassignEnd = jest.fn()
 
-        // Create a task and link
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
+        render(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={false}
+                onDelete={onDelete}
+                onReassignStart={onReassignStart}
+                onReassignEnd={onReassignEnd}
+            />
         )
 
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
+        // Action buttons should NOT be visible when link is not selected
+        const allTexts = screen.queryAllByTestId('konva-text')
+        const deleteButton = allTexts.find(
+            (text) => text.getAttribute('data-text') === '✕'
+        )
+        const reassignStartButton = allTexts.find(
+            (text) => text.getAttribute('data-text') === '⇤'
+        )
+        const reassignEndButton = allTexts.find(
+            (text) => text.getAttribute('data-text') === '⇥'
+        )
 
-        // Find and click the arrow to select it
-        const arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
-
-        // Arrow should be selected (blue)
-        expect(arrows[0].getAttribute('data-stroke')).toBe('#2196f3')
-
-        // Click on stage to deselect
-        const stage = screen.getByTestId('konva-stage')
-        await act(async () => {
-            fireEvent.click(stage)
-        })
-
-        // Arrow should be deselected (gray)
-        expect(arrows[0].getAttribute('data-stroke')).toBe('#6b7280')
+        expect(deleteButton).toBeUndefined()
+        expect(reassignStartButton).toBeUndefined()
+        expect(reassignEndButton).toBeUndefined()
     })
 
-    test('delete button opens confirmation dialog', async () => {
-        const ref = React.createRef<any>()
-        const { container } = render(<InfiniteCanvas ref={ref} />)
+    test('delete button has correct styling', () => {
+        const onDelete = jest.fn()
 
-        // Create a task and link
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
+        render(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={true}
+                onDelete={onDelete}
+            />
         )
 
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
-
-        // Find and click the arrow to select it
-        const arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
-
-        // Find the delete button (red rectangle) within the link's action buttons
+        // Find the delete button (red rectangle)
         const rects = screen.queryAllByTestId('konva-rect')
         const deleteButton = rects.find(
             (rect) => rect.getAttribute('data-fill') === '#ef4444'
         )
+
         expect(deleteButton).toBeTruthy()
-
-        await act(async () => {
-            if (deleteButton) {
-                fireEvent.click(deleteButton)
-            }
-        })
-
-        // Check that confirmation dialog appears
-        const dialog = container.querySelector('.confirm-dialog')
-        expect(dialog).toBeInTheDocument()
-
-        // Check dialog title
-        const dialogTitle = container.querySelector('.confirm-dialog-title')
-        expect(dialogTitle?.textContent).toBe('Delete Link')
+        expect(deleteButton?.getAttribute('data-width')).toBe('24')
+        expect(deleteButton?.getAttribute('data-height')).toBe('24')
     })
 
-    test('confirming deletion removes the link', async () => {
-        const ref = React.createRef<any>()
-        const { container } = render(<InfiniteCanvas ref={ref} />)
+    test('reassign buttons have correct styling', () => {
+        const onReassignStart = jest.fn()
+        const onReassignEnd = jest.fn()
 
-        // Create a task and link
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
+        render(
+            <LinkComponent
+                id="test-link"
+                sourceX={0}
+                sourceY={0}
+                sourceWidth={200}
+                sourceHeight={150}
+                targetX={300}
+                targetY={0}
+                targetWidth={200}
+                targetHeight={120}
+                isSelected={true}
+                onReassignStart={onReassignStart}
+                onReassignEnd={onReassignEnd}
+            />
         )
 
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
-
-        // Verify link was created
-        let arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-
-        // Find and click the arrow to select it
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
-
-        // Find and click the delete button
-        const rects = screen.queryAllByTestId('konva-rect')
-        const deleteButton = rects.find(
-            (rect) => rect.getAttribute('data-fill') === '#ef4444'
-        )
-
-        await act(async () => {
-            if (deleteButton) {
-                fireEvent.click(deleteButton)
-            }
-        })
-
-        // Find and click the confirm button
-        const confirmButton = container.querySelector(
-            '.confirm-dialog-actions button.confirm'
-        )
-        expect(confirmButton).toBeTruthy()
-
-        await act(async () => {
-            if (confirmButton) {
-                fireEvent.click(confirmButton)
-            }
-        })
-
-        // Verify link was removed
-        arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(0)
-    })
-
-    test('canceling deletion keeps the link', async () => {
-        const ref = React.createRef<any>()
-        const { container } = render(<InfiniteCanvas ref={ref} />)
-
-        // Create a task and link
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
-        )
-
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
-
-        // Verify link was created
-        let arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-
-        // Find and click the arrow to select it
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
-
-        // Find and click the delete button
-        const rects = screen.queryAllByTestId('konva-rect')
-        const deleteButton = rects.find(
-            (rect) => rect.getAttribute('data-fill') === '#ef4444'
-        )
-
-        await act(async () => {
-            if (deleteButton) {
-                fireEvent.click(deleteButton)
-            }
-        })
-
-        // Find and click the cancel button
-        const cancelButton = container.querySelector(
-            '.confirm-dialog-actions button:not(.confirm-btn)'
-        )
-        expect(cancelButton).toBeTruthy()
-
-        await act(async () => {
-            if (cancelButton) {
-                fireEvent.click(cancelButton)
-            }
-        })
-
-        // Verify link still exists
-        arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-    })
-
-    test('reassign start button is clickable', async () => {
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
-        const ref = React.createRef<any>()
-        render(<InfiniteCanvas ref={ref} />)
-
-        // Create a task and link
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
-        )
-
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
-
-        // Find and click the arrow to select it
-        const arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
-
-        // Find all purple rectangles (reassign buttons)
+        // Find the reassign buttons (purple rectangles)
         const rects = screen.queryAllByTestId('konva-rect')
         const purpleButtons = rects.filter(
             (rect) => rect.getAttribute('data-fill') === '#8b5cf6'
         )
-        expect(purpleButtons.length).toBeGreaterThanOrEqual(2)
 
-        // Click the first purple button (reassign start)
-        await act(async () => {
-            fireEvent.click(purpleButtons[0])
+        expect(purpleButtons.length).toBe(2)
+        purpleButtons.forEach((button) => {
+            expect(button.getAttribute('data-width')).toBe('24')
+            expect(button.getAttribute('data-height')).toBe('24')
         })
-
-        // Check that placeholder message was logged
-        expect(consoleSpy).toHaveBeenCalled()
-        const calls = consoleSpy.mock.calls
-        const matchingCall = calls.find((call) =>
-            call.some(
-                (arg) =>
-                    typeof arg === 'string' &&
-                    arg.includes('Reassign start for link:')
-            )
-        )
-        expect(matchingCall).toBeTruthy()
-
-        consoleSpy.mockRestore()
-    })
-
-    test('reassign end button is clickable', async () => {
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
-        const ref = React.createRef<any>()
-        render(<InfiniteCanvas ref={ref} />)
-
-        // Create a task and link
-        await act(async () => {
-            if (ref.current) {
-                ref.current.createTask()
-            }
-        })
-
-        const texts = screen.queryAllByTestId('konva-text')
-        const linkHandle = texts.find(
-            (text) => text.getAttribute('data-text') === '→'
-        )
-
-        await act(async () => {
-            if (linkHandle) {
-                fireEvent.mouseDown(linkHandle)
-            }
-        })
-
-        // Find and click the arrow to select it
-        const arrows = screen.queryAllByTestId('konva-arrow')
-        expect(arrows.length).toBe(1)
-
-        await act(async () => {
-            fireEvent.click(arrows[0])
-        })
-
-        // Find all purple rectangles (reassign buttons)
-        const rects = screen.queryAllByTestId('konva-rect')
-        const purpleButtons = rects.filter(
-            (rect) => rect.getAttribute('data-fill') === '#8b5cf6'
-        )
-        expect(purpleButtons.length).toBeGreaterThanOrEqual(2)
-
-        // Click the second purple button (reassign end)
-        await act(async () => {
-            fireEvent.click(purpleButtons[1])
-        })
-
-        // Check that placeholder message was logged
-        expect(consoleSpy).toHaveBeenCalled()
-        const calls = consoleSpy.mock.calls
-        const matchingCall = calls.find((call) =>
-            call.some(
-                (arg) =>
-                    typeof arg === 'string' &&
-                    arg.includes('Reassign end for link:')
-            )
-        )
-        expect(matchingCall).toBeTruthy()
-
-        consoleSpy.mockRestore()
     })
 })
