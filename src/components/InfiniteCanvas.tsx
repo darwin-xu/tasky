@@ -69,7 +69,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const [deleteConfirmation, setDeleteConfirmation] = useState<{
             isOpen: boolean
             itemId: string | null
-            itemType: 'task' | 'state' | null
+            itemType: 'task' | 'state' | 'link' | null
         }>({
             isOpen: false,
             itemId: null,
@@ -399,6 +399,24 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             setSelectedStateId(null)
         }, [])
 
+        const handleLinkDeleteRequest = useCallback((linkId: string) => {
+            setDeleteConfirmation({
+                isOpen: true,
+                itemId: linkId,
+                itemType: 'link',
+            })
+        }, [])
+
+        const handleLinkReassignStart = useCallback((linkId: string) => {
+            // TODO: Implement reassign start functionality in Story 6
+            console.log('Reassign start for link:', linkId)
+        }, [])
+
+        const handleLinkReassignEnd = useCallback((linkId: string) => {
+            // TODO: Implement reassign end functionality in Story 6
+            console.log('Reassign end for link:', linkId)
+        }, [])
+
         // Create task function
         const createTask = useCallback(() => {
             const stage = stageRef.current
@@ -611,6 +629,16 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     if (selectedStateId === deleteConfirmation.itemId) {
                         setSelectedStateId(null)
                     }
+                } else if (deleteConfirmation.itemType === 'link') {
+                    setLinks((prevLinks) =>
+                        prevLinks.filter(
+                            (link) => link.id !== deleteConfirmation.itemId
+                        )
+                    )
+                    // Clear selection if deleted link was selected
+                    if (selectedLinkId === deleteConfirmation.itemId) {
+                        setSelectedLinkId(null)
+                    }
                 }
             }
             setDeleteConfirmation({
@@ -623,6 +651,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             deleteConfirmation.itemType,
             selectedTaskId,
             selectedStateId,
+            selectedLinkId,
         ])
 
         // Cancel deletion
@@ -726,6 +755,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     targetHeight={targetHeight}
                                     isSelected={link.id === selectedLinkId}
                                     onClick={handleLinkClick}
+                                    onDelete={handleLinkDeleteRequest}
+                                    onReassignStart={handleLinkReassignStart}
+                                    onReassignEnd={handleLinkReassignEnd}
                                 />
                             )
                         })}
@@ -838,14 +870,18 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 <ConfirmDialog
                     isOpen={deleteConfirmation.isOpen}
                     title={
-                        deleteConfirmation.itemType === 'state'
-                            ? 'Delete State'
-                            : 'Delete Task'
+                        deleteConfirmation.itemType === 'link'
+                            ? 'Delete Link'
+                            : deleteConfirmation.itemType === 'state'
+                              ? 'Delete State'
+                              : 'Delete Task'
                     }
                     message={
-                        deleteConfirmation.itemType === 'state'
-                            ? 'Are you sure you want to delete this state? This action cannot be undone.'
-                            : 'Are you sure you want to delete this task? This action cannot be undone.'
+                        deleteConfirmation.itemType === 'link'
+                            ? 'Are you sure you want to delete this link? This action cannot be undone.'
+                            : deleteConfirmation.itemType === 'state'
+                              ? 'Are you sure you want to delete this state? This action cannot be undone.'
+                              : 'Are you sure you want to delete this task? This action cannot be undone.'
                     }
                     confirmLabel="Delete"
                     cancelLabel="Cancel"
