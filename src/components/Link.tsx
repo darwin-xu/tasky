@@ -194,15 +194,7 @@ const calculateOrthogonalPath = (
             }
 
             // Check if horizontal segment intersects
-            if (
-                pathIntersectsCard(
-                    startX,
-                    startY,
-                    midX,
-                    startY,
-                    card
-                )
-            ) {
+            if (pathIntersectsCard(startX, startY, midX, startY, card)) {
                 // Route above or below the card
                 const cardTop = card.y - padding
                 const cardBottom = card.y + card.height + padding
@@ -401,7 +393,11 @@ const Link: React.FC<LinkProps> = ({
                                 onTap={handleStyleToggle}
                             />
                             <Text
-                                text={linkStyle === 'free' ? 'Free ⇄ Ortho' : 'Ortho ⇄ Free'}
+                                text={
+                                    linkStyle === 'free'
+                                        ? 'Free ⇄ Ortho'
+                                        : 'Ortho ⇄ Free'
+                                }
                                 x={-40}
                                 y={-36}
                                 width={80}
@@ -431,7 +427,11 @@ const Link: React.FC<LinkProps> = ({
                                 onTap={handleRouteAroundToggle}
                             />
                             <Text
-                                text={routeAround ? '☑ Route Around' : '☐ Route Around'}
+                                text={
+                                    routeAround
+                                        ? '☑ Route Around'
+                                        : '☐ Route Around'
+                                }
                                 x={-40}
                                 y={-8}
                                 width={80}

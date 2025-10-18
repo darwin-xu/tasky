@@ -91,7 +91,7 @@ describe('InfiniteCanvas - Card Duplication', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
 
         // Don't create any task - just try to duplicate with nothing selected
-        
+
         // Count tasks before shortcut (should be 0)
         let texts = screen.queryAllByTestId('konva-text')
         const taskCountBefore = texts.filter(

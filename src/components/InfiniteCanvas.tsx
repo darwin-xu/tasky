@@ -405,7 +405,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             (linkId: string, style: 'free' | 'orthogonal') => {
                 setLinks((prevLinks) =>
                     prevLinks.map((link) =>
-                        link.id === linkId ? { ...link, linkStyle: style } : link
+                        link.id === linkId
+                            ? { ...link, linkStyle: style }
+                            : link
                     )
                 )
             },
@@ -735,10 +737,14 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             if (!sourceCard || !targetCard) return null
 
                             // Determine dimensions based on card type
-                            const sourceWidth = link.sourceType === 'task' ? 200 : 200
-                            const sourceHeight = link.sourceType === 'task' ? 150 : 120
-                            const targetWidth = link.targetType === 'task' ? 200 : 200
-                            const targetHeight = link.targetType === 'task' ? 150 : 120
+                            const sourceWidth =
+                                link.sourceType === 'task' ? 200 : 200
+                            const sourceHeight =
+                                link.sourceType === 'task' ? 150 : 120
+                            const targetWidth =
+                                link.targetType === 'task' ? 200 : 200
+                            const targetHeight =
+                                link.targetType === 'task' ? 150 : 120
 
                             // Collect all card positions for route-around
                             const allCards = [
@@ -773,7 +779,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     isSelected={link.id === selectedLinkId}
                                     onClick={handleLinkClick}
                                     onUpdateLinkStyle={handleUpdateLinkStyle}
-                                    onUpdateRouteAround={handleUpdateRouteAround}
+                                    onUpdateRouteAround={
+                                        handleUpdateRouteAround
+                                    }
                                     allCards={allCards}
                                 />
                             )

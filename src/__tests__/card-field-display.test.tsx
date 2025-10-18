@@ -32,8 +32,12 @@ describe('Card Field Validation & Display', () => {
             )
             expect(dateText).toBeTruthy()
             // Should be formatted as "📅 Jan 15, 2024" instead of "📅 2024-01-15"
-            expect(dateText?.getAttribute('data-text')).toMatch(/📅.*Jan.*15.*2024/)
-            expect(dateText?.getAttribute('data-text')).not.toContain('2024-01-15')
+            expect(dateText?.getAttribute('data-text')).toMatch(
+                /📅.*Jan.*15.*2024/
+            )
+            expect(dateText?.getAttribute('data-text')).not.toContain(
+                '2024-01-15'
+            )
         })
 
         test('StateCard displays date in human-readable format', () => {
@@ -55,8 +59,12 @@ describe('Card Field Validation & Display', () => {
             )
             expect(dateText).toBeTruthy()
             // Should be formatted as "📅 Mar 20, 2024" instead of "📅 2024-03-20"
-            expect(dateText?.getAttribute('data-text')).toMatch(/📅.*Mar.*20.*2024/)
-            expect(dateText?.getAttribute('data-text')).not.toContain('2024-03-20')
+            expect(dateText?.getAttribute('data-text')).toMatch(
+                /📅.*Mar.*20.*2024/
+            )
+            expect(dateText?.getAttribute('data-text')).not.toContain(
+                '2024-03-20'
+            )
         })
 
         test('TaskCard handles empty date gracefully', () => {

@@ -356,29 +356,17 @@ const Line = React.forwardRef<
         onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
         onTap?: (event: React.TouchEvent<HTMLDivElement>) => void
     }
->(
-    (
-        {
-            points,
-            stroke,
-            strokeWidth,
-            hitStrokeWidth,
-            onClick,
-            onTap,
-        },
-        ref
-    ) => (
-        <div
-            ref={ref}
-            data-testid="konva-line"
-            data-points={points ? JSON.stringify(points) : undefined}
-            data-stroke={stroke}
-            data-stroke-width={strokeWidth}
-            data-hit-stroke-width={hitStrokeWidth}
-            onClick={onClick}
-        />
-    )
-)
+>(({ points, stroke, strokeWidth, hitStrokeWidth, onClick, onTap }, ref) => (
+    <div
+        ref={ref}
+        data-testid="konva-line"
+        data-points={points ? JSON.stringify(points) : undefined}
+        data-stroke={stroke}
+        data-stroke-width={strokeWidth}
+        data-hit-stroke-width={hitStrokeWidth}
+        onClick={onClick}
+    />
+))
 Line.displayName = 'MockLine'
 
 const Circle = React.forwardRef<
