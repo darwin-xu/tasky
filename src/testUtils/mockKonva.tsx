@@ -11,6 +11,7 @@ type StageEventHandlers = {
     onMouseUp?: (event: any) => void
     onMouseLeave?: (event: any) => void
     onWheel?: (event: any) => void
+    onClick?: (event: any) => void
     onTouchStart?: (event: any) => void
     onTouchMove?: (event: any) => void
     onTouchEnd?: (event: any) => void
@@ -57,6 +58,7 @@ const Stage = React.forwardRef<any, StageLikeProps>((props, forwardedRef) => {
         onMouseUp,
         onMouseLeave,
         onWheel,
+        onClick,
         onTouchStart,
         onTouchMove,
         onTouchEnd,
@@ -113,6 +115,7 @@ const Stage = React.forwardRef<any, StageLikeProps>((props, forwardedRef) => {
             onMouseUp={wrapHandler(onMouseUp, defaultPointers.move)}
             onMouseLeave={wrapHandler(onMouseLeave, defaultPointers.initial)}
             onWheel={wrapHandler(onWheel, defaultPointers.wheel)}
+            onClick={wrapHandler(onClick)}
             onTouchStart={wrapHandler(onTouchStart, defaultPointers.initial)}
             onTouchMove={wrapHandler(onTouchMove, defaultPointers.move)}
             onTouchEnd={wrapHandler(onTouchEnd, defaultPointers.move)}
@@ -195,6 +198,10 @@ const Rect = React.forwardRef<
         shadowOpacity?: number
         shadowOffsetX?: number
         shadowOffsetY?: number
+        onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onTap?: (event: React.TouchEvent<HTMLDivElement>) => void
+        onMouseDown?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onTouchStart?: (event: React.TouchEvent<HTMLDivElement>) => void
     }
 >(
     (
@@ -211,6 +218,10 @@ const Rect = React.forwardRef<
             shadowOpacity,
             shadowOffsetX,
             shadowOffsetY,
+            onClick,
+            onTap,
+            onMouseDown,
+            onTouchStart,
         },
         ref
     ) => (
@@ -233,6 +244,9 @@ const Rect = React.forwardRef<
             data-shadow-opacity={shadowOpacity}
             data-shadow-offset-x={shadowOffsetX}
             data-shadow-offset-y={shadowOffsetY}
+            onClick={onClick}
+            onMouseDown={onMouseDown}
+            onTouchStart={onTouchStart}
         />
     )
 )
@@ -248,21 +262,89 @@ const Text = React.forwardRef<
         height?: number
         align?: string
         verticalAlign?: string
+        onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onTap?: (event: React.TouchEvent<HTMLDivElement>) => void
+        onMouseDown?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onTouchStart?: (event: React.TouchEvent<HTMLDivElement>) => void
     }
->(({ text, x, y, width, height, align, verticalAlign }, ref) => (
-    <div
-        ref={ref}
-        data-testid="konva-text"
-        data-text={text}
-        data-x={x}
-        data-y={y}
-        data-width={width}
-        data-height={height}
-        data-align={align}
-        data-vertical-align={verticalAlign}
-    />
-))
+>(
+    (
+        {
+            text,
+            x,
+            y,
+            width,
+            height,
+            align,
+            verticalAlign,
+            onClick,
+            onTap,
+            onMouseDown,
+            onTouchStart,
+        },
+        ref
+    ) => (
+        <div
+            ref={ref}
+            data-testid="konva-text"
+            data-text={text}
+            data-x={x}
+            data-y={y}
+            data-width={width}
+            data-height={height}
+            data-align={align}
+            data-vertical-align={verticalAlign}
+            onClick={onClick}
+            onMouseDown={onMouseDown}
+            onTouchStart={onTouchStart}
+        />
+    )
+)
 Text.displayName = 'MockText'
+
+const Arrow = React.forwardRef<
+    HTMLDivElement,
+    {
+        points?: number[]
+        stroke?: string
+        strokeWidth?: number
+        fill?: string
+        pointerLength?: number
+        pointerWidth?: number
+        hitStrokeWidth?: number
+        onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onTap?: (event: React.TouchEvent<HTMLDivElement>) => void
+    }
+>(
+    (
+        {
+            points,
+            stroke,
+            strokeWidth,
+            fill,
+            pointerLength,
+            pointerWidth,
+            hitStrokeWidth,
+            onClick,
+            onTap,
+        },
+        ref
+    ) => (
+        <div
+            ref={ref}
+            data-testid="konva-arrow"
+            data-points={points ? JSON.stringify(points) : undefined}
+            data-stroke={stroke}
+            data-stroke-width={strokeWidth}
+            data-fill={fill}
+            data-pointer-length={pointerLength}
+            data-pointer-width={pointerWidth}
+            data-hit-stroke-width={hitStrokeWidth}
+            onClick={onClick}
+        />
+    )
+)
+Arrow.displayName = 'MockArrow'
 
 const Circle = React.forwardRef<
     HTMLDivElement,
@@ -284,4 +366,4 @@ const Circle = React.forwardRef<
 ))
 Circle.displayName = 'MockCircle'
 
-export { Stage, Layer, Group, Rect, Text, Circle }
+export { Stage, Layer, Group, Rect, Text, Circle, Arrow }

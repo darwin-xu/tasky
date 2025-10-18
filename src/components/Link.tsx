@@ -1,5 +1,6 @@
 import React from 'react'
-import { Arrow } from 'react-konva'
+import { Arrow, Group, Rect, Text } from 'react-konva'
+import { KonvaEventObject } from 'konva/lib/Node'
 
 export interface LinkProps {
     id: string
@@ -13,6 +14,9 @@ export interface LinkProps {
     targetHeight: number
     isSelected?: boolean
     onClick?: (id: string) => void
+    onDelete?: (id: string) => void
+    onReassignStart?: (id: string) => void
+    onReassignEnd?: (id: string) => void
 }
 
 // Calculate the best anchor point on the edge of a rectangle
@@ -86,6 +90,9 @@ const Link: React.FC<LinkProps> = ({
     targetHeight,
     isSelected = false,
     onClick,
+    onDelete,
+    onReassignStart,
+    onReassignEnd,
 }) => {
     // Calculate anchor points on card edges
     const sourceAnchor = calculateAnchorPoint(
@@ -106,24 +113,151 @@ const Link: React.FC<LinkProps> = ({
         sourceY + sourceHeight / 2
     )
 
+    // Calculate midpoint for action buttons
+    const midX = (sourceAnchor.x + targetAnchor.x) / 2
+    const midY = (sourceAnchor.y + targetAnchor.y) / 2
+
     const handleClick = () => {
         if (onClick) {
             onClick(id)
         }
     }
 
+    const handleDeleteClick = (e: KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true
+        if (onDelete) {
+            onDelete(id)
+        }
+    }
+
+    const handleReassignStartClick = (e: KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true
+        if (onReassignStart) {
+            onReassignStart(id)
+        }
+    }
+
+    const handleReassignEndClick = (e: KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true
+        if (onReassignEnd) {
+            onReassignEnd(id)
+        }
+    }
+
     return (
-        <Arrow
-            points={[sourceAnchor.x, sourceAnchor.y, targetAnchor.x, targetAnchor.y]}
-            stroke={isSelected ? '#2196f3' : '#6b7280'}
-            strokeWidth={isSelected ? 3 : 2}
-            fill={isSelected ? '#2196f3' : '#6b7280'}
-            pointerLength={10}
-            pointerWidth={10}
-            onClick={handleClick}
-            onTap={handleClick}
-            hitStrokeWidth={20} // Make it easier to click
-        />
+        <>
+            <Arrow
+                points={[
+                    sourceAnchor.x,
+                    sourceAnchor.y,
+                    targetAnchor.x,
+                    targetAnchor.y,
+                ]}
+                stroke={isSelected ? '#2196f3' : '#6b7280'}
+                strokeWidth={isSelected ? 3 : 2}
+                fill={isSelected ? '#2196f3' : '#6b7280'}
+                pointerLength={10}
+                pointerWidth={10}
+                onClick={handleClick}
+                onTap={handleClick}
+                hitStrokeWidth={20} // Make it easier to click
+            />
+
+            {/* Action buttons - only visible when selected */}
+            {isSelected && (
+                <Group x={midX} y={midY}>
+                    {/* Delete button */}
+                    {onDelete && (
+                        <>
+                            <Rect
+                                x={-12}
+                                y={-36}
+                                width={24}
+                                height={24}
+                                fill="#ef4444"
+                                cornerRadius={4}
+                                onClick={handleDeleteClick}
+                                onTap={handleDeleteClick}
+                            />
+                            <Text
+                                text="✕"
+                                x={-12}
+                                y={-36}
+                                width={24}
+                                height={24}
+                                fontSize={16}
+                                fontFamily="Arial"
+                                fill="white"
+                                align="center"
+                                verticalAlign="middle"
+                                onClick={handleDeleteClick}
+                                onTap={handleDeleteClick}
+                            />
+                        </>
+                    )}
+
+                    {/* Reassign Start button */}
+                    {onReassignStart && (
+                        <>
+                            <Rect
+                                x={-42}
+                                y={-36}
+                                width={24}
+                                height={24}
+                                fill="#8b5cf6"
+                                cornerRadius={4}
+                                onClick={handleReassignStartClick}
+                                onTap={handleReassignStartClick}
+                            />
+                            <Text
+                                text="⇤"
+                                x={-42}
+                                y={-36}
+                                width={24}
+                                height={24}
+                                fontSize={16}
+                                fontFamily="Arial"
+                                fill="white"
+                                align="center"
+                                verticalAlign="middle"
+                                onClick={handleReassignStartClick}
+                                onTap={handleReassignStartClick}
+                            />
+                        </>
+                    )}
+
+                    {/* Reassign End button */}
+                    {onReassignEnd && (
+                        <>
+                            <Rect
+                                x={18}
+                                y={-36}
+                                width={24}
+                                height={24}
+                                fill="#8b5cf6"
+                                cornerRadius={4}
+                                onClick={handleReassignEndClick}
+                                onTap={handleReassignEndClick}
+                            />
+                            <Text
+                                text="⇥"
+                                x={18}
+                                y={-36}
+                                width={24}
+                                height={24}
+                                fontSize={16}
+                                fontFamily="Arial"
+                                fill="white"
+                                align="center"
+                                verticalAlign="middle"
+                                onClick={handleReassignEndClick}
+                                onTap={handleReassignEndClick}
+                            />
+                        </>
+                    )}
+                </Group>
+            )}
+        </>
     )
 }
 
