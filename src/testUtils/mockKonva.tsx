@@ -346,6 +346,29 @@ const Arrow = React.forwardRef<
 )
 Arrow.displayName = 'MockArrow'
 
+const Line = React.forwardRef<
+    HTMLDivElement,
+    {
+        points?: number[]
+        stroke?: string
+        strokeWidth?: number
+        hitStrokeWidth?: number
+        onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
+        onTap?: (event: React.TouchEvent<HTMLDivElement>) => void
+    }
+>(({ points, stroke, strokeWidth, hitStrokeWidth, onClick, onTap }, ref) => (
+    <div
+        ref={ref}
+        data-testid="konva-line"
+        data-points={points ? JSON.stringify(points) : undefined}
+        data-stroke={stroke}
+        data-stroke-width={strokeWidth}
+        data-hit-stroke-width={hitStrokeWidth}
+        onClick={onClick}
+    />
+))
+Line.displayName = 'MockLine'
+
 const Circle = React.forwardRef<
     HTMLDivElement,
     {
@@ -366,4 +389,4 @@ const Circle = React.forwardRef<
 ))
 Circle.displayName = 'MockCircle'
 
-export { Stage, Layer, Group, Rect, Text, Circle, Arrow }
+export { Stage, Layer, Group, Rect, Text, Circle, Arrow, Line }

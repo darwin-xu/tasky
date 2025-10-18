@@ -70,7 +70,7 @@ describe('InfiniteCanvas Link Creation', () => {
 
         const layers = screen.getAllByTestId('konva-layer')
         expect(layers).toHaveLength(3)
-        
+
         // Links layer should be the second layer (after grid, before content)
         expect(layers[1]).toBeInTheDocument()
     })

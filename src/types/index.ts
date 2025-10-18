@@ -55,4 +55,6 @@ export interface Link {
     targetId: string
     sourceType: 'task' | 'state'
     targetType: 'task' | 'state'
+    linkStyle?: 'free' | 'orthogonal'
+    routeAround?: boolean
 }

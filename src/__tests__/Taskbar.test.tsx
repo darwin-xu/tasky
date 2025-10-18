@@ -5,11 +5,7 @@ import Taskbar from '../components/Taskbar'
 describe('Taskbar Component', () => {
     test('renders taskbar with title', () => {
         const mockCreateTask = jest.fn()
-        render(
-            <Taskbar
-                onCreateTask={mockCreateTask}
-            />
-        )
+        render(<Taskbar onCreateTask={mockCreateTask} />)
 
         const title = screen.getByText('Tasky - Infinite Canvas')
         expect(title).toBeInTheDocument()
@@ -17,11 +13,7 @@ describe('Taskbar Component', () => {
 
     test('renders Create Task button', () => {
         const mockCreateTask = jest.fn()
-        render(
-            <Taskbar
-                onCreateTask={mockCreateTask}
-            />
-        )
+        render(<Taskbar onCreateTask={mockCreateTask} />)
 
         const button = screen.getByText('+ Create Task')
         expect(button).toBeInTheDocument()
@@ -30,11 +22,7 @@ describe('Taskbar Component', () => {
 
     test('calls onCreateTask when Create Task button is clicked', () => {
         const mockCreateTask = jest.fn()
-        render(
-            <Taskbar
-                onCreateTask={mockCreateTask}
-            />
-        )
+        render(<Taskbar onCreateTask={mockCreateTask} />)
 
         const button = screen.getByText('+ Create Task')
         fireEvent.click(button)
@@ -44,11 +32,7 @@ describe('Taskbar Component', () => {
 
     test('Create Task button has correct accessibility attributes', () => {
         const mockCreateTask = jest.fn()
-        render(
-            <Taskbar
-                onCreateTask={mockCreateTask}
-            />
-        )
+        render(<Taskbar onCreateTask={mockCreateTask} />)
 
         const button = screen.getByLabelText('Create Task')
         expect(button).toBeInTheDocument()
@@ -56,11 +40,7 @@ describe('Taskbar Component', () => {
 
     test('Create Task button has appropriate CSS classes', () => {
         const mockCreateTask = jest.fn()
-        render(
-            <Taskbar
-                onCreateTask={mockCreateTask}
-            />
-        )
+        render(<Taskbar onCreateTask={mockCreateTask} />)
 
         const button = screen.getByText('+ Create Task')
         expect(button.className).toContain('taskbar-button')
