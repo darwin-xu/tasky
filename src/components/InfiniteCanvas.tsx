@@ -737,14 +737,10 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             if (!sourceCard || !targetCard) return null
 
                             // Determine dimensions based on card type
-                            const sourceWidth =
-                                link.sourceType === 'task' ? 200 : 200
-                            const sourceHeight =
-                                link.sourceType === 'task' ? 150 : 120
-                            const targetWidth =
-                                link.targetType === 'task' ? 200 : 200
-                            const targetHeight =
-                                link.targetType === 'task' ? 150 : 120
+                            const sourceWidth = 200
+                            const sourceHeight = 120
+                            const targetWidth = 200
+                            const targetHeight = 120
 
                             // Collect all card positions for route-around
                             const allCards = [
@@ -752,7 +748,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     x: t.x,
                                     y: t.y,
                                     width: 200,
-                                    height: 150,
+                                    height: 120,
                                 })),
                                 ...states.map((s) => ({
                                     x: s.x,

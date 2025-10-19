@@ -31,7 +31,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     x,
     y,
     width = 200,
-    height = 150,
+    height = 120,
     title,
     description = '',
     date = '',
@@ -170,6 +170,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
         }
     }
 
+    const descriptionTop = 45
+    const footerReservedHeight = 40
+    const descriptionHeight = Math.max(
+        0,
+        height - descriptionTop - footerReservedHeight
+    )
+
     return (
         <>
             {/* Snap preview indicator */}
@@ -216,7 +223,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     shadowOpacity={isDragging ? 0.4 : isSelected ? 0.3 : 0.2}
                     shadowOffsetX={2}
                     shadowOffsetY={2}
-                    cornerRadius={4}
+                    cornerRadius={10}
                 />
 
                 {/* Priority indicator bar */}
@@ -225,7 +232,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     y={0}
                     width={width}
                     height={4}
-                    fill={getPriorityColor()}
+                    fill="#10b981"
                     cornerRadius={[4, 4, 0, 0]}
                 />
 
@@ -244,13 +251,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 />
 
                 {/* Description */}
-                {description && (
+                {description && descriptionHeight > 0 && (
                     <Text
                         text={description}
                         x={10}
-                        y={45}
+                        y={descriptionTop}
                         width={width - 20}
-                        height={60}
+                        height={descriptionHeight}
                         fontSize={12}
                         fontFamily="Arial"
                         fill="#6b7280"
@@ -264,7 +271,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     <Text
                         text={`📅 ${formatDateForDisplay(date)}`}
                         x={10}
-                        y={height - 35}
+                        y={height - 30}
                         width={width - 20}
                         fontSize={11}
                         fontFamily="Arial"
@@ -276,7 +283,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <Text
                     text={getPriorityLabel()}
                     x={10}
-                    y={height - 20}
+                    y={height - 15}
                     width={width - 20}
                     fontSize={11}
                     fontFamily="Arial"

@@ -32,7 +32,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -51,11 +51,11 @@ describe('Orthogonal Routing Algorithm', () => {
             const pointsStr = line.getAttribute('data-points')
             expect(pointsStr).toBeTruthy()
 
-            // Path should start from right-middle of source (200, 75)
+            // Path should start from right-middle of source (200, 60)
             // and end at left-middle of target (400, 60)
             const numPoints = JSON.parse(pointsStr!)
             expect(numPoints[0]).toBe(200) // startX = sourceX + sourceWidth
-            expect(numPoints[1]).toBe(75)  // startY = sourceY + sourceHeight/2
+            expect(numPoints[1]).toBe(60)  // startY = sourceY + sourceHeight/2
             
             const lastX = numPoints[numPoints.length - 2]
             const lastY = numPoints[numPoints.length - 1]
@@ -74,7 +74,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -105,7 +105,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={100}
                     sourceY={200}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={500}
                     targetY={100}
                     targetWidth={200}
@@ -121,9 +121,9 @@ describe('Orthogonal Routing Algorithm', () => {
             expect(pointsStr).toBeTruthy()
 
             const points = JSON.parse(pointsStr!)
-            // Start point should be right-middle: (100 + 200, 200 + 150/2)
+            // Start point should be right-middle: (100 + 200, 200 + 120/2)
             expect(points[0]).toBe(300) // sourceX + sourceWidth
-            expect(points[1]).toBe(275) // sourceY + sourceHeight/2
+            expect(points[1]).toBe(260) // sourceY + sourceHeight/2
         })
 
         test('always anchors to left-middle of target card', () => {
@@ -133,7 +133,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={100}
                     sourceY={200}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={500}
                     targetY={100}
                     targetWidth={200}
@@ -160,7 +160,7 @@ describe('Orthogonal Routing Algorithm', () => {
     describe('Obstacle Avoidance', () => {
         test('routes around single obstacle when routeAround is enabled', () => {
             const obstacles = [
-                { x: 250, y: 0, width: 100, height: 150 }
+                { x: 250, y: 0, width: 100, height: 120 }
             ]
 
             render(
@@ -169,7 +169,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -204,7 +204,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={50}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={50}
                     targetWidth={200}
@@ -227,7 +227,7 @@ describe('Orthogonal Routing Algorithm', () => {
 
         test('does not treat source and target as obstacles', () => {
             const allCards = [
-                { x: 0, y: 0, width: 200, height: 150 },     // source
+                { x: 0, y: 0, width: 200, height: 120 },     // source
                 { x: 400, y: 0, width: 200, height: 120 }    // target
             ]
 
@@ -237,7 +237,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -270,7 +270,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={60}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={60}
                     targetWidth={200}
@@ -299,7 +299,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={100}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={100}
                     targetY={300}
                     targetWidth={200}
@@ -324,7 +324,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={400}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={0}
                     targetY={0}
                     targetWidth={200}
@@ -344,12 +344,12 @@ describe('Orthogonal Routing Algorithm', () => {
             const points = JSON.parse(pointsStr!)
             // Should still start from right-middle of source
             expect(points[0]).toBe(600) // sourceX + sourceWidth
-            expect(points[1]).toBe(75)  // sourceY + sourceHeight/2
+            expect(points[1]).toBe(60)  // sourceY + sourceHeight/2
         })
 
         test('handles overlapping cards', () => {
             const obstacles = [
-                { x: 150, y: 50, width: 200, height: 150 }
+                { x: 150, y: 50, width: 200, height: 120 }
             ]
 
             render(
@@ -358,7 +358,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={300}
                     targetY={0}
                     targetWidth={200}
@@ -385,7 +385,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -415,7 +415,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -440,7 +440,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={220}
                     targetY={0}
                     targetWidth={200}
@@ -469,7 +469,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={50}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={50}
                     targetWidth={200}
@@ -501,7 +501,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={200}
                     targetWidth={200}
@@ -525,7 +525,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={200}
                     targetWidth={200}
@@ -555,7 +555,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -586,7 +586,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={0}
                     targetWidth={200}
@@ -613,7 +613,7 @@ describe('Orthogonal Routing Algorithm', () => {
                     sourceX={0}
                     sourceY={0}
                     sourceWidth={200}
-                    sourceHeight={150}
+                    sourceHeight={120}
                     targetX={400}
                     targetY={100}
                     targetWidth={200}

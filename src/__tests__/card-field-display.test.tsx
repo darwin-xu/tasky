@@ -240,8 +240,8 @@ describe('Card Field Validation & Display', () => {
                 (rect) => rect.getAttribute('data-height') === '4'
             )
             expect(priorityBar).toBeTruthy()
-            // High priority should be red (#ef4444)
-            expect(priorityBar?.getAttribute('data-fill')).toBe('#ef4444')
+            // Tasks now have green ribbon (#10b981)
+            expect(priorityBar?.getAttribute('data-fill')).toBe('#10b981')
         })
     })
 
