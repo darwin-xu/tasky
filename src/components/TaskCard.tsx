@@ -170,6 +170,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
         }
     }
 
+    const descriptionTop = 45
+    const footerReservedHeight = 40
+    const descriptionHeight = Math.max(
+        0,
+        height - descriptionTop - footerReservedHeight
+    )
+
     return (
         <>
             {/* Snap preview indicator */}
@@ -244,13 +251,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 />
 
                 {/* Description */}
-                {description && (
+                {description && descriptionHeight > 0 && (
                     <Text
                         text={description}
                         x={10}
-                        y={45}
+                        y={descriptionTop}
                         width={width - 20}
-                        height={60}
+                        height={descriptionHeight}
                         fontSize={12}
                         fontFamily="Arial"
                         fill="#6b7280"
@@ -264,7 +271,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     <Text
                         text={`📅 ${formatDateForDisplay(date)}`}
                         x={10}
-                        y={height - 35}
+                        y={height - 30}
                         width={width - 20}
                         fontSize={11}
                         fontFamily="Arial"
@@ -276,7 +283,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <Text
                     text={getPriorityLabel()}
                     x={10}
-                    y={height - 20}
+                    y={height - 15}
                     width={width - 20}
                     fontSize={11}
                     fontFamily="Arial"
