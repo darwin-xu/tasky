@@ -13,44 +13,37 @@ const GridLayer: React.FC<GridLayerProps> = ({
     dotColor = GRID_DOT_COLOR,
     dotRadius = GRID_DOT_RADIUS,
 }) => {
-    // Calculate the effective grid spacing after scaling
-    const scaledSpacing = gridSpacing * scale
-    const scaledRadius = dotRadius * scale
+    // Transform the viewport into world coordinates so the grid follows panning/zooming
+    const worldLeft = -x / scale
+    const worldTop = -y / scale
+    const worldRight = worldLeft + width / scale
+    const worldBottom = worldTop + height / scale
 
-    // Calculate the starting position for the grid to make it appear stationary
-    // during panning. We use modulo to ensure the grid pattern continues seamlessly
-    const startX = -x % scaledSpacing
-    const startY = -y % scaledSpacing
+    // Expand the bounds slightly to avoid empty edges while panning
+    const paddedLeft = worldLeft - gridSpacing
+    const paddedTop = worldTop - gridSpacing
+    const paddedRight = worldRight + gridSpacing
+    const paddedBottom = worldBottom + gridSpacing
 
-    // Calculate how many dots we need to fill the visible area
-    const dotsX = Math.ceil(width / scaledSpacing) + 2 // +2 for buffer
-    const dotsY = Math.ceil(height / scaledSpacing) + 2 // +2 for buffer
+    // Determine the first grid coordinate that is visible (or just outside) the viewport
+    const startX = Math.floor(paddedLeft / gridSpacing) * gridSpacing
+    const startY = Math.floor(paddedTop / gridSpacing) * gridSpacing
+    const endX = Math.ceil(paddedRight / gridSpacing) * gridSpacing
+    const endY = Math.ceil(paddedBottom / gridSpacing) * gridSpacing
 
     const dots = []
 
-    // Generate grid dots
-    for (let i = 0; i < dotsX; i++) {
-        for (let j = 0; j < dotsY; j++) {
-            const dotX = startX + i * scaledSpacing
-            const dotY = startY + j * scaledSpacing
-
-            // Only render dots that are within or near the visible area
-            if (
-                dotX >= -scaledSpacing &&
-                dotX <= width + scaledSpacing &&
-                dotY >= -scaledSpacing &&
-                dotY <= height + scaledSpacing
-            ) {
-                dots.push(
-                    <Circle
-                        key={`dot-${i}-${j}`}
-                        x={dotX}
-                        y={dotY}
-                        radius={scaledRadius}
-                        fill={dotColor}
-                    />
-                )
-            }
+    for (let posX = startX; posX <= endX; posX += gridSpacing) {
+        for (let posY = startY; posY <= endY; posY += gridSpacing) {
+            dots.push(
+                <Circle
+                    key={`dot-${posX}-${posY}`}
+                    x={posX}
+                    y={posY}
+                    radius={dotRadius}
+                    fill={dotColor}
+                />
+            )
         }
     }
 

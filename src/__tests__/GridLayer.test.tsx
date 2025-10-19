@@ -85,8 +85,21 @@ describe('GridLayer Component', () => {
 
         const circle = circles[0]
 
-        // At 2x scale, radius should be 2 (1 * 2)
-        expect(circle).toHaveAttribute('data-radius', '2')
+        // Radius remains constant in world space; stage scale handles on-screen sizing
+        expect(circle).toHaveAttribute('data-radius', '1')
+
+        // Verify effective on-screen spacing accounts for zoom level
+        const uniqueXPositions = Array.from(
+            new Set(
+                circles.map((c) => Number(c.getAttribute('data-x')) || 0)
+            )
+        ).sort((a, b) => a - b)
+
+        expect(uniqueXPositions.length).toBeGreaterThan(1)
+        const worldSpacing = uniqueXPositions[1] - uniqueXPositions[0]
+        const effectiveScreenSpacing = worldSpacing * 2 // scale factor
+
+        expect(effectiveScreenSpacing).toBeCloseTo(40) // 20 spacing * 2 scale
     })
 
     test('TC2.4: Grid Styling is Applied', () => {
