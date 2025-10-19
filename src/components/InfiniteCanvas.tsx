@@ -18,6 +18,16 @@ import TaskEditorModal, { TaskEditorData } from './TaskEditorModal'
 import StateEditorModal, { StateEditorData } from './StateEditorModal'
 import ConfirmDialog from './ConfirmDialog'
 import { snapPositionToGrid } from '../utils/snapToGrid'
+import {
+    VIEWPORT_DEFAULT_WIDTH,
+    VIEWPORT_DEFAULT_HEIGHT,
+    GRID_SPACING,
+    CARD_WIDTH,
+    CARD_HEIGHT,
+    DEFAULTS,
+    OFFSETS,
+    VIEWPORT_ZOOM_FACTOR,
+} from '../constants'
 import './InfiniteCanvas.css'
 
 export interface InfiniteCanvasRef {
@@ -33,8 +43,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const stageRef = useRef<any>(null)
         const containerRef = useRef<HTMLDivElement>(null)
         const [dimensions, setDimensions] = useState({
-            width: 800,
-            height: 600,
+            width: VIEWPORT_DEFAULT_WIDTH,
+            height: VIEWPORT_DEFAULT_HEIGHT,
         })
         const [lastPointerPosition, setLastPointerPosition] = useState<{
             x: number
@@ -93,8 +103,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 if (containerRef.current) {
                     const rect = containerRef.current.getBoundingClientRect()
                     setDimensions({
-                        width: width || rect.width || 800,
-                        height: height || rect.height || 600,
+                        width: width || rect.width || VIEWPORT_DEFAULT_WIDTH,
+                        height: height || rect.height || VIEWPORT_DEFAULT_HEIGHT,
                     })
                 }
             }
@@ -212,14 +222,12 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     const stage = e.target.getStage()
                     const pointerPos = stage?.getPointerPosition()
 
-                    if (pointerPos) {
-                        // Calculate zoom factor based on deltaY
-                        const scaleBy = 1.05
-                        const direction = deltaY > 0 ? -1 : 1
-                        const newScale =
-                            viewport.scale * Math.pow(scaleBy, direction)
-
-                        // Zoom to the pointer position
+                if (pointerPos) {
+                    // Calculate zoom factor based on deltaY
+                    const scaleBy = VIEWPORT_ZOOM_FACTOR
+                    const direction = deltaY > 0 ? -1 : 1
+                    const newScale =
+                        viewport.scale * Math.pow(scaleBy, direction)                        // Zoom to the pointer position
                         viewport.zoomToPoint(pointerPos, newScale)
                     }
                 } else {
@@ -354,13 +362,13 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 if (!sourceTask) return
 
                 // Calculate offset position (240px to the right of the task)
-                const offsetX = sourceTask.x + 240
-                const offsetY = sourceTask.y
+                const offsetX = sourceTask.x + OFFSETS.LINK_STATE_CREATION_X
+                const offsetY = sourceTask.y + OFFSETS.LINK_STATE_CREATION_Y
 
                 // Snap to grid
                 const snapped = snapPositionToGrid(
                     { x: offsetX, y: offsetY },
-                    20,
+                    GRID_SPACING,
                     viewport.scale
                 )
 
@@ -369,9 +377,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     id: `state-${Date.now()}`,
                     x: snapped.x,
                     y: snapped.y,
-                    description: 'New State',
-                    date: '',
-                    priority: 'Medium',
+                    description: DEFAULTS.STATE_DESCRIPTION,
+                    date: DEFAULTS.STATE_DATE,
+                    priority: DEFAULTS.STATE_PRIORITY,
                 }
 
                 setStates((prevStates) => [...prevStates, newState])
@@ -383,8 +391,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     targetId: newState.id,
                     sourceType: 'task',
                     targetType: 'state',
-                    linkStyle: 'free',
-                    routeAround: false,
+                    linkStyle: DEFAULTS.LINK_STYLE,
+                    routeAround: DEFAULTS.LINK_ROUTE_AROUND,
                 }
                 setLinks((prevLinks) => [...prevLinks, newLink])
 
@@ -440,7 +448,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             // Snap to grid
             const snapped = snapPositionToGrid(
                 { x: centerX, y: centerY },
-                20,
+                GRID_SPACING,
                 viewport.scale
             )
 
@@ -448,10 +456,10 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 id: `task-${Date.now()}`,
                 x: snapped.x,
                 y: snapped.y,
-                title: 'New Task',
-                description: '',
-                date: '',
-                priority: 'Medium',
+                title: DEFAULTS.TASK_TITLE,
+                description: DEFAULTS.TASK_DESCRIPTION,
+                date: DEFAULTS.TASK_DATE,
+                priority: DEFAULTS.TASK_PRIORITY,
             }
 
             setTasks((prevTasks) => [...prevTasks, newTask])
@@ -476,7 +484,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             // Snap to grid
             const snapped = snapPositionToGrid(
                 { x: centerX, y: centerY },
-                20,
+                GRID_SPACING,
                 viewport.scale
             )
 
@@ -484,9 +492,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 id: `state-${Date.now()}`,
                 x: snapped.x,
                 y: snapped.y,
-                description: 'New State',
-                date: '',
-                priority: 'Medium',
+                description: DEFAULTS.STATE_DESCRIPTION,
+                date: DEFAULTS.STATE_DATE,
+                priority: DEFAULTS.STATE_PRIORITY,
             }
 
             setStates((prevStates) => [...prevStates, newState])
@@ -500,13 +508,13 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 if (!taskToDuplicate) return
 
                 // Calculate offset position (40px down and right from original)
-                const offsetX = taskToDuplicate.x + 40
-                const offsetY = taskToDuplicate.y + 40
+                const offsetX = taskToDuplicate.x + OFFSETS.DUPLICATE_X
+                const offsetY = taskToDuplicate.y + OFFSETS.DUPLICATE_Y
 
                 // Snap to grid
                 const snapped = snapPositionToGrid(
                     { x: offsetX, y: offsetY },
-                    20,
+                    GRID_SPACING,
                     viewport.scale
                 )
 
@@ -535,13 +543,13 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 if (!stateToDuplicate) return
 
                 // Calculate offset position (40px down and right from original)
-                const offsetX = stateToDuplicate.x + 40
-                const offsetY = stateToDuplicate.y + 40
+                const offsetX = stateToDuplicate.x + OFFSETS.DUPLICATE_X
+                const offsetY = stateToDuplicate.y + OFFSETS.DUPLICATE_Y
 
                 // Snap to grid
                 const snapped = snapPositionToGrid(
                     { x: offsetX, y: offsetY },
-                    20,
+                    GRID_SPACING,
                     viewport.scale
                 )
 
@@ -567,13 +575,13 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 if (!sourceState) return
 
                 // Calculate offset position (40px down and right from original)
-                const offsetX = sourceState.x + 40
-                const offsetY = sourceState.y + 40
+                const offsetX = sourceState.x + OFFSETS.DUPLICATE_X
+                const offsetY = sourceState.y + OFFSETS.DUPLICATE_Y
 
                 // Snap to grid
                 const snapped = snapPositionToGrid(
                     { x: offsetX, y: offsetY },
-                    20,
+                    GRID_SPACING,
                     viewport.scale
                 )
 
@@ -596,8 +604,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     targetId: newState.id,
                     sourceType: 'state',
                     targetType: 'state',
-                    linkStyle: 'free',
-                    routeAround: false,
+                    linkStyle: DEFAULTS.LINK_STYLE,
+                    routeAround: DEFAULTS.LINK_ROUTE_AROUND,
                 }
                 setLinks((prevLinks) => [...prevLinks, newLink])
 
@@ -737,24 +745,24 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             if (!sourceCard || !targetCard) return null
 
                             // Determine dimensions based on card type
-                            const sourceWidth = 200
-                            const sourceHeight = 120
-                            const targetWidth = 200
-                            const targetHeight = 120
+                            const sourceWidth = CARD_WIDTH
+                            const sourceHeight = CARD_HEIGHT
+                            const targetWidth = CARD_WIDTH
+                            const targetHeight = CARD_HEIGHT
 
                             // Collect all card positions for route-around
                             const allCards = [
                                 ...tasks.map((t) => ({
                                     x: t.x,
                                     y: t.y,
-                                    width: 200,
-                                    height: 120,
+                                    width: CARD_WIDTH,
+                                    height: CARD_HEIGHT,
                                 })),
                                 ...states.map((s) => ({
                                     x: s.x,
                                     y: s.y,
-                                    width: 200,
-                                    height: 120,
+                                    width: CARD_WIDTH,
+                                    height: CARD_HEIGHT,
                                 })),
                             ]
 
@@ -796,7 +804,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 description={task.description}
                                 date={task.date}
                                 priority={task.priority}
-                                gridSpacing={20}
+                                gridSpacing={GRID_SPACING}
                                 scale={viewport.scale}
                                 isSelected={task.id === selectedTaskId}
                                 onPositionChange={handleCardPositionChange}
@@ -817,7 +825,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     description={state.description}
                                     date={state.date}
                                     priority={state.priority}
-                                    gridSpacing={20}
+                                    gridSpacing={GRID_SPACING}
                                     scale={viewport.scale}
                                     isSelected={state.id === selectedStateId}
                                     onPositionChange={handleStatePositionChange}

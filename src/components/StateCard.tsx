@@ -4,6 +4,15 @@ import Konva from 'konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { snapPositionToGrid } from '../utils/snapToGrid'
 import { formatDateForDisplay } from '../utils/dateValidation'
+import {
+    CARD_WIDTH,
+    CARD_HEIGHT,
+    GRID_SPACING,
+    STATE_CARD,
+    COLORS,
+    TEXT,
+    SNAP_PREVIEW,
+} from '../constants'
 
 export interface StateCardProps {
     id: string
@@ -29,12 +38,12 @@ const StateCard: React.FC<StateCardProps> = ({
     id,
     x,
     y,
-    width = 200,
-    height = 120,
+    width = CARD_WIDTH,
+    height = CARD_HEIGHT,
     description,
     date = '',
     priority = 'Medium',
-    gridSpacing = 20,
+    gridSpacing = GRID_SPACING,
     scale = 1,
     isSelected = false,
     onPositionChange,
@@ -137,13 +146,13 @@ const StateCard: React.FC<StateCardProps> = ({
     const getPriorityColor = () => {
         switch (priority) {
             case 'High':
-                return '#ef4444'
+                return COLORS.PRIORITY_HIGH
             case 'Medium':
-                return '#f59e0b'
+                return COLORS.PRIORITY_MEDIUM
             case 'Low':
-                return '#10b981'
+                return COLORS.PRIORITY_LOW
             default:
-                return '#6b7280'
+                return COLORS.PRIORITY_DEFAULT
         }
     }
 
@@ -151,11 +160,11 @@ const StateCard: React.FC<StateCardProps> = ({
     const getPriorityLabel = () => {
         switch (priority) {
             case 'High':
-                return '🔴 High'
+                return TEXT.PRIORITY_HIGH_LABEL
             case 'Medium':
-                return '🟡 Medium'
+                return TEXT.PRIORITY_MEDIUM_LABEL
             case 'Low':
-                return '🟢 Low'
+                return TEXT.PRIORITY_LOW_LABEL
             default:
                 return `Priority: ${priority}`
         }
@@ -169,11 +178,11 @@ const StateCard: React.FC<StateCardProps> = ({
                     <Rect
                         width={width}
                         height={height}
-                        fill="rgba(139, 92, 246, 0.3)"
-                        stroke="rgba(139, 92, 246, 0.8)"
-                        strokeWidth={2}
-                        dash={[5, 5]}
-                        cornerRadius={0}
+                        fill={COLORS.SNAP_PREVIEW_STATE_FILL}
+                        stroke={COLORS.SNAP_PREVIEW_STATE_STROKE}
+                        strokeWidth={SNAP_PREVIEW.STROKE_WIDTH}
+                        dash={SNAP_PREVIEW.DASH_PATTERN}
+                        cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_STATE}
                     />
                 </Group>
             )}
@@ -193,21 +202,21 @@ const StateCard: React.FC<StateCardProps> = ({
                 <Rect
                     width={width}
                     height={height}
-                    fill={isDragging ? '#f3e8ff' : '#faf5ff'}
+                    fill={isDragging ? COLORS.STATE_BG_DRAGGING : COLORS.STATE_BG_NORMAL}
                     stroke={
                         isSelected
-                            ? '#8b5cf6'
+                            ? COLORS.STATE_BORDER_SELECTED
                             : isDragging
-                              ? '#8b5cf6'
-                              : '#d8b4fe'
+                              ? COLORS.STATE_BORDER_DRAGGING
+                              : COLORS.STATE_BORDER_NORMAL
                     }
-                    strokeWidth={isSelected ? 3 : 2}
-                    shadowColor="black"
-                    shadowBlur={isDragging ? 15 : isSelected ? 10 : 5}
-                    shadowOpacity={isDragging ? 0.4 : isSelected ? 0.3 : 0.2}
-                    shadowOffsetX={2}
-                    shadowOffsetY={2}
-                    cornerRadius={0}
+                    strokeWidth={isSelected ? STATE_CARD.STROKE_WIDTH_SELECTED : STATE_CARD.STROKE_WIDTH_NORMAL}
+                    shadowColor={COLORS.SHADOW_COLOR}
+                    shadowBlur={isDragging ? STATE_CARD.SHADOW_BLUR_DRAGGING : isSelected ? STATE_CARD.SHADOW_BLUR_SELECTED : STATE_CARD.SHADOW_BLUR_NORMAL}
+                    shadowOpacity={isDragging ? STATE_CARD.SHADOW_OPACITY_DRAGGING : isSelected ? STATE_CARD.SHADOW_OPACITY_SELECTED : STATE_CARD.SHADOW_OPACITY_NORMAL}
+                    shadowOffsetX={STATE_CARD.SHADOW_OFFSET_X}
+                    shadowOffsetY={STATE_CARD.SHADOW_OFFSET_Y}
+                    cornerRadius={STATE_CARD.CORNER_RADIUS}
                 />
 
                 {/* Priority indicator bar */}
@@ -215,46 +224,46 @@ const StateCard: React.FC<StateCardProps> = ({
                     x={0}
                     y={0}
                     width={width}
-                    height={4}
-                    fill="#eab308"
-                    cornerRadius={0}
+                    height={STATE_CARD.PRIORITY_BAR_HEIGHT}
+                    fill={COLORS.STATE_PRIORITY_BAR}
+                    cornerRadius={STATE_CARD.PRIORITY_BAR_CORNER_RADIUS}
                 />
 
                 {/* Description */}
                 <Text
                     text={description}
-                    x={10}
-                    y={15}
-                    width={width - 20}
-                    height={60}
-                    fontSize={13}
-                    fontFamily="Arial"
-                    fill="#1f2937"
-                    wrap="word"
+                    x={STATE_CARD.DESCRIPTION_X}
+                    y={STATE_CARD.DESCRIPTION_Y}
+                    width={width - STATE_CARD.DESCRIPTION_WIDTH_PADDING}
+                    height={STATE_CARD.DESCRIPTION_HEIGHT}
+                    fontSize={STATE_CARD.DESCRIPTION_FONT_SIZE}
+                    fontFamily={TEXT.FONT_FAMILY}
+                    fill={COLORS.TEXT_TITLE}
+                    wrap={TEXT.WRAP_WORD}
                     ellipsis={true}
                 />
 
                 {/* Date */}
                 {date && (
                     <Text
-                        text={`📅 ${formatDateForDisplay(date)}`}
-                        x={10}
-                        y={height - 35}
-                        width={width - 20}
-                        fontSize={11}
-                        fontFamily="Arial"
-                        fill="#4b5563"
+                        text={`${TEXT.DATE_ICON} ${formatDateForDisplay(date)}`}
+                        x={STATE_CARD.DESCRIPTION_X}
+                        y={height - STATE_CARD.DATE_Y_OFFSET}
+                        width={width - STATE_CARD.DESCRIPTION_WIDTH_PADDING}
+                        fontSize={STATE_CARD.DATE_FONT_SIZE}
+                        fontFamily={TEXT.FONT_FAMILY}
+                        fill={COLORS.TEXT_DATE}
                     />
                 )}
 
                 {/* Priority label */}
                 <Text
                     text={getPriorityLabel()}
-                    x={10}
-                    y={height - 20}
-                    width={width - 20}
-                    fontSize={11}
-                    fontFamily="Arial"
+                    x={STATE_CARD.DESCRIPTION_X}
+                    y={height - STATE_CARD.PRIORITY_Y_OFFSET}
+                    width={width - STATE_CARD.DESCRIPTION_WIDTH_PADDING}
+                    fontSize={STATE_CARD.PRIORITY_FONT_SIZE}
+                    fontFamily={TEXT.FONT_FAMILY}
                     fill={getPriorityColor()}
                     fontStyle="bold"
                 />
@@ -263,26 +272,26 @@ const StateCard: React.FC<StateCardProps> = ({
                 {isSelected && onDelete && (
                     <>
                         <Rect
-                            x={width - 30}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fill="#ef4444"
-                            cornerRadius={4}
+                            x={width - STATE_CARD.DELETE_BUTTON_X_OFFSET}
+                            y={STATE_CARD.BUTTON_Y}
+                            width={STATE_CARD.BUTTON_SIZE}
+                            height={STATE_CARD.BUTTON_SIZE}
+                            fill={COLORS.BUTTON_DELETE}
+                            cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                             onClick={handleDeleteClick}
                             onTap={handleDeleteClick}
                         />
                         <Text
                             text="✕"
-                            x={width - 30}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fontSize={16}
-                            fontFamily="Arial"
-                            fill="white"
-                            align="center"
-                            verticalAlign="middle"
+                            x={width - STATE_CARD.DELETE_BUTTON_X_OFFSET}
+                            y={STATE_CARD.BUTTON_Y}
+                            width={STATE_CARD.BUTTON_SIZE}
+                            height={STATE_CARD.BUTTON_SIZE}
+                            fontSize={STATE_CARD.BUTTON_FONT_SIZE}
+                            fontFamily={TEXT.FONT_FAMILY}
+                            fill={COLORS.TEXT_WHITE}
+                            align={TEXT.ALIGN_CENTER}
+                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                             onClick={handleDeleteClick}
                             onTap={handleDeleteClick}
                         />
@@ -293,26 +302,26 @@ const StateCard: React.FC<StateCardProps> = ({
                 {isSelected && onFork && (
                     <>
                         <Rect
-                            x={width - 60}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fill="#10b981"
-                            cornerRadius={4}
+                            x={width - STATE_CARD.FORK_BUTTON_X_OFFSET}
+                            y={STATE_CARD.BUTTON_Y}
+                            width={STATE_CARD.BUTTON_SIZE}
+                            height={STATE_CARD.BUTTON_SIZE}
+                            fill={COLORS.BUTTON_FORK}
+                            cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                             onClick={handleForkClick}
                             onTap={handleForkClick}
                         />
                         <Text
                             text="⑂"
-                            x={width - 60}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fontSize={16}
-                            fontFamily="Arial"
-                            fill="white"
-                            align="center"
-                            verticalAlign="middle"
+                            x={width - STATE_CARD.FORK_BUTTON_X_OFFSET}
+                            y={STATE_CARD.BUTTON_Y}
+                            width={STATE_CARD.BUTTON_SIZE}
+                            height={STATE_CARD.BUTTON_SIZE}
+                            fontSize={STATE_CARD.BUTTON_FONT_SIZE}
+                            fontFamily={TEXT.FONT_FAMILY}
+                            fill={COLORS.TEXT_WHITE}
+                            align={TEXT.ALIGN_CENTER}
+                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                             onClick={handleForkClick}
                             onTap={handleForkClick}
                         />
@@ -323,26 +332,26 @@ const StateCard: React.FC<StateCardProps> = ({
                 {isSelected && onDuplicate && (
                     <>
                         <Rect
-                            x={width - 90}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fill="#8b5cf6"
-                            cornerRadius={4}
+                            x={width - STATE_CARD.DUPLICATE_BUTTON_X_OFFSET}
+                            y={STATE_CARD.BUTTON_Y}
+                            width={STATE_CARD.BUTTON_SIZE}
+                            height={STATE_CARD.BUTTON_SIZE}
+                            fill={COLORS.BUTTON_DUPLICATE_STATE}
+                            cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                             onClick={handleDuplicateClick}
                             onTap={handleDuplicateClick}
                         />
                         <Text
                             text="⧉"
-                            x={width - 90}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fontSize={16}
-                            fontFamily="Arial"
-                            fill="white"
-                            align="center"
-                            verticalAlign="middle"
+                            x={width - STATE_CARD.DUPLICATE_BUTTON_X_OFFSET}
+                            y={STATE_CARD.BUTTON_Y}
+                            width={STATE_CARD.BUTTON_SIZE}
+                            height={STATE_CARD.BUTTON_SIZE}
+                            fontSize={STATE_CARD.BUTTON_FONT_SIZE}
+                            fontFamily={TEXT.FONT_FAMILY}
+                            fill={COLORS.TEXT_WHITE}
+                            align={TEXT.ALIGN_CENTER}
+                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                             onClick={handleDuplicateClick}
                             onTap={handleDuplicateClick}
                         />

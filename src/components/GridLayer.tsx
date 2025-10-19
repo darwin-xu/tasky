@@ -1,6 +1,7 @@
 import React from 'react'
 import { Circle } from 'react-konva'
 import { GridLayerProps } from '../types'
+import { GRID_SPACING, GRID_DOT_COLOR, GRID_DOT_RADIUS } from '../constants'
 
 const GridLayer: React.FC<GridLayerProps> = ({
     x,
@@ -8,9 +9,9 @@ const GridLayer: React.FC<GridLayerProps> = ({
     scale,
     width,
     height,
-    gridSpacing = 20,
-    dotColor = '#e0e0e0',
-    dotRadius = 1,
+    gridSpacing = GRID_SPACING,
+    dotColor = GRID_DOT_COLOR,
+    dotRadius = GRID_DOT_RADIUS,
 }) => {
     // Calculate the effective grid spacing after scaling
     const scaledSpacing = gridSpacing * scale

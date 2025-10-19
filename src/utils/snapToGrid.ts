@@ -2,17 +2,19 @@
  * Snap-to-grid utility functions
  */
 
+import { GRID_SPACING, VIEWPORT_INITIAL_SCALE } from '../constants'
+
 /**
  * Snaps a coordinate to the nearest grid point
  * @param value - The coordinate value to snap
- * @param gridSpacing - The spacing between grid points (default: 20)
+ * @param gridSpacing - The spacing between grid points (default: GRID_SPACING)
  * @param scale - The current zoom scale (default: 1)
  * @returns The snapped coordinate value
  */
 export const snapToGrid = (
     value: number,
-    gridSpacing: number = 20,
-    scale: number = 1
+    gridSpacing: number = GRID_SPACING,
+    scale: number = VIEWPORT_INITIAL_SCALE
 ): number => {
     // Calculate the effective grid spacing after scaling
     const scaledSpacing = gridSpacing * scale
@@ -24,14 +26,14 @@ export const snapToGrid = (
 /**
  * Snaps a position object to the nearest grid point
  * @param position - The position to snap {x, y}
- * @param gridSpacing - The spacing between grid points (default: 20)
+ * @param gridSpacing - The spacing between grid points (default: GRID_SPACING)
  * @param scale - The current zoom scale (default: 1)
  * @returns The snapped position
  */
 export const snapPositionToGrid = (
     position: { x: number; y: number },
-    gridSpacing: number = 20,
-    scale: number = 1
+    gridSpacing: number = GRID_SPACING,
+    scale: number = VIEWPORT_INITIAL_SCALE
 ): { x: number; y: number } => {
     return {
         x: snapToGrid(position.x, gridSpacing, scale),

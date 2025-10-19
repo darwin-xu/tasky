@@ -1,6 +1,7 @@
 import React from 'react'
 import { Arrow, Group, Rect, Text, Line } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
+import { LINK, COLORS, TEXT, SNAP_PREVIEW } from '../constants'
 
 export interface LinkProps {
     id: string
@@ -87,7 +88,7 @@ const lineSegmentIntersectsRect = (
     x2: number,
     y2: number,
     rect: { x: number; y: number; width: number; height: number },
-    padding: number = 20
+    padding: number = LINK.OBSTACLE_PADDING
 ): boolean => {
     const rectLeft = rect.x - padding
     const rectRight = rect.x + rect.width + padding
@@ -125,7 +126,7 @@ const lineSegmentIntersectsRect = (
 const pathIntersectsObstacles = (
     points: number[],
     obstacles: Array<{ x: number; y: number; width: number; height: number }>,
-    padding: number = 20
+    padding: number = LINK.OBSTACLE_PADDING
 ): boolean => {
     // Check each segment of the path
     for (let i = 0; i < points.length - 2; i += 2) {
@@ -173,7 +174,7 @@ const calculateOrthogonalPath = (
     routeAround: boolean,
     allCards?: Array<{ x: number; y: number; width: number; height: number }>
 ): number[] => {
-    const padding = 20
+    const padding = LINK.OBSTACLE_PADDING
 
     // Always anchor to right-middle of source and left-middle of target
     const startX = sourceX + sourceWidth
@@ -215,10 +216,10 @@ const calculateOrthogonalPath = (
         targetY,
         ...obstacles.map((o) => o.y)
     )
-    const routeAbove = maxTop - padding - 40
+    const routeAbove = maxTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
     
     // Go straight out past obstacles before turning up
-    const clearRightX = Math.min(obstacleLeft - 10, startX + 40)
+    const clearRightX = Math.min(obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL, startX + LINK.ROUTE_ABOVE_BELOW_OFFSET)
     const pathAbove = [
         startX,
         startY,
@@ -226,9 +227,9 @@ const calculateOrthogonalPath = (
         startY,
         clearRightX,
         routeAbove,
-        Math.max(endX - 30, clearRightX),
+        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
         routeAbove,
-        Math.max(endX - 30, clearRightX),
+        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
         endY,
         endX,
         endY,
@@ -243,7 +244,7 @@ const calculateOrthogonalPath = (
         targetY + targetHeight,
         ...obstacles.map((o) => o.y + o.height)
     )
-    const routeBelow = maxBottom + padding + 40
+    const routeBelow = maxBottom + padding + LINK.ROUTE_ABOVE_BELOW_OFFSET
     
     const pathBelow = [
         startX,
@@ -252,9 +253,9 @@ const calculateOrthogonalPath = (
         startY,
         clearRightX,
         routeBelow,
-        Math.max(endX - 30, clearRightX),
+        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
         routeBelow,
-        Math.max(endX - 30, clearRightX),
+        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
         endY,
         endX,
         endY,
@@ -264,8 +265,8 @@ const calculateOrthogonalPath = (
     }
 
     // Strategy 3: Route far to the right of all obstacles
-    const farRight = obstacleRight + 40
-    if (farRight < endX - 30) {
+    const farRight = obstacleRight + LINK.FAR_RIGHT_OFFSET
+    if (farRight < endX - LINK.CLEARANCE_OFFSET_LARGE) {
         const pathFarRight = [
             startX,
             startY,
@@ -291,9 +292,9 @@ const calculateOrthogonalPath = (
         // Only consider obstacles that are actually in the way
         if (obsRight > startX && obsLeft < endX) {
             // Try routing above this obstacle
-            const aboveY = obsTop - 30
-            const beforeObsX = Math.max(startX + 20, obsLeft - 30)
-            const afterObsX = Math.min(endX - 20, obsRight + 30)
+            const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
+            const beforeObsX = Math.max(startX + LINK.OBSTACLE_PADDING, obsLeft - LINK.AROUND_OBSTACLE_OFFSET)
+            const afterObsX = Math.min(endX - LINK.OBSTACLE_PADDING, obsRight + LINK.AROUND_OBSTACLE_OFFSET)
             
             const pathAroundTop = [
                 startX,
@@ -314,7 +315,7 @@ const calculateOrthogonalPath = (
             }
 
             // Try routing below this obstacle
-            const belowY = obsBottom + 30
+            const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
             const pathAroundBottom = [
                 startX,
                 startY,
@@ -336,8 +337,8 @@ const calculateOrthogonalPath = (
     }
 
     // Strategy 5: Direct vertical-horizontal path if very close
-    if (Math.abs(endX - startX) < 60) {
-        const pathDirect = [startX, startY, startX + 30, startY, startX + 30, endY, endX, endY]
+    if (Math.abs(endX - startX) < LINK.DIRECT_PATH_THRESHOLD) {
+        const pathDirect = [startX, startY, startX + LINK.CLEARANCE_OFFSET_LARGE, startY, startX + LINK.CLEARANCE_OFFSET_LARGE, endY, endX, endY]
         if (!pathIntersectsObstacles(pathDirect, obstacles, padding)) {
             strategies.push(pathDirect)
         }
@@ -467,35 +468,35 @@ const Link: React.FC<LinkProps> = ({
                 <>
                     <Line
                         points={pathPoints}
-                        stroke={isSelected ? '#2196f3' : '#6b7280'}
-                        strokeWidth={isSelected ? 3 : 2}
+                        stroke={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
+                        strokeWidth={isSelected ? LINK.STROKE_WIDTH_SELECTED : LINK.STROKE_WIDTH_NORMAL}
                         onClick={handleClick}
                         onTap={handleClick}
-                        hitStrokeWidth={20}
+                        hitStrokeWidth={LINK.HIT_STROKE_WIDTH}
                     />
                     <Arrow
                         points={arrowPoints}
-                        stroke={isSelected ? '#2196f3' : '#6b7280'}
-                        strokeWidth={isSelected ? 3 : 2}
-                        fill={isSelected ? '#2196f3' : '#6b7280'}
-                        pointerLength={10}
-                        pointerWidth={10}
+                        stroke={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
+                        strokeWidth={isSelected ? LINK.STROKE_WIDTH_SELECTED : LINK.STROKE_WIDTH_NORMAL}
+                        fill={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
+                        pointerLength={LINK.POINTER_LENGTH}
+                        pointerWidth={LINK.POINTER_WIDTH}
                         onClick={handleClick}
                         onTap={handleClick}
-                        hitStrokeWidth={20}
+                        hitStrokeWidth={LINK.HIT_STROKE_WIDTH}
                     />
                 </>
             ) : (
                 <Arrow
                     points={arrowPoints}
-                    stroke={isSelected ? '#2196f3' : '#6b7280'}
-                    strokeWidth={isSelected ? 3 : 2}
-                    fill={isSelected ? '#2196f3' : '#6b7280'}
-                    pointerLength={10}
-                    pointerWidth={10}
+                    stroke={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
+                    strokeWidth={isSelected ? LINK.STROKE_WIDTH_SELECTED : LINK.STROKE_WIDTH_NORMAL}
+                    fill={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
+                    pointerLength={LINK.POINTER_LENGTH}
+                    pointerWidth={LINK.POINTER_WIDTH}
                     onClick={handleClick}
                     onTap={handleClick}
-                    hitStrokeWidth={20}
+                    hitStrokeWidth={LINK.HIT_STROKE_WIDTH}
                 />
             )}
 
@@ -506,12 +507,12 @@ const Link: React.FC<LinkProps> = ({
                     {onUpdateLinkStyle && (
                         <>
                             <Rect
-                                x={-40}
-                                y={-36}
-                                width={80}
-                                height={24}
-                                fill="#8b5cf6"
-                                cornerRadius={4}
+                                x={LINK.STYLE_TOGGLE_X_OFFSET}
+                                y={LINK.STYLE_TOGGLE_Y_OFFSET}
+                                width={LINK.CONTROL_BUTTON_WIDTH}
+                                height={LINK.CONTROL_BUTTON_HEIGHT}
+                                fill={COLORS.LINK_STYLE_BUTTON}
+                                cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                                 onClick={handleStyleToggle}
                                 onTap={handleStyleToggle}
                             />
@@ -521,15 +522,15 @@ const Link: React.FC<LinkProps> = ({
                                         ? 'Free ⇄ Ortho'
                                         : 'Ortho ⇄ Free'
                                 }
-                                x={-40}
-                                y={-36}
-                                width={80}
-                                height={24}
-                                fontSize={12}
-                                fontFamily="Arial"
-                                fill="white"
-                                align="center"
-                                verticalAlign="middle"
+                                x={LINK.STYLE_TOGGLE_X_OFFSET}
+                                y={LINK.STYLE_TOGGLE_Y_OFFSET}
+                                width={LINK.CONTROL_BUTTON_WIDTH}
+                                height={LINK.CONTROL_BUTTON_HEIGHT}
+                                fontSize={LINK.STYLE_TOGGLE_FONT_SIZE}
+                                fontFamily={TEXT.FONT_FAMILY}
+                                fill={COLORS.TEXT_WHITE}
+                                align={TEXT.ALIGN_CENTER}
+                                verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                                 onClick={handleStyleToggle}
                                 onTap={handleStyleToggle}
                             />
@@ -540,12 +541,12 @@ const Link: React.FC<LinkProps> = ({
                     {linkStyle === 'orthogonal' && onUpdateRouteAround && (
                         <>
                             <Rect
-                                x={-40}
-                                y={-8}
-                                width={80}
-                                height={24}
-                                fill={routeAround ? '#10b981' : '#6b7280'}
-                                cornerRadius={4}
+                                x={LINK.ROUTE_AROUND_X_OFFSET}
+                                y={LINK.ROUTE_AROUND_Y_OFFSET}
+                                width={LINK.CONTROL_BUTTON_WIDTH}
+                                height={LINK.CONTROL_BUTTON_HEIGHT}
+                                fill={routeAround ? COLORS.LINK_ROUTE_AROUND_ACTIVE : COLORS.LINK_ROUTE_AROUND_INACTIVE}
+                                cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                                 onClick={handleRouteAroundToggle}
                                 onTap={handleRouteAroundToggle}
                             />
@@ -555,15 +556,15 @@ const Link: React.FC<LinkProps> = ({
                                         ? '☑ Route Around'
                                         : '☐ Route Around'
                                 }
-                                x={-40}
-                                y={-8}
-                                width={80}
-                                height={24}
-                                fontSize={11}
-                                fontFamily="Arial"
-                                fill="white"
-                                align="center"
-                                verticalAlign="middle"
+                                x={LINK.ROUTE_AROUND_X_OFFSET}
+                                y={LINK.ROUTE_AROUND_Y_OFFSET}
+                                width={LINK.CONTROL_BUTTON_WIDTH}
+                                height={LINK.CONTROL_BUTTON_HEIGHT}
+                                fontSize={LINK.ROUTE_AROUND_FONT_SIZE}
+                                fontFamily={TEXT.FONT_FAMILY}
+                                fill={COLORS.TEXT_WHITE}
+                                align={TEXT.ALIGN_CENTER}
+                                verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                                 onClick={handleRouteAroundToggle}
                                 onTap={handleRouteAroundToggle}
                             />

@@ -1,15 +1,19 @@
 import { useState, useCallback, useMemo } from 'react'
 import { ViewportState, ViewportActions } from '../types'
-
-const SCALE_MIN = 0.1
-const SCALE_MAX = 10.0
+import {
+    VIEWPORT_SCALE_MIN,
+    VIEWPORT_SCALE_MAX,
+    VIEWPORT_INITIAL_SCALE,
+    VIEWPORT_INITIAL_X,
+    VIEWPORT_INITIAL_Y,
+} from '../constants'
 
 const validateScale = (scale: number): number => {
     if (isNaN(scale) || !isFinite(scale) || scale <= 0) {
         console.warn('Invalid scale value, using default 1.0')
-        return 1.0
+        return VIEWPORT_INITIAL_SCALE
     }
-    return Math.max(SCALE_MIN, Math.min(SCALE_MAX, scale))
+    return Math.max(VIEWPORT_SCALE_MIN, Math.min(VIEWPORT_SCALE_MAX, scale))
 }
 
 const validateCoordinate = (value: number, fallback: number = 0): number => {
@@ -22,9 +26,9 @@ const validateCoordinate = (value: number, fallback: number = 0): number => {
 
 export const useViewportState = (): ViewportState & ViewportActions => {
     const [state, setState] = useState<ViewportState>({
-        x: 0,
-        y: 0,
-        scale: 1.0,
+        x: VIEWPORT_INITIAL_X,
+        y: VIEWPORT_INITIAL_Y,
+        scale: VIEWPORT_INITIAL_SCALE,
         isDragging: false,
     })
 

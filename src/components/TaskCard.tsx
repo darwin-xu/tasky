@@ -4,6 +4,15 @@ import Konva from 'konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { snapPositionToGrid } from '../utils/snapToGrid'
 import { formatDateForDisplay } from '../utils/dateValidation'
+import {
+    CARD_WIDTH,
+    CARD_HEIGHT,
+    GRID_SPACING,
+    TASK_CARD,
+    COLORS,
+    TEXT,
+    SNAP_PREVIEW,
+} from '../constants'
 
 export interface TaskCardProps {
     id: string
@@ -30,13 +39,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
     id,
     x,
     y,
-    width = 200,
-    height = 120,
+    width = CARD_WIDTH,
+    height = CARD_HEIGHT,
     title,
     description = '',
     date = '',
     priority = 'Medium',
-    gridSpacing = 20,
+    gridSpacing = GRID_SPACING,
     scale = 1,
     isSelected = false,
     onPositionChange,
@@ -146,13 +155,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
     const getPriorityColor = () => {
         switch (priority) {
             case 'High':
-                return '#ef4444'
+                return COLORS.PRIORITY_HIGH
             case 'Medium':
-                return '#f59e0b'
+                return COLORS.PRIORITY_MEDIUM
             case 'Low':
-                return '#10b981'
+                return COLORS.PRIORITY_LOW
             default:
-                return '#6b7280'
+                return COLORS.PRIORITY_DEFAULT
         }
     }
 
@@ -160,18 +169,18 @@ const TaskCard: React.FC<TaskCardProps> = ({
     const getPriorityLabel = () => {
         switch (priority) {
             case 'High':
-                return '🔴 High'
+                return TEXT.PRIORITY_HIGH_LABEL
             case 'Medium':
-                return '🟡 Medium'
+                return TEXT.PRIORITY_MEDIUM_LABEL
             case 'Low':
-                return '🟢 Low'
+                return TEXT.PRIORITY_LOW_LABEL
             default:
                 return `Priority: ${priority}`
         }
     }
 
-    const descriptionTop = 45
-    const footerReservedHeight = 40
+    const descriptionTop = TASK_CARD.DESCRIPTION_TOP
+    const footerReservedHeight = TASK_CARD.FOOTER_RESERVED_HEIGHT
     const descriptionHeight = Math.max(
         0,
         height - descriptionTop - footerReservedHeight
@@ -185,11 +194,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     <Rect
                         width={width}
                         height={height}
-                        fill="rgba(100, 149, 237, 0.3)"
-                        stroke="rgba(100, 149, 237, 0.8)"
-                        strokeWidth={2}
-                        dash={[5, 5]}
-                        cornerRadius={4}
+                        fill={COLORS.SNAP_PREVIEW_TASK_FILL}
+                        stroke={COLORS.SNAP_PREVIEW_TASK_STROKE}
+                        strokeWidth={SNAP_PREVIEW.STROKE_WIDTH}
+                        dash={SNAP_PREVIEW.DASH_PATTERN}
+                        cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                     />
                 </Group>
             )}
@@ -209,21 +218,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <Rect
                     width={width}
                     height={height}
-                    fill={isDragging ? '#e3f2fd' : '#ffffff'}
+                    fill={isDragging ? COLORS.TASK_BG_DRAGGING : COLORS.TASK_BG_NORMAL}
                     stroke={
                         isSelected
-                            ? '#2196f3'
+                            ? COLORS.TASK_BORDER_SELECTED
                             : isDragging
-                              ? '#2196f3'
-                              : '#cccccc'
+                              ? COLORS.TASK_BORDER_DRAGGING
+                              : COLORS.TASK_BORDER_NORMAL
                     }
-                    strokeWidth={isSelected ? 3 : 2}
-                    shadowColor="black"
-                    shadowBlur={isDragging ? 15 : isSelected ? 10 : 5}
-                    shadowOpacity={isDragging ? 0.4 : isSelected ? 0.3 : 0.2}
-                    shadowOffsetX={2}
-                    shadowOffsetY={2}
-                    cornerRadius={10}
+                    strokeWidth={isSelected ? TASK_CARD.STROKE_WIDTH_SELECTED : TASK_CARD.STROKE_WIDTH_NORMAL}
+                    shadowColor={COLORS.SHADOW_COLOR}
+                    shadowBlur={isDragging ? TASK_CARD.SHADOW_BLUR_DRAGGING : isSelected ? TASK_CARD.SHADOW_BLUR_SELECTED : TASK_CARD.SHADOW_BLUR_NORMAL}
+                    shadowOpacity={isDragging ? TASK_CARD.SHADOW_OPACITY_DRAGGING : isSelected ? TASK_CARD.SHADOW_OPACITY_SELECTED : TASK_CARD.SHADOW_OPACITY_NORMAL}
+                    shadowOffsetX={TASK_CARD.SHADOW_OFFSET_X}
+                    shadowOffsetY={TASK_CARD.SHADOW_OFFSET_Y}
+                    cornerRadius={TASK_CARD.CORNER_RADIUS}
                 />
 
                 {/* Priority indicator bar */}
@@ -231,22 +240,22 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     x={0}
                     y={0}
                     width={width}
-                    height={4}
-                    fill="#10b981"
-                    cornerRadius={[4, 4, 0, 0]}
+                    height={TASK_CARD.PRIORITY_BAR_HEIGHT}
+                    fill={COLORS.TASK_PRIORITY_BAR}
+                    cornerRadius={TASK_CARD.PRIORITY_BAR_CORNER_RADIUS}
                 />
 
                 {/* Title */}
                 <Text
                     text={title}
-                    x={10}
-                    y={15}
-                    width={width - 20}
-                    fontSize={16}
-                    fontFamily="Arial"
+                    x={TASK_CARD.TITLE_X}
+                    y={TASK_CARD.TITLE_Y}
+                    width={width - TASK_CARD.TITLE_WIDTH_PADDING}
+                    fontSize={TASK_CARD.TITLE_FONT_SIZE}
+                    fontFamily={TEXT.FONT_FAMILY}
                     fontStyle="bold"
-                    fill="#1f2937"
-                    wrap="word"
+                    fill={COLORS.TEXT_TITLE}
+                    wrap={TEXT.WRAP_WORD}
                     ellipsis={true}
                 />
 
@@ -254,14 +263,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {description && descriptionHeight > 0 && (
                     <Text
                         text={description}
-                        x={10}
+                        x={TASK_CARD.DESCRIPTION_X}
                         y={descriptionTop}
-                        width={width - 20}
+                        width={width - TASK_CARD.DESCRIPTION_WIDTH_PADDING}
                         height={descriptionHeight}
-                        fontSize={12}
-                        fontFamily="Arial"
-                        fill="#6b7280"
-                        wrap="word"
+                        fontSize={TASK_CARD.DESCRIPTION_FONT_SIZE}
+                        fontFamily={TEXT.FONT_FAMILY}
+                        fill={COLORS.TEXT_DESCRIPTION}
+                        wrap={TEXT.WRAP_WORD}
                         ellipsis={true}
                     />
                 )}
@@ -269,24 +278,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {/* Date */}
                 {date && (
                     <Text
-                        text={`📅 ${formatDateForDisplay(date)}`}
-                        x={10}
-                        y={height - 30}
-                        width={width - 20}
-                        fontSize={11}
-                        fontFamily="Arial"
-                        fill="#4b5563"
+                        text={`${TEXT.DATE_ICON} ${formatDateForDisplay(date)}`}
+                        x={TASK_CARD.DESCRIPTION_X}
+                        y={height - TASK_CARD.DATE_Y_OFFSET}
+                        width={width - TASK_CARD.DESCRIPTION_WIDTH_PADDING}
+                        fontSize={TASK_CARD.DATE_FONT_SIZE}
+                        fontFamily={TEXT.FONT_FAMILY}
+                        fill={COLORS.TEXT_DATE}
                     />
                 )}
 
                 {/* Priority label */}
                 <Text
                     text={getPriorityLabel()}
-                    x={10}
-                    y={height - 15}
-                    width={width - 20}
-                    fontSize={11}
-                    fontFamily="Arial"
+                    x={TASK_CARD.DESCRIPTION_X}
+                    y={height - TASK_CARD.PRIORITY_Y_OFFSET}
+                    width={width - TASK_CARD.DESCRIPTION_WIDTH_PADDING}
+                    fontSize={TASK_CARD.PRIORITY_FONT_SIZE}
+                    fontFamily={TEXT.FONT_FAMILY}
                     fill={getPriorityColor()}
                     fontStyle="bold"
                 />
@@ -295,26 +304,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {isSelected && onDelete && (
                     <>
                         <Rect
-                            x={width - 30}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fill="#ef4444"
-                            cornerRadius={4}
+                            x={width - TASK_CARD.DELETE_BUTTON_X_OFFSET}
+                            y={TASK_CARD.BUTTON_Y}
+                            width={TASK_CARD.BUTTON_SIZE}
+                            height={TASK_CARD.BUTTON_SIZE}
+                            fill={COLORS.BUTTON_DELETE}
+                            cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                             onClick={handleDeleteClick}
                             onTap={handleDeleteClick}
                         />
                         <Text
                             text="✕"
-                            x={width - 30}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fontSize={16}
-                            fontFamily="Arial"
-                            fill="white"
-                            align="center"
-                            verticalAlign="middle"
+                            x={width - TASK_CARD.DELETE_BUTTON_X_OFFSET}
+                            y={TASK_CARD.BUTTON_Y}
+                            width={TASK_CARD.BUTTON_SIZE}
+                            height={TASK_CARD.BUTTON_SIZE}
+                            fontSize={TASK_CARD.BUTTON_FONT_SIZE}
+                            fontFamily={TEXT.FONT_FAMILY}
+                            fill={COLORS.TEXT_WHITE}
+                            align={TEXT.ALIGN_CENTER}
+                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                             onClick={handleDeleteClick}
                             onTap={handleDeleteClick}
                         />
@@ -325,26 +334,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {isSelected && onDuplicate && (
                     <>
                         <Rect
-                            x={width - 60}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fill="#3b82f6"
-                            cornerRadius={4}
+                            x={width - TASK_CARD.DUPLICATE_BUTTON_X_OFFSET}
+                            y={TASK_CARD.BUTTON_Y}
+                            width={TASK_CARD.BUTTON_SIZE}
+                            height={TASK_CARD.BUTTON_SIZE}
+                            fill={COLORS.BUTTON_DUPLICATE_TASK}
+                            cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                             onClick={handleDuplicateClick}
                             onTap={handleDuplicateClick}
                         />
                         <Text
                             text="⧉"
-                            x={width - 60}
-                            y={5}
-                            width={24}
-                            height={24}
-                            fontSize={16}
-                            fontFamily="Arial"
-                            fill="white"
-                            align="center"
-                            verticalAlign="middle"
+                            x={width - TASK_CARD.DUPLICATE_BUTTON_X_OFFSET}
+                            y={TASK_CARD.BUTTON_Y}
+                            width={TASK_CARD.BUTTON_SIZE}
+                            height={TASK_CARD.BUTTON_SIZE}
+                            fontSize={TASK_CARD.BUTTON_FONT_SIZE}
+                            fontFamily={TEXT.FONT_FAMILY}
+                            fill={COLORS.TEXT_WHITE}
+                            align={TEXT.ALIGN_CENTER}
+                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                             onClick={handleDuplicateClick}
                             onTap={handleDuplicateClick}
                         />
@@ -355,26 +364,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 {isSelected && onLinkStart && (
                     <>
                         <Rect
-                            x={width - 15}
-                            y={height / 2 - 12}
-                            width={24}
-                            height={24}
-                            fill="#10b981"
-                            cornerRadius={12}
+                            x={width - TASK_CARD.LINK_HANDLE_X_OFFSET}
+                            y={height / 2 - TASK_CARD.LINK_HANDLE_Y_CENTER_OFFSET}
+                            width={TASK_CARD.LINK_HANDLE_SIZE}
+                            height={TASK_CARD.LINK_HANDLE_SIZE}
+                            fill={COLORS.BUTTON_LINK}
+                            cornerRadius={TASK_CARD.LINK_HANDLE_CORNER_RADIUS}
                             onMouseDown={handleLinkHandleMouseDown}
                             onTouchStart={handleLinkHandleTouchStart}
                         />
                         <Text
                             text="→"
-                            x={width - 15}
-                            y={height / 2 - 12}
-                            width={24}
-                            height={24}
-                            fontSize={16}
-                            fontFamily="Arial"
-                            fill="white"
-                            align="center"
-                            verticalAlign="middle"
+                            x={width - TASK_CARD.LINK_HANDLE_X_OFFSET}
+                            y={height / 2 - TASK_CARD.LINK_HANDLE_Y_CENTER_OFFSET}
+                            width={TASK_CARD.LINK_HANDLE_SIZE}
+                            height={TASK_CARD.LINK_HANDLE_SIZE}
+                            fontSize={TASK_CARD.BUTTON_FONT_SIZE}
+                            fontFamily={TEXT.FONT_FAMILY}
+                            fill={COLORS.TEXT_WHITE}
+                            align={TEXT.ALIGN_CENTER}
+                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
                             onMouseDown={handleLinkHandleMouseDown}
                             onTouchStart={handleLinkHandleTouchStart}
                         />
