@@ -173,7 +173,7 @@ const StateCard: React.FC<StateCardProps> = ({
                         stroke="rgba(139, 92, 246, 0.8)"
                         strokeWidth={2}
                         dash={[5, 5]}
-                        cornerRadius={4}
+                        cornerRadius={0}
                     />
                 </Group>
             )}
@@ -207,7 +207,7 @@ const StateCard: React.FC<StateCardProps> = ({
                     shadowOpacity={isDragging ? 0.4 : isSelected ? 0.3 : 0.2}
                     shadowOffsetX={2}
                     shadowOffsetY={2}
-                    cornerRadius={4}
+                    cornerRadius={0}
                 />
 
                 {/* Priority indicator bar */}
@@ -216,8 +216,8 @@ const StateCard: React.FC<StateCardProps> = ({
                     y={0}
                     width={width}
                     height={4}
-                    fill={getPriorityColor()}
-                    cornerRadius={[4, 4, 0, 0]}
+                    fill="#eab308"
+                    cornerRadius={0}
                 />
 
                 {/* Description */}

@@ -31,7 +31,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     x,
     y,
     width = 200,
-    height = 150,
+    height = 120,
     title,
     description = '',
     date = '',
@@ -225,7 +225,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     y={0}
                     width={width}
                     height={4}
-                    fill={getPriorityColor()}
+                    fill="#10b981"
                     cornerRadius={[4, 4, 0, 0]}
                 />
 

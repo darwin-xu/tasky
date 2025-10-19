@@ -143,7 +143,7 @@ describe('Snap-to-Grid Drag Behavior', () => {
 
             // Verify it has the expected dimensions
             expect(mainRect).toHaveAttribute('data-width', '200')
-            expect(mainRect).toHaveAttribute('data-height', '150')
+            expect(mainRect).toHaveAttribute('data-height', '120')
         })
 
         test('TC8.7: TaskCard works with custom grid spacing', () => {
