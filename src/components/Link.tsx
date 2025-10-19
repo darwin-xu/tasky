@@ -80,7 +80,87 @@ const calculateAnchorPoint = (
     return { x: anchorX, y: anchorY }
 }
 
-// Calculate orthogonal path points
+// Helper function to check if a line segment intersects with a rectangle
+const lineSegmentIntersectsRect = (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    rect: { x: number; y: number; width: number; height: number },
+    padding: number = 20
+): boolean => {
+    const rectLeft = rect.x - padding
+    const rectRight = rect.x + rect.width + padding
+    const rectTop = rect.y - padding
+    const rectBottom = rect.y + rect.height + padding
+
+    // Check if horizontal line intersects
+    if (y1 === y2) {
+        const minX = Math.min(x1, x2)
+        const maxX = Math.max(x1, x2)
+        return (
+            y1 >= rectTop &&
+            y1 <= rectBottom &&
+            maxX >= rectLeft &&
+            minX <= rectRight
+        )
+    }
+
+    // Check if vertical line intersects
+    if (x1 === x2) {
+        const minY = Math.min(y1, y2)
+        const maxY = Math.max(y1, y2)
+        return (
+            x1 >= rectLeft &&
+            x1 <= rectRight &&
+            maxY >= rectTop &&
+            minY <= rectBottom
+        )
+    }
+
+    return false
+}
+
+// Helper function to check if a path (array of points) intersects any obstacles
+const pathIntersectsObstacles = (
+    points: number[],
+    obstacles: Array<{ x: number; y: number; width: number; height: number }>,
+    padding: number = 20
+): boolean => {
+    // Check each segment of the path
+    for (let i = 0; i < points.length - 2; i += 2) {
+        const x1 = points[i]
+        const y1 = points[i + 1]
+        const x2 = points[i + 2]
+        const y2 = points[i + 3]
+
+        for (const obstacle of obstacles) {
+            if (lineSegmentIntersectsRect(x1, y1, x2, y2, obstacle, padding)) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+// Count the number of turns in a path
+const countTurns = (points: number[]): number => {
+    let turns = 0
+    for (let i = 0; i < points.length - 4; i += 2) {
+        const dx1 = points[i + 2] - points[i]
+        const dy1 = points[i + 3] - points[i + 1]
+        const dx2 = points[i + 4] - points[i + 2]
+        const dy2 = points[i + 5] - points[i + 3]
+
+        // Check if direction changed (turn occurred)
+        if ((dx1 === 0 && dy2 === 0) || (dy1 === 0 && dx2 === 0)) {
+            turns++
+        }
+    }
+    return turns
+}
+
+// Calculate orthogonal path points using heuristic routing
 const calculateOrthogonalPath = (
     sourceX: number,
     sourceY: number,
@@ -93,151 +173,194 @@ const calculateOrthogonalPath = (
     routeAround: boolean,
     allCards?: Array<{ x: number; y: number; width: number; height: number }>
 ): number[] => {
-    const sourceCenterX = sourceX + sourceWidth / 2
-    const sourceCenterY = sourceY + sourceHeight / 2
-    const targetCenterX = targetX + targetWidth / 2
-    const targetCenterY = targetY + targetHeight / 2
+    const padding = 20
 
-    // Start from right edge of source
+    // Always anchor to right-middle of source and left-middle of target
     const startX = sourceX + sourceWidth
-    const startY = sourceCenterY
+    const startY = sourceY + sourceHeight / 2
+    const endX = targetX
+    const endY = targetY + targetHeight / 2
 
-    // End at left edge of target (or appropriate edge)
-    let endX: number
-    let endY: number
+    // Filter out source and target from obstacles
+    const obstacles = (allCards || []).filter(
+        (card) =>
+            !(card.x === sourceX && card.y === sourceY) &&
+            !(card.x === targetX && card.y === targetY)
+    )
 
-    // Determine which edge of target to connect to
-    if (targetCenterX > sourceCenterX) {
-        // Target is to the right, connect to left edge
-        endX = targetX
-        endY = targetCenterY
-    } else if (targetCenterX < sourceCenterX) {
-        // Target is to the left, connect to right edge
-        endX = targetX + targetWidth
-        endY = targetCenterY
-    } else {
-        // Target is aligned vertically
-        if (targetCenterY > sourceCenterY) {
-            // Target is below, connect to top edge
-            endX = targetCenterX
-            endY = targetY
-        } else {
-            // Target is above, connect to bottom edge
-            endX = targetCenterX
-            endY = targetY + targetHeight
-        }
-    }
-
-    if (!routeAround) {
-        // Simple orthogonal path - shortest path
-        const midX = (startX + endX) / 2
-        return [startX, startY, midX, startY, midX, endY, endX, endY]
-    }
-
-    // Route around obstacles
-    const padding = 20 // Padding around cards
-
-    // Check if path intersects with any cards
-    const pathIntersectsCard = (
-        x1: number,
-        y1: number,
-        x2: number,
-        y2: number,
-        card: { x: number; y: number; width: number; height: number }
-    ): boolean => {
-        // Expand card bounds with padding
-        const cardLeft = card.x - padding
-        const cardRight = card.x + card.width + padding
-        const cardTop = card.y - padding
-        const cardBottom = card.y + card.height + padding
-
-        // Check if horizontal line intersects
-        if (y1 === y2) {
-            const minX = Math.min(x1, x2)
-            const maxX = Math.max(x1, x2)
-            return (
-                y1 >= cardTop &&
-                y1 <= cardBottom &&
-                maxX >= cardLeft &&
-                minX <= cardRight
-            )
-        }
-
-        // Check if vertical line intersects
-        if (x1 === x2) {
-            const minY = Math.min(y1, y2)
-            const maxY = Math.max(y1, y2)
-            return (
-                x1 >= cardLeft &&
-                x1 <= cardRight &&
-                maxY >= cardTop &&
-                minY <= cardBottom
-            )
-        }
-
-        return false
-    }
-
-    // Simple routing: go around by adding waypoints
+    // Simple 3-segment path (right, down/up, right)
     const midX = (startX + endX) / 2
-    let points = [startX, startY, midX, startY, midX, endY, endX, endY]
+    const simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
 
-    // Check if any segment intersects a card and route around if needed
-    if (allCards) {
-        for (const card of allCards) {
-            // Skip source and target cards
-            if (
-                (card.x === sourceX && card.y === sourceY) ||
-                (card.x === targetX && card.y === targetY)
-            ) {
-                continue
+    // If no obstacles or route around is disabled, return simple path
+    if (!routeAround || obstacles.length === 0) {
+        return simplePath
+    }
+
+    // Check if simple path is clear
+    if (!pathIntersectsObstacles(simplePath, obstacles, padding)) {
+        return simplePath
+    }
+
+    // Try different routing strategies
+    const strategies: number[][] = []
+
+    // Find the leftmost and rightmost obstacle bounds
+    const obstacleLeft = Math.min(...obstacles.map((o) => o.x - padding))
+    const obstacleRight = Math.max(...obstacles.map((o) => o.x + o.width + padding))
+
+    // Strategy 1: Route far above all obstacles
+    const maxTop = Math.min(
+        sourceY,
+        targetY,
+        ...obstacles.map((o) => o.y)
+    )
+    const routeAbove = maxTop - padding - 40
+    
+    // Go straight out past obstacles before turning up
+    const clearRightX = Math.min(obstacleLeft - 10, startX + 40)
+    const pathAbove = [
+        startX,
+        startY,
+        clearRightX,
+        startY,
+        clearRightX,
+        routeAbove,
+        Math.max(endX - 30, clearRightX),
+        routeAbove,
+        Math.max(endX - 30, clearRightX),
+        endY,
+        endX,
+        endY,
+    ]
+    if (!pathIntersectsObstacles(pathAbove, obstacles, padding)) {
+        strategies.push(pathAbove)
+    }
+
+    // Strategy 2: Route far below all obstacles
+    const maxBottom = Math.max(
+        sourceY + sourceHeight,
+        targetY + targetHeight,
+        ...obstacles.map((o) => o.y + o.height)
+    )
+    const routeBelow = maxBottom + padding + 40
+    
+    const pathBelow = [
+        startX,
+        startY,
+        clearRightX,
+        startY,
+        clearRightX,
+        routeBelow,
+        Math.max(endX - 30, clearRightX),
+        routeBelow,
+        Math.max(endX - 30, clearRightX),
+        endY,
+        endX,
+        endY,
+    ]
+    if (!pathIntersectsObstacles(pathBelow, obstacles, padding)) {
+        strategies.push(pathBelow)
+    }
+
+    // Strategy 3: Route far to the right of all obstacles
+    const farRight = obstacleRight + 40
+    if (farRight < endX - 30) {
+        const pathFarRight = [
+            startX,
+            startY,
+            farRight,
+            startY,
+            farRight,
+            endY,
+            endX,
+            endY,
+        ]
+        if (!pathIntersectsObstacles(pathFarRight, obstacles, padding)) {
+            strategies.push(pathFarRight)
+        }
+    }
+
+    // Strategy 4: Route around individual obstacles (above and below)
+    for (const obstacle of obstacles) {
+        const obsLeft = obstacle.x - padding
+        const obsRight = obstacle.x + obstacle.width + padding
+        const obsTop = obstacle.y - padding
+        const obsBottom = obstacle.y + obstacle.height + padding
+
+        // Only consider obstacles that are actually in the way
+        if (obsRight > startX && obsLeft < endX) {
+            // Try routing above this obstacle
+            const aboveY = obsTop - 30
+            const beforeObsX = Math.max(startX + 20, obsLeft - 30)
+            const afterObsX = Math.min(endX - 20, obsRight + 30)
+            
+            const pathAroundTop = [
+                startX,
+                startY,
+                beforeObsX,
+                startY,
+                beforeObsX,
+                aboveY,
+                afterObsX,
+                aboveY,
+                afterObsX,
+                endY,
+                endX,
+                endY,
+            ]
+            if (!pathIntersectsObstacles(pathAroundTop, obstacles, padding)) {
+                strategies.push(pathAroundTop)
             }
 
-            // Check if horizontal segment intersects
-            if (pathIntersectsCard(startX, startY, midX, startY, card)) {
-                // Route above or below the card
-                const cardTop = card.y - padding
-                const cardBottom = card.y + card.height + padding
-
-                if (startY < targetCenterY) {
-                    // Going down, route below
-                    points = [
-                        startX,
-                        startY,
-                        startX + 20,
-                        startY,
-                        startX + 20,
-                        cardBottom,
-                        midX,
-                        cardBottom,
-                        midX,
-                        endY,
-                        endX,
-                        endY,
-                    ]
-                } else {
-                    // Going up, route above
-                    points = [
-                        startX,
-                        startY,
-                        startX + 20,
-                        startY,
-                        startX + 20,
-                        cardTop,
-                        midX,
-                        cardTop,
-                        midX,
-                        endY,
-                        endX,
-                        endY,
-                    ]
-                }
-                break
+            // Try routing below this obstacle
+            const belowY = obsBottom + 30
+            const pathAroundBottom = [
+                startX,
+                startY,
+                beforeObsX,
+                startY,
+                beforeObsX,
+                belowY,
+                afterObsX,
+                belowY,
+                afterObsX,
+                endY,
+                endX,
+                endY,
+            ]
+            if (!pathIntersectsObstacles(pathAroundBottom, obstacles, padding)) {
+                strategies.push(pathAroundBottom)
             }
         }
     }
 
-    return points
+    // Strategy 5: Direct vertical-horizontal path if very close
+    if (Math.abs(endX - startX) < 60) {
+        const pathDirect = [startX, startY, startX + 30, startY, startX + 30, endY, endX, endY]
+        if (!pathIntersectsObstacles(pathDirect, obstacles, padding)) {
+            strategies.push(pathDirect)
+        }
+    }
+
+    // If we found valid strategies, pick the one with fewest turns
+    if (strategies.length > 0) {
+        strategies.sort((a, b) => {
+            const turnsA = countTurns(a)
+            const turnsB = countTurns(b)
+            if (turnsA !== turnsB) {
+                return turnsA - turnsB
+            }
+            // If same number of turns, prefer shorter path
+            const lengthA = a.length
+            const lengthB = b.length
+            return lengthA - lengthB
+        })
+        return strategies[0]
+    }
+
+    // If no valid strategy found, return simple path (best effort)
+    return simplePath
 }
 
 const Link: React.FC<LinkProps> = ({
