@@ -1,8 +1,6 @@
 import React from 'react'
 import { render, screen, act } from '@testing-library/react'
-import InfiniteCanvas, {
-    InfiniteCanvasRef,
-} from '../components/InfiniteCanvas'
+import InfiniteCanvas, { InfiniteCanvasRef } from '../components/InfiniteCanvas'
 
 // Mock react-konva components with DOM-safe wrappers
 jest.mock('react-konva', () => jest.requireActual('../testUtils/mockKonva'))

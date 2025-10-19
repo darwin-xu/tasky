@@ -69,7 +69,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const [deleteConfirmation, setDeleteConfirmation] = useState<{
             isOpen: boolean
             itemId: string | null
-            itemType: 'task' | 'state' | 'link' | null
+            itemType: 'task' | 'state' | null
         }>({
             isOpen: false,
             itemId: null,
@@ -383,6 +383,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     targetId: newState.id,
                     sourceType: 'task',
                     targetType: 'state',
+                    linkStyle: 'free',
+                    routeAround: false,
                 }
                 setLinks((prevLinks) => [...prevLinks, newLink])
 
@@ -399,23 +401,31 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             setSelectedStateId(null)
         }, [])
 
-        const handleLinkDeleteRequest = useCallback((linkId: string) => {
-            setDeleteConfirmation({
-                isOpen: true,
-                itemId: linkId,
-                itemType: 'link',
-            })
-        }, [])
+        const handleUpdateLinkStyle = useCallback(
+            (linkId: string, style: 'free' | 'orthogonal') => {
+                setLinks((prevLinks) =>
+                    prevLinks.map((link) =>
+                        link.id === linkId
+                            ? { ...link, linkStyle: style }
+                            : link
+                    )
+                )
+            },
+            []
+        )
 
-        const handleLinkReassignStart = useCallback((linkId: string) => {
-            // TODO: Implement reassign start functionality in Story 6
-            console.log('Reassign start for link:', linkId)
-        }, [])
-
-        const handleLinkReassignEnd = useCallback((linkId: string) => {
-            // TODO: Implement reassign end functionality in Story 6
-            console.log('Reassign end for link:', linkId)
-        }, [])
+        const handleUpdateRouteAround = useCallback(
+            (linkId: string, routeAround: boolean) => {
+                setLinks((prevLinks) =>
+                    prevLinks.map((link) =>
+                        link.id === linkId
+                            ? { ...link, routeAround: routeAround }
+                            : link
+                    )
+                )
+            },
+            []
+        )
 
         // Create task function
         const createTask = useCallback(() => {
@@ -586,6 +596,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     targetId: newState.id,
                     sourceType: 'state',
                     targetType: 'state',
+                    linkStyle: 'free',
+                    routeAround: false,
                 }
                 setLinks((prevLinks) => [...prevLinks, newLink])
 
@@ -629,16 +641,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     if (selectedStateId === deleteConfirmation.itemId) {
                         setSelectedStateId(null)
                     }
-                } else if (deleteConfirmation.itemType === 'link') {
-                    setLinks((prevLinks) =>
-                        prevLinks.filter(
-                            (link) => link.id !== deleteConfirmation.itemId
-                        )
-                    )
-                    // Clear selection if deleted link was selected
-                    if (selectedLinkId === deleteConfirmation.itemId) {
-                        setSelectedLinkId(null)
-                    }
                 }
             }
             setDeleteConfirmation({
@@ -651,7 +653,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             deleteConfirmation.itemType,
             selectedTaskId,
             selectedStateId,
-            selectedLinkId,
         ])
 
         // Cancel deletion
@@ -736,10 +737,30 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             if (!sourceCard || !targetCard) return null
 
                             // Determine dimensions based on card type
-                            const sourceWidth = link.sourceType === 'task' ? 200 : 200
-                            const sourceHeight = link.sourceType === 'task' ? 150 : 120
-                            const targetWidth = link.targetType === 'task' ? 200 : 200
-                            const targetHeight = link.targetType === 'task' ? 150 : 120
+                            const sourceWidth =
+                                link.sourceType === 'task' ? 200 : 200
+                            const sourceHeight =
+                                link.sourceType === 'task' ? 150 : 120
+                            const targetWidth =
+                                link.targetType === 'task' ? 200 : 200
+                            const targetHeight =
+                                link.targetType === 'task' ? 150 : 120
+
+                            // Collect all card positions for route-around
+                            const allCards = [
+                                ...tasks.map((t) => ({
+                                    x: t.x,
+                                    y: t.y,
+                                    width: 200,
+                                    height: 150,
+                                })),
+                                ...states.map((s) => ({
+                                    x: s.x,
+                                    y: s.y,
+                                    width: 200,
+                                    height: 120,
+                                })),
+                            ]
 
                             return (
                                 <LinkComponent
@@ -753,11 +774,15 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                     targetY={targetCard.y}
                                     targetWidth={targetWidth}
                                     targetHeight={targetHeight}
+                                    linkStyle={link.linkStyle || 'free'}
+                                    routeAround={link.routeAround || false}
                                     isSelected={link.id === selectedLinkId}
                                     onClick={handleLinkClick}
-                                    onDelete={handleLinkDeleteRequest}
-                                    onReassignStart={handleLinkReassignStart}
-                                    onReassignEnd={handleLinkReassignEnd}
+                                    onUpdateLinkStyle={handleUpdateLinkStyle}
+                                    onUpdateRouteAround={
+                                        handleUpdateRouteAround
+                                    }
+                                    allCards={allCards}
                                 />
                             )
                         })}
@@ -870,18 +895,14 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 <ConfirmDialog
                     isOpen={deleteConfirmation.isOpen}
                     title={
-                        deleteConfirmation.itemType === 'link'
-                            ? 'Delete Link'
-                            : deleteConfirmation.itemType === 'state'
-                              ? 'Delete State'
-                              : 'Delete Task'
+                        deleteConfirmation.itemType === 'state'
+                            ? 'Delete State'
+                            : 'Delete Task'
                     }
                     message={
-                        deleteConfirmation.itemType === 'link'
-                            ? 'Are you sure you want to delete this link? This action cannot be undone.'
-                            : deleteConfirmation.itemType === 'state'
-                              ? 'Are you sure you want to delete this state? This action cannot be undone.'
-                              : 'Are you sure you want to delete this task? This action cannot be undone.'
+                        deleteConfirmation.itemType === 'state'
+                            ? 'Are you sure you want to delete this state? This action cannot be undone.'
+                            : 'Are you sure you want to delete this task? This action cannot be undone.'
                     }
                     confirmLabel="Delete"
                     cancelLabel="Cancel"
