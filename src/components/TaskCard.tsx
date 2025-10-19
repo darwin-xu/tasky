@@ -223,7 +223,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     shadowOpacity={isDragging ? 0.4 : isSelected ? 0.3 : 0.2}
                     shadowOffsetX={2}
                     shadowOffsetY={2}
-                    cornerRadius={4}
+                    cornerRadius={10}
                 />
 
                 {/* Priority indicator bar */}
