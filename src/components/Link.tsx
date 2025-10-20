@@ -22,6 +22,99 @@ export interface LinkProps {
     allCards?: Array<{ x: number; y: number; width: number; height: number }>
 }
 
+type RectLike = { x: number; y: number; width: number; height: number }
+
+type Side = 'left' | 'right' | 'top' | 'bottom'
+
+const rectsOverlap = (a: RectLike, b: RectLike): boolean => {
+    return !(
+        a.x + a.width <= b.x ||
+        b.x + b.width <= a.x ||
+        a.y + a.height <= b.y ||
+        b.y + b.height <= a.y
+    )
+}
+
+const getSideMidpoint = (rect: RectLike, side: Side): { x: number; y: number } => {
+    switch (side) {
+        case 'left':
+            return { x: rect.x, y: rect.y + rect.height / 2 }
+        case 'right':
+            return { x: rect.x + rect.width, y: rect.y + rect.height / 2 }
+        case 'top':
+            return { x: rect.x + rect.width / 2, y: rect.y }
+        case 'bottom':
+            return { x: rect.x + rect.width / 2, y: rect.y + rect.height }
+        default:
+            return { x: rect.x, y: rect.y }
+    }
+}
+
+const squaredDistance = (a: { x: number; y: number }, b: { x: number; y: number }): number => {
+    const dx = a.x - b.x
+    const dy = a.y - b.y
+    return dx * dx + dy * dy
+}
+
+const pointInsideRect = (x: number, y: number, rect: RectLike): boolean => {
+    return (
+        x >= rect.x &&
+        x <= rect.x + rect.width &&
+        y >= rect.y &&
+        y <= rect.y + rect.height
+    )
+}
+
+const segmentsIntersect = (
+    ax1: number,
+    ay1: number,
+    ax2: number,
+    ay2: number,
+    bx1: number,
+    by1: number,
+    bx2: number,
+    by2: number
+): boolean => {
+    const orientation = (
+        px1: number,
+        py1: number,
+        px2: number,
+        py2: number,
+        px3: number,
+        py3: number
+    ): number => {
+        return (py2 - py1) * (px3 - px2) - (px2 - px1) * (py3 - py2)
+    }
+
+    const onSegment = (
+        px1: number,
+        py1: number,
+        px2: number,
+        py2: number,
+        px3: number,
+        py3: number
+    ): boolean => {
+        return (
+            Math.min(px1, px2) <= px3 &&
+            px3 <= Math.max(px1, px2) &&
+            Math.min(py1, py2) <= py3 &&
+            py3 <= Math.max(py1, py2)
+        )
+    }
+
+    const o1 = orientation(ax1, ay1, ax2, ay2, bx1, by1)
+    const o2 = orientation(ax1, ay1, ax2, ay2, bx2, by2)
+    const o3 = orientation(bx1, by1, bx2, by2, ax1, ay1)
+    const o4 = orientation(bx1, by1, bx2, by2, ax2, ay2)
+
+    if (o1 === 0 && onSegment(ax1, ay1, ax2, ay2, bx1, by1)) return true
+    if (o2 === 0 && onSegment(ax1, ay1, ax2, ay2, bx2, by2)) return true
+    if (o3 === 0 && onSegment(bx1, by1, bx2, by2, ax1, ay1)) return true
+    if (o4 === 0 && onSegment(bx1, by1, bx2, by2, ax2, ay2)) return true
+
+    return (o1 > 0) !== (o2 > 0) && (o3 > 0) !== (o4 > 0)
+}
+
 // Calculate the best anchor point on the edge of a rectangle
 const calculateAnchorPoint = (
     sourceX: number,
@@ -87,39 +180,47 @@ const lineSegmentIntersectsRect = (
     y1: number,
     x2: number,
     y2: number,
-    rect: { x: number; y: number; width: number; height: number },
+    rect: RectLike,
     padding: number = LINK.OBSTACLE_PADDING
 ): boolean => {
-    const rectLeft = rect.x - padding
-    const rectRight = rect.x + rect.width + padding
-    const rectTop = rect.y - padding
-    const rectBottom = rect.y + rect.height + padding
-
-    // Check if horizontal line intersects
-    if (y1 === y2) {
-        const minX = Math.min(x1, x2)
-        const maxX = Math.max(x1, x2)
-        return (
-            y1 >= rectTop &&
-            y1 <= rectBottom &&
-            maxX >= rectLeft &&
-            minX <= rectRight
-        )
+    const paddedRect: RectLike = {
+        x: rect.x - padding,
+        y: rect.y - padding,
+        width: rect.width + padding * 2,
+        height: rect.height + padding * 2,
     }
 
-    // Check if vertical line intersects
-    if (x1 === x2) {
-        const minY = Math.min(y1, y2)
-        const maxY = Math.max(y1, y2)
-        return (
-            x1 >= rectLeft &&
-            x1 <= rectRight &&
-            maxY >= rectTop &&
-            minY <= rectBottom
-        )
+    const rectMaxX = paddedRect.x + paddedRect.width
+    const rectMaxY = paddedRect.y + paddedRect.height
+
+    const segMinX = Math.min(x1, x2)
+    const segMaxX = Math.max(x1, x2)
+    const segMinY = Math.min(y1, y2)
+    const segMaxY = Math.max(y1, y2)
+
+    if (
+        segMaxX < paddedRect.x ||
+        segMinX > rectMaxX ||
+        segMaxY < paddedRect.y ||
+        segMinY > rectMaxY
+    ) {
+        return false
     }
 
-    return false
+    if (pointInsideRect(x1, y1, paddedRect) || pointInsideRect(x2, y2, paddedRect)) {
+        return true
+    }
+
+    const edges: Array<[number, number, number, number]> = [
+        [paddedRect.x, paddedRect.y, rectMaxX, paddedRect.y],
+        [rectMaxX, paddedRect.y, rectMaxX, rectMaxY],
+        [rectMaxX, rectMaxY, paddedRect.x, rectMaxY],
+        [paddedRect.x, rectMaxY, paddedRect.x, paddedRect.y],
+    ]
+
+    return edges.some(([ex1, ey1, ex2, ey2]) =>
+        segmentsIntersect(x1, y1, x2, y2, ex1, ey1, ex2, ey2)
+    )
 }
 
 // Helper function to check if a path (array of points) intersects any obstacles
@@ -409,32 +510,99 @@ const Link: React.FC<LinkProps> = ({
             pathPoints[len - 1],
         ]
     } else {
-        // Free path - calculate anchor points on card edges
-        const sourceAnchor = calculateAnchorPoint(
-            sourceX,
-            sourceY,
-            sourceWidth,
-            sourceHeight,
-            targetX + targetWidth / 2,
-            targetY + targetHeight / 2
-        )
+        const sourceRect: RectLike = {
+            x: sourceX,
+            y: sourceY,
+            width: sourceWidth,
+            height: sourceHeight,
+        }
+        const targetRect: RectLike = {
+            x: targetX,
+            y: targetY,
+            width: targetWidth,
+            height: targetHeight,
+        }
 
-        const targetAnchor = calculateAnchorPoint(
-            targetX,
-            targetY,
-            targetWidth,
-            targetHeight,
-            sourceX + sourceWidth / 2,
-            sourceY + sourceHeight / 2
-        )
+        if (rectsOverlap(sourceRect, targetRect)) {
+            return null
+        }
 
-        arrowPoints = [
-            sourceAnchor.x,
-            sourceAnchor.y,
-            targetAnchor.x,
-            targetAnchor.y,
+        const connectionPairs: Array<{ sourceSide: Side; targetSide: Side }> = [
+            { sourceSide: 'left', targetSide: 'right' },
+            { sourceSide: 'right', targetSide: 'left' },
+            { sourceSide: 'top', targetSide: 'bottom' },
+            { sourceSide: 'bottom', targetSide: 'top' },
         ]
-        pathPoints = arrowPoints
+
+        const obstacles = (allCards || []).filter(
+            (card) =>
+                !(
+                    card.x === sourceRect.x &&
+                    card.y === sourceRect.y &&
+                    card.width === sourceRect.width &&
+                    card.height === sourceRect.height
+                ) &&
+                !(
+                    card.x === targetRect.x &&
+                    card.y === targetRect.y &&
+                    card.width === targetRect.width &&
+                    card.height === targetRect.height
+                )
+        )
+
+        const candidates = connectionPairs.map((pair) => {
+            const start = getSideMidpoint(sourceRect, pair.sourceSide)
+            const end = getSideMidpoint(targetRect, pair.targetSide)
+            const blocked = obstacles.some((obstacle) =>
+                lineSegmentIntersectsRect(
+                    start.x,
+                    start.y,
+                    end.x,
+                    end.y,
+                    obstacle
+                )
+            )
+            return { start, end, blocked, distance: squaredDistance(start, end) }
+        })
+
+        const valid = candidates.filter((candidate) => !candidate.blocked)
+        const preferred = (valid.length > 0 ? valid : candidates).sort(
+            (a, b) => a.distance - b.distance
+        )[0]
+
+        if (!preferred) {
+            const fallbackSource = calculateAnchorPoint(
+                sourceX,
+                sourceY,
+                sourceWidth,
+                sourceHeight,
+                targetX + targetWidth / 2,
+                targetY + targetHeight / 2
+            )
+            const fallbackTarget = calculateAnchorPoint(
+                targetX,
+                targetY,
+                targetWidth,
+                targetHeight,
+                sourceX + sourceWidth / 2,
+                sourceY + sourceHeight / 2
+            )
+            arrowPoints = [
+                fallbackSource.x,
+                fallbackSource.y,
+                fallbackTarget.x,
+                fallbackTarget.y,
+            ]
+            pathPoints = arrowPoints
+        } else {
+            arrowPoints = [
+                preferred.start.x,
+                preferred.start.y,
+                preferred.end.x,
+                preferred.end.y,
+            ]
+            pathPoints = arrowPoints
+        }
     }
 
     // Calculate midpoint for control buttons
