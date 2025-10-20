@@ -5,6 +5,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 1: Create Task Card
+- [x] Completed
 
 - **As a** user,
 - **I want** to create a new Task card on the canvas,
@@ -21,6 +22,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 2: Edit Task Card
+- [x] Completed
 
 - **As a** user,
 - **I want** to edit a Task card’s fields,
@@ -37,6 +39,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 3: Delete Task Card
+- [x] Completed
 
 - **As a** user,
 - **I want** to delete a Task card,
@@ -52,6 +55,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 4: Create State Card
+- [x] Completed
 
 - **As a** user,
 - **I want** to create a new State card on the canvas,
@@ -67,6 +71,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 5: Edit State Card
+- [x] Completed
 
 - **As a** user,
 - **I want** to edit a State card’s fields,
@@ -82,6 +87,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 6: Delete State Card
+- [x] Completed
 
 - **As a** user,
 - **I want** to delete a State card,
@@ -96,6 +102,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 7: Drag and Drop Cards
+- [x] Completed
 
 - **As a** user,
 - **I want** to drag and drop Task and State cards anywhere on the canvas,
@@ -111,6 +118,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 8: Card Snap-to-Grid
+- [x] Completed
 
 - **As a** user,
 - **I want** cards to snap to the grid when moved,
@@ -125,6 +133,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 9: Fork / Duplicate Card
+- [x] Completed
 
 - **As a** user,
 - **I want** to duplicate an existing Task or State card,
@@ -140,6 +149,7 @@ This document breaks down EPIC 2 into individual user stories, following the INV
 ---
 
 ### Story 10: Card Field Validation & Display
+- [x] Completed
 
 - **As a** user,
 - **I want** clear validation and consistent display of card fields,

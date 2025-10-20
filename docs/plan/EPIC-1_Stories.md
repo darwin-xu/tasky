@@ -5,6 +5,7 @@ This document breaks down EPIC 1 into individual user stories, following the INV
 ---
 
 ### Story 1: Infinite Canvas View
+- [x] Completed
 
 - **As a** user,
 - **I want** an endless canvas workspace,
@@ -19,6 +20,7 @@ This document breaks down EPIC 1 into individual user stories, following the INV
 ---
 
 ### Story 2: Visual Grid System
+- [x] Completed
 
 - **As a** user,
 - **I want** to see a non-intrusive dotted grid on the canvas background,
@@ -33,6 +35,7 @@ This document breaks down EPIC 1 into individual user stories, following the INV
 ---
 
 ### Story 3: Canvas Panning
+- [x] Completed
 
 - **As a** user,
 - **I want** to pan the canvas in any direction (horizontally and vertically),
@@ -48,6 +51,7 @@ This document breaks down EPIC 1 into individual user stories, following the INV
 ---
 
 ### Story 4: Canvas Zooming
+- [x] Completed
 
 - **As a** user,
 - **I want** to zoom in and out on the canvas,
@@ -62,6 +66,7 @@ This document breaks down EPIC 1 into individual user stories, following the INV
 ---
 
 ### Story 5: Snap-to-Grid Alignment
+- [x] Completed
 
 - **As a** user,
 - **I want** objects to automatically snap to the nearest grid point when I move them,
@@ -76,6 +81,7 @@ This document breaks down EPIC 1 into individual user stories, following the INV
 ---
 
 ### Story 6: Responsive Canvas Layout
+- [x] Completed
 
 - **As a** user,
 - **I want** the canvas view to adapt to the size of my browser window,
