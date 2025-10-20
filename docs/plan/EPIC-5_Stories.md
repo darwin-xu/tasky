@@ -5,6 +5,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 1: Undo/Redo Framework
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** undo and redo for major actions,
@@ -20,6 +21,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 2: Search Cards by Text
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to search cards by title or description,
@@ -34,6 +36,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 3: Filter Cards by Properties
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to filter cards by priority, date range, or type (Task/State),
@@ -48,6 +51,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 4: Highlight Related Cards on Selection
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** related cards and links to be highlighted when I select an item,
@@ -62,6 +66,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 5: Smooth Interaction Performance
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** pan, zoom, drag, and selection interactions to remain smooth,
@@ -76,6 +81,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 6: Persistent UI Preferences (Session)
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** search/filter criteria and visibility preferences to persist for the session,
@@ -89,6 +95,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 7: Accessible Search & Filter
+- [ ] Not implemented yet
 
 - **As a** keyboard user,
 - **I want** to operate search and filters via keyboard,
@@ -103,6 +110,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 8: Keyboard Shortcuts for Discovery
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** keyboard shortcuts to quickly access search and filters,
@@ -117,6 +125,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 9: Navigate Search Results
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to jump between search matches,
@@ -131,6 +140,7 @@ This document breaks down EPIC 5 into individual user stories, following the INV
 ---
 
 ### Story 10: Interaction Conflict Handling
+- [x] Completed
 
 - **As a** user,
 - **I want** interactions to avoid conflicting gestures,

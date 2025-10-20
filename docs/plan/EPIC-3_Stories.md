@@ -5,6 +5,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 1: Create Link (Task ➜ State)
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to create a directed visual link from a Task card to a State card,
@@ -20,6 +21,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 2: Fork New State From Existing State
+- [x] Completed
 
 - **As a** user,
 - **I want** to fork a new State from an existing State,
@@ -35,6 +37,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 3: Auto-Update Links When Cards Move
+- [x] Completed
 
 - **As a** user,
 - **I want** links to follow cards as I move them,
@@ -49,6 +52,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 4: Select and Inspect Links
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to select a link and see clear feedback,
@@ -63,6 +67,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 5: Delete Link
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to delete a link,
@@ -78,6 +83,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 6: Reassign Link Endpoints
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to reassign a link’s start or end to a different card,
@@ -93,6 +99,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 7: Visualize Relationship Hierarchy on Selection
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** relationship-focused highlighting,
@@ -107,6 +114,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 8: Link Validation Rules
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** clear rules preventing invalid connections,
@@ -122,6 +130,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 9: Link Routing, Layering, and Clarity
+- [x] Completed
 
 - **As a** user,
 - **I want** links to be readable and not obstruct content,
@@ -136,6 +145,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 10: Multiple Links and Fan-Out Management
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** multiple links from a Task to remain distinguishable,

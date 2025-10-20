@@ -5,6 +5,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 1: Backend API Skeleton (Node.js)
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** a minimal backend API scaffold,
@@ -19,6 +20,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 2: Persist Cards and Positions
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** my tasks, states, and their positions saved,
@@ -33,6 +35,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 3: Persist Links
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** links between cards saved and restored,
@@ -46,6 +49,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 4: Load Canvas on App Start
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** the canvas to load my data on app start,
@@ -59,6 +63,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 5: CRUD Endpoints for Tasks & States
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** full CRUD endpoints for tasks and states,
@@ -73,6 +78,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 6: Error Handling & Logging
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** consistent error handling and logs,
@@ -87,6 +93,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 7: Environment Configuration
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** environment-driven config,
@@ -100,6 +107,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 8: Data Model & Migrations (Basic)
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** a schema and migrations for core entities,
@@ -113,6 +121,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 9: Ownership & Auth Integration Points
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** endpoints ready to respect user ownership,
@@ -126,6 +135,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 10: Basic Rate Limiting & CORS
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** minimal protections and cross-origin access controls,

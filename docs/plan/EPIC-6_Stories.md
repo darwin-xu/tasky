@@ -5,6 +5,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 1: User Registration (Email/Password)
+- [ ] Not implemented yet
 
 - **As a** visitor,
 - **I want** to create an account with email and password,
@@ -19,6 +20,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 2: User Login & Logout
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to log in and log out,
@@ -33,6 +35,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 3: Secure Password Storage
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** passwords stored securely,
@@ -47,6 +50,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 4: Authenticated API Endpoints
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** my data requests to be protected by authentication,
@@ -61,6 +65,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 5: Associate Data to User
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** my tasks, states, and canvases associated with my account,
@@ -75,6 +80,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 6: Session Persistence (Client)
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to stay signed in across page reloads,
@@ -88,6 +94,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 7: Profile Basics
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** a minimal profile view,
@@ -101,6 +108,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 8: Change Password
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to change my password securely,
@@ -115,6 +123,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 9: Delete or Deactivate Account
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to delete or deactivate my account,
@@ -129,6 +138,7 @@ This document breaks down EPIC 6 into individual user stories, following the INV
 ---
 
 ### Story 10: User Management API (CRUD)
+- [ ] Not implemented yet
 
 - **As a** developer,
 - **I want** API endpoints for user profile update and deletion,

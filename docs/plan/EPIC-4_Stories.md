@@ -5,6 +5,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 1: Fixed Top Taskbar
+- [x] Completed
 
 - **As a** user,
 - **I want** a fixed taskbar at the top of the window,
@@ -19,6 +20,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 2: Create Task Button
+- [x] Completed
 
 - **As a** user,
 - **I want** a "Create Task" button in the taskbar,
@@ -33,6 +35,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 3: Configuration Menu
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** a Configuration menu accessible from the taskbar,
@@ -47,6 +50,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 4: Global UI Style Guidelines
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** a clean, minimal, and modern UI,
@@ -61,6 +65,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 5: Keyboard and Focus Accessibility
+- [ ] Not implemented yet
 
 - **As a** keyboard user,
 - **I want** to navigate and operate the taskbar and menus without a mouse,
@@ -75,6 +80,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 6: Modal or Inline Editors for Cards
+- [x] Completed
 
 - **As a** user,
 - **I want** to edit cards via a consistent editor experience (modal or inline),
@@ -89,6 +95,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 7: Non-Blocking UI Overlays
+- [x] Completed
 
 - **As a** user,
 - **I want** overlays (menus, modals) to behave predictably with the canvas,
@@ -103,6 +110,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 8: Theming Support (Light/Dark)
+- [ ] Not implemented yet
 
 - **As a** user,
 - **I want** to switch between light and dark themes,
@@ -117,6 +125,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 9: Layout Responsiveness & Safe Areas
+- [x] Completed
 
 - **As a** user,
 - **I want** the application shell to adapt to different screen sizes and safe areas,
@@ -131,6 +140,7 @@ This document breaks down EPIC 4 into individual user stories, following the INV
 ---
 
 ### Story 10: Performance & Visual Fidelity of Shell
+- [x] Completed
 
 - **As a** user,
 - **I want** the shell to render smoothly without jank,
