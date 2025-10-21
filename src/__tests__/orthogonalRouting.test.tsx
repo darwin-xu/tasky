@@ -1,6 +1,6 @@
 /**
  * Test suite for orthogonal routing algorithm
- * 
+ *
  * The routing algorithm should:
  * 1. Always anchor start point to right-middle of source card
  * 2. Always anchor end point to left-middle of target card
@@ -55,18 +55,16 @@ describe('Orthogonal Routing Algorithm', () => {
             // and end at left-middle of target (400, 60)
             const numPoints = JSON.parse(pointsStr!)
             expect(numPoints[0]).toBe(200) // startX = sourceX + sourceWidth
-            expect(numPoints[1]).toBe(60)  // startY = sourceY + sourceHeight/2
-            
+            expect(numPoints[1]).toBe(60) // startY = sourceY + sourceHeight/2
+
             const lastX = numPoints[numPoints.length - 2]
             const lastY = numPoints[numPoints.length - 1]
             expect(lastX).toBe(400) // endX = targetX
-            expect(lastY).toBe(60)  // endY = targetY + targetHeight/2
+            expect(lastY).toBe(60) // endY = targetY + targetHeight/2
         })
 
         test('keeps simple path when routeAround is false even with obstacles', () => {
-            const obstacles = [
-                { x: 250, y: 50, width: 100, height: 80 }
-            ]
+            const obstacles = [{ x: 250, y: 50, width: 100, height: 80 }]
 
             render(
                 <LinkComponent
@@ -90,8 +88,11 @@ describe('Orthogonal Routing Algorithm', () => {
 
             // Should still use simple path (not routing around)
             const line = lines[0]
-            const points = line.getAttribute('data-points')?.split(',').map(Number)
-            
+            const points = line
+                .getAttribute('data-points')
+                ?.split(',')
+                .map(Number)
+
             // Simple path has 8 values (4 points: start, mid1, mid2, end)
             expect(points?.length).toBe(8)
         })
@@ -159,9 +160,7 @@ describe('Orthogonal Routing Algorithm', () => {
 
     describe('Obstacle Avoidance', () => {
         test('routes around single obstacle when routeAround is enabled', () => {
-            const obstacles = [
-                { x: 250, y: 0, width: 100, height: 120 }
-            ]
+            const obstacles = [{ x: 250, y: 0, width: 100, height: 120 }]
 
             render(
                 <LinkComponent
@@ -186,7 +185,7 @@ describe('Orthogonal Routing Algorithm', () => {
             const line = lines[0]
             const pointsStr = line.getAttribute('data-points')
             expect(pointsStr).toBeTruthy()
-            
+
             const points = JSON.parse(pointsStr!)
             // Should have more than 4 points (8 values) for routing around
             expect(points.length > 8).toBe(true)
@@ -195,7 +194,7 @@ describe('Orthogonal Routing Algorithm', () => {
         test('routes around multiple obstacles', () => {
             const obstacles = [
                 { x: 250, y: 0, width: 100, height: 80 },
-                { x: 250, y: 100, width: 100, height: 80 }
+                { x: 250, y: 100, width: 100, height: 80 },
             ]
 
             render(
@@ -219,7 +218,10 @@ describe('Orthogonal Routing Algorithm', () => {
             expect(lines.length).toBeGreaterThan(0)
 
             const line = lines[0]
-            const points = line.getAttribute('data-points')?.split(',').map(Number)
+            const points = line
+                .getAttribute('data-points')
+                ?.split(',')
+                .map(Number)
 
             // Should route around both obstacles
             expect(points && points.length >= 8).toBe(true)
@@ -227,8 +229,8 @@ describe('Orthogonal Routing Algorithm', () => {
 
         test('does not treat source and target as obstacles', () => {
             const allCards = [
-                { x: 0, y: 0, width: 200, height: 120 },     // source
-                { x: 400, y: 0, width: 200, height: 120 }    // target
+                { x: 0, y: 0, width: 200, height: 120 }, // source
+                { x: 400, y: 0, width: 200, height: 120 }, // target
             ]
 
             render(
@@ -250,7 +252,10 @@ describe('Orthogonal Routing Algorithm', () => {
 
             const lines = screen.queryAllByTestId('konva-line')
             const line = lines[0]
-            const points = line.getAttribute('data-points')?.split(',').map(Number)
+            const points = line
+                .getAttribute('data-points')
+                ?.split(',')
+                .map(Number)
 
             // Should use simple path since source and target are excluded from obstacles
             expect(points?.length).toBe(8)
@@ -260,9 +265,7 @@ describe('Orthogonal Routing Algorithm', () => {
     describe('Path Optimization', () => {
         test('chooses path with fewer turns when multiple routes available', () => {
             // Place obstacle that could be routed around from top or bottom
-            const obstacles = [
-                { x: 300, y: 50, width: 50, height: 80 }
-            ]
+            const obstacles = [{ x: 300, y: 50, width: 50, height: 80 }]
 
             render(
                 <LinkComponent
@@ -344,13 +347,11 @@ describe('Orthogonal Routing Algorithm', () => {
             const points = JSON.parse(pointsStr!)
             // Should still start from right-middle of source
             expect(points[0]).toBe(600) // sourceX + sourceWidth
-            expect(points[1]).toBe(60)  // sourceY + sourceHeight/2
+            expect(points[1]).toBe(60) // sourceY + sourceHeight/2
         })
 
         test('handles overlapping cards', () => {
-            const obstacles = [
-                { x: 150, y: 50, width: 200, height: 120 }
-            ]
+            const obstacles = [{ x: 150, y: 50, width: 200, height: 120 }]
 
             render(
                 <LinkComponent
@@ -459,9 +460,7 @@ describe('Orthogonal Routing Algorithm', () => {
         })
 
         test('handles obstacle directly in the path', () => {
-            const obstacles = [
-                { x: 250, y: 50, width: 100, height: 80 }
-            ]
+            const obstacles = [{ x: 250, y: 50, width: 100, height: 80 }]
 
             render(
                 <LinkComponent
@@ -545,9 +544,7 @@ describe('Orthogonal Routing Algorithm', () => {
 
     describe('Path Validity', () => {
         test('path points are always valid numbers', () => {
-            const obstacles = [
-                { x: 250, y: 50, width: 100, height: 80 }
-            ]
+            const obstacles = [{ x: 250, y: 50, width: 100, height: 80 }]
 
             render(
                 <LinkComponent

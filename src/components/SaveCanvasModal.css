@@ -1,0 +1,78 @@
+.save-canvas-modal {
+    width: 400px;
+    max-width: 90%;
+}
+
+.save-canvas-modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #1f2937;
+    font-size: 24px;
+}
+
+.save-canvas-modal .form-group {
+    margin-bottom: 20px;
+}
+
+.save-canvas-modal label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.save-canvas-modal input[type='text'] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.save-canvas-modal input[type='text']:focus {
+    outline: none;
+    border-color: #2196f3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.save-canvas-modal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.save-canvas-modal .cancel-button,
+.save-canvas-modal .save-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.save-canvas-modal .cancel-button {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.save-canvas-modal .cancel-button:hover {
+    background-color: #e5e7eb;
+}
+
+.save-canvas-modal .save-button {
+    background-color: #2196f3;
+    color: white;
+}
+
+.save-canvas-modal .save-button:hover:not(:disabled) {
+    background-color: #1976d2;
+}
+
+.save-canvas-modal .save-button:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}

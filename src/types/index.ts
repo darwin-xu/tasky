@@ -58,3 +58,20 @@ export interface Link {
     linkStyle?: 'free' | 'orthogonal'
     routeAround?: boolean
 }
+
+export interface CanvasData {
+    id: string
+    name: string
+    tasks: Task[]
+    states: State[]
+    links: Link[]
+    createdAt: string
+    updatedAt: string
+}
+
+export interface CanvasMetadata {
+    id: string
+    name: string
+    createdAt: string
+    updatedAt: string
+}

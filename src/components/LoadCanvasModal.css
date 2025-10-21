@@ -1,0 +1,114 @@
+.load-canvas-modal {
+    width: 500px;
+    max-width: 90%;
+}
+
+.load-canvas-modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #1f2937;
+    font-size: 24px;
+}
+
+.load-canvas-modal .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+}
+
+.load-canvas-modal .empty-state p {
+    margin: 10px 0;
+}
+
+.load-canvas-modal .canvas-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+}
+
+.load-canvas-modal .canvas-item {
+    padding: 15px;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.load-canvas-modal .canvas-item:last-child {
+    border-bottom: none;
+}
+
+.load-canvas-modal .canvas-item:hover {
+    background-color: #f9fafb;
+}
+
+.load-canvas-modal .canvas-item.selected {
+    background-color: #eff6ff;
+}
+
+.load-canvas-modal .canvas-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.load-canvas-modal .canvas-item-header input[type='radio'] {
+    cursor: pointer;
+}
+
+.load-canvas-modal .canvas-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.load-canvas-modal .canvas-item-details {
+    margin-left: 24px;
+}
+
+.load-canvas-modal .canvas-date {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.load-canvas-modal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.load-canvas-modal .cancel-button,
+.load-canvas-modal .load-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.load-canvas-modal .cancel-button {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.load-canvas-modal .cancel-button:hover {
+    background-color: #e5e7eb;
+}
+
+.load-canvas-modal .load-button {
+    background-color: #2196f3;
+    color: white;
+}
+
+.load-canvas-modal .load-button:hover:not(:disabled) {
+    background-color: #1976d2;
+}
+
+.load-canvas-modal .load-button:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}

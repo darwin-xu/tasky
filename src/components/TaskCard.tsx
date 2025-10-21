@@ -218,7 +218,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <Rect
                     width={width}
                     height={height}
-                    fill={isDragging ? COLORS.TASK_BG_DRAGGING : COLORS.TASK_BG_NORMAL}
+                    fill={
+                        isDragging
+                            ? COLORS.TASK_BG_DRAGGING
+                            : COLORS.TASK_BG_NORMAL
+                    }
                     stroke={
                         isSelected
                             ? COLORS.TASK_BORDER_SELECTED
@@ -226,10 +230,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
                               ? COLORS.TASK_BORDER_DRAGGING
                               : COLORS.TASK_BORDER_NORMAL
                     }
-                    strokeWidth={isSelected ? TASK_CARD.STROKE_WIDTH_SELECTED : TASK_CARD.STROKE_WIDTH_NORMAL}
+                    strokeWidth={
+                        isSelected
+                            ? TASK_CARD.STROKE_WIDTH_SELECTED
+                            : TASK_CARD.STROKE_WIDTH_NORMAL
+                    }
                     shadowColor={COLORS.SHADOW_COLOR}
-                    shadowBlur={isDragging ? TASK_CARD.SHADOW_BLUR_DRAGGING : isSelected ? TASK_CARD.SHADOW_BLUR_SELECTED : TASK_CARD.SHADOW_BLUR_NORMAL}
-                    shadowOpacity={isDragging ? TASK_CARD.SHADOW_OPACITY_DRAGGING : isSelected ? TASK_CARD.SHADOW_OPACITY_SELECTED : TASK_CARD.SHADOW_OPACITY_NORMAL}
+                    shadowBlur={
+                        isDragging
+                            ? TASK_CARD.SHADOW_BLUR_DRAGGING
+                            : isSelected
+                              ? TASK_CARD.SHADOW_BLUR_SELECTED
+                              : TASK_CARD.SHADOW_BLUR_NORMAL
+                    }
+                    shadowOpacity={
+                        isDragging
+                            ? TASK_CARD.SHADOW_OPACITY_DRAGGING
+                            : isSelected
+                              ? TASK_CARD.SHADOW_OPACITY_SELECTED
+                              : TASK_CARD.SHADOW_OPACITY_NORMAL
+                    }
                     shadowOffsetX={TASK_CARD.SHADOW_OFFSET_X}
                     shadowOffsetY={TASK_CARD.SHADOW_OFFSET_Y}
                     cornerRadius={TASK_CARD.CORNER_RADIUS}
@@ -365,7 +385,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     <>
                         <Rect
                             x={width - TASK_CARD.LINK_HANDLE_X_OFFSET}
-                            y={height / 2 - TASK_CARD.LINK_HANDLE_Y_CENTER_OFFSET}
+                            y={
+                                height / 2 -
+                                TASK_CARD.LINK_HANDLE_Y_CENTER_OFFSET
+                            }
                             width={TASK_CARD.LINK_HANDLE_SIZE}
                             height={TASK_CARD.LINK_HANDLE_SIZE}
                             fill={COLORS.BUTTON_LINK}
@@ -376,7 +399,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
                         <Text
                             text="→"
                             x={width - TASK_CARD.LINK_HANDLE_X_OFFSET}
-                            y={height / 2 - TASK_CARD.LINK_HANDLE_Y_CENTER_OFFSET}
+                            y={
+                                height / 2 -
+                                TASK_CARD.LINK_HANDLE_Y_CENTER_OFFSET
+                            }
                             width={TASK_CARD.LINK_HANDLE_SIZE}
                             height={TASK_CARD.LINK_HANDLE_SIZE}
                             fontSize={TASK_CARD.BUTTON_FONT_SIZE}

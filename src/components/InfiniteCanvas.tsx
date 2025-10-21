@@ -37,6 +37,8 @@ export interface InfiniteCanvasRef {
     duplicateState: (stateId: string) => void
     forkState: (stateId: string) => void
     clearCanvas: () => void
+    getCanvasState: () => { tasks: Task[]; states: State[]; links: Link[] }
+    loadCanvasState: (tasks: Task[], states: State[], links: Link[]) => void
 }
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
@@ -97,6 +99,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             duplicateState,
             forkState,
             clearCanvas,
+            getCanvasState,
+            loadCanvasState,
         }))
 
         // Handle container resize
@@ -106,7 +110,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     const rect = containerRef.current.getBoundingClientRect()
                     setDimensions({
                         width: width || rect.width || VIEWPORT_DEFAULT_WIDTH,
-                        height: height || rect.height || VIEWPORT_DEFAULT_HEIGHT,
+                        height:
+                            height || rect.height || VIEWPORT_DEFAULT_HEIGHT,
                     })
                 }
             }
@@ -224,12 +229,12 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     const stage = e.target.getStage()
                     const pointerPos = stage?.getPointerPosition()
 
-                if (pointerPos) {
-                    // Calculate zoom factor based on deltaY
-                    const scaleBy = VIEWPORT_ZOOM_FACTOR
-                    const direction = deltaY > 0 ? -1 : 1
-                    const newScale =
-                        viewport.scale * Math.pow(scaleBy, direction)                        // Zoom to the pointer position
+                    if (pointerPos) {
+                        // Calculate zoom factor based on deltaY
+                        const scaleBy = VIEWPORT_ZOOM_FACTOR
+                        const direction = deltaY > 0 ? -1 : 1
+                        const newScale =
+                            viewport.scale * Math.pow(scaleBy, direction) // Zoom to the pointer position
                         viewport.zoomToPoint(pointerPos, newScale)
                     }
                 } else {
@@ -626,6 +631,24 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             setSelectedStateId(null)
             setSelectedLinkId(null)
         }, [])
+
+        // Get current canvas state
+        const getCanvasState = useCallback(() => {
+            return { tasks, states, links }
+        }, [tasks, states, links])
+
+        // Load canvas state
+        const loadCanvasState = useCallback(
+            (newTasks: Task[], newStates: State[], newLinks: Link[]) => {
+                setTasks(newTasks)
+                setStates(newStates)
+                setLinks(newLinks)
+                setSelectedTaskId(null)
+                setSelectedStateId(null)
+                setSelectedLinkId(null)
+            },
+            []
+        )
 
         // Handle delete request (opens confirmation dialog)
         const handleDeleteRequest = useCallback((id: string) => {
