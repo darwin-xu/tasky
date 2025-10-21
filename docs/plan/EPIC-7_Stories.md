@@ -4,47 +4,52 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 
 ---
 
-### Story 1: Backend API Skeleton (Node.js)
-- [ ] Not implemented yet
-
-- **As a** developer,
-- **I want** a minimal backend API scaffold,
-- **so that** the app can persist and fetch data.
-
-**Acceptance Criteria:**
-
-- Create a Node.js API service structure with routing, controllers, and basic error handling.
-- Health check endpoint returns service status and version.
-- Configuration is driven by environment variables with safe defaults.
-
----
-
-### Story 2: Persist Cards and Positions
+### Story 1: Interface for Persistent Data
 - [ ] Not implemented yet
 
 - **As a** user,
-- **I want** my tasks, states, and their positions saved,
-- **so that** my canvas layout is preserved between sessions.
+- **I want** have a menu for persistent data,
+- **so that** I can save and restore my tasks, states, and links.
 
 **Acceptance Criteria:**
 
-- API endpoints to create/read/update/delete Tasks and States, including position fields.
-- Saving updates the backend; loading restores the last saved positions.
-- Data model supports card fields from EPIC 2 and position on the canvas.
+- A menu option exists to save the current canvas state to DB.
+- A menu option exists to load the last saved canvas state from DB.
+- A menu option exists to clear the current canvas state.
+- A menu option exists to delete the saved canvas from DB.
+- No actual data persistence is implemented yet; this is just the interface.
 
 ---
 
-### Story 3: Persist Links
+### Story 2: Persist Canvas
 - [ ] Not implemented yet
 
 - **As a** user,
-- **I want** links between cards saved and restored,
-- **so that** relationships are preserved.
+- **I want** my canvas to be saved with their layout,
+- **so that** I can return to my work later without losing my progress.
 
 **Acceptance Criteria:**
 
-- API endpoints to create/read/delete links and reassign endpoints.
-- Loading a canvas restores all links with correct endpoints.
+- API endpoints to create/read/update/delete Tasks, States, and Links, including position fields.
+- Hook the save option in the menu to these endpoints.
+- Hook the save option in the menu to these endpoints.
+- Users can save multiple canvases to the database, each with a user-defined name.
+- Design all necessary data structures to store information for Tasks, States, and Links, along with a canvas metadata structure to hold them all together.
+
+---
+
+### Story 3: Load Canvas
+- [ ] Not implemented yet
+
+- **As a** user,
+- **I want** load a canvas with all its tasks, states, and links,
+- **so that** I can continue working seamlessly.
+
+**Acceptance Criteria:**
+
+- Hook the load option in the menu to the API endpoint to fetch the last saved canvas.
+- Loading a canvas restores all items along with their positions.
+
 
 ---
 
