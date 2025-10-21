@@ -35,7 +35,10 @@ const rectsOverlap = (a: RectLike, b: RectLike): boolean => {
     )
 }
 
-const getSideMidpoint = (rect: RectLike, side: Side): { x: number; y: number } => {
+const getSideMidpoint = (
+    rect: RectLike,
+    side: Side
+): { x: number; y: number } => {
     switch (side) {
         case 'left':
             return { x: rect.x, y: rect.y + rect.height / 2 }
@@ -50,7 +53,10 @@ const getSideMidpoint = (rect: RectLike, side: Side): { x: number; y: number } =
     }
 }
 
-const squaredDistance = (a: { x: number; y: number }, b: { x: number; y: number }): number => {
+const squaredDistance = (
+    a: { x: number; y: number },
+    b: { x: number; y: number }
+): number => {
     const dx = a.x - b.x
     const dy = a.y - b.y
     return dx * dx + dy * dy
@@ -112,7 +118,7 @@ const segmentsIntersect = (
     if (o3 === 0 && onSegment(bx1, by1, bx2, by2, ax1, ay1)) return true
     if (o4 === 0 && onSegment(bx1, by1, bx2, by2, ax2, ay2)) return true
 
-    return (o1 > 0) !== (o2 > 0) && (o3 > 0) !== (o4 > 0)
+    return o1 > 0 !== o2 > 0 && o3 > 0 !== o4 > 0
 }
 
 // Calculate the best anchor point on the edge of a rectangle
@@ -207,7 +213,10 @@ const lineSegmentIntersectsRect = (
         return false
     }
 
-    if (pointInsideRect(x1, y1, paddedRect) || pointInsideRect(x2, y2, paddedRect)) {
+    if (
+        pointInsideRect(x1, y1, paddedRect) ||
+        pointInsideRect(x2, y2, paddedRect)
+    ) {
         return true
     }
 
@@ -309,18 +318,19 @@ const calculateOrthogonalPath = (
 
     // Find the leftmost and rightmost obstacle bounds
     const obstacleLeft = Math.min(...obstacles.map((o) => o.x - padding))
-    const obstacleRight = Math.max(...obstacles.map((o) => o.x + o.width + padding))
+    const obstacleRight = Math.max(
+        ...obstacles.map((o) => o.x + o.width + padding)
+    )
 
     // Strategy 1: Route far above all obstacles
-    const maxTop = Math.min(
-        sourceY,
-        targetY,
-        ...obstacles.map((o) => o.y)
-    )
+    const maxTop = Math.min(sourceY, targetY, ...obstacles.map((o) => o.y))
     const routeAbove = maxTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
-    
+
     // Go straight out past obstacles before turning up
-    const clearRightX = Math.min(obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL, startX + LINK.ROUTE_ABOVE_BELOW_OFFSET)
+    const clearRightX = Math.min(
+        obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL,
+        startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
+    )
     const pathAbove = [
         startX,
         startY,
@@ -346,7 +356,7 @@ const calculateOrthogonalPath = (
         ...obstacles.map((o) => o.y + o.height)
     )
     const routeBelow = maxBottom + padding + LINK.ROUTE_ABOVE_BELOW_OFFSET
-    
+
     const pathBelow = [
         startX,
         startY,
@@ -394,9 +404,15 @@ const calculateOrthogonalPath = (
         if (obsRight > startX && obsLeft < endX) {
             // Try routing above this obstacle
             const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
-            const beforeObsX = Math.max(startX + LINK.OBSTACLE_PADDING, obsLeft - LINK.AROUND_OBSTACLE_OFFSET)
-            const afterObsX = Math.min(endX - LINK.OBSTACLE_PADDING, obsRight + LINK.AROUND_OBSTACLE_OFFSET)
-            
+            const beforeObsX = Math.max(
+                startX + LINK.OBSTACLE_PADDING,
+                obsLeft - LINK.AROUND_OBSTACLE_OFFSET
+            )
+            const afterObsX = Math.min(
+                endX - LINK.OBSTACLE_PADDING,
+                obsRight + LINK.AROUND_OBSTACLE_OFFSET
+            )
+
             const pathAroundTop = [
                 startX,
                 startY,
@@ -431,7 +447,9 @@ const calculateOrthogonalPath = (
                 endX,
                 endY,
             ]
-            if (!pathIntersectsObstacles(pathAroundBottom, obstacles, padding)) {
+            if (
+                !pathIntersectsObstacles(pathAroundBottom, obstacles, padding)
+            ) {
                 strategies.push(pathAroundBottom)
             }
         }
@@ -439,7 +457,16 @@ const calculateOrthogonalPath = (
 
     // Strategy 5: Direct vertical-horizontal path if very close
     if (Math.abs(endX - startX) < LINK.DIRECT_PATH_THRESHOLD) {
-        const pathDirect = [startX, startY, startX + LINK.CLEARANCE_OFFSET_LARGE, startY, startX + LINK.CLEARANCE_OFFSET_LARGE, endY, endX, endY]
+        const pathDirect = [
+            startX,
+            startY,
+            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            startY,
+            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            endY,
+            endX,
+            endY,
+        ]
         if (!pathIntersectsObstacles(pathDirect, obstacles, padding)) {
             strategies.push(pathDirect)
         }
@@ -562,7 +589,12 @@ const Link: React.FC<LinkProps> = ({
                     obstacle
                 )
             )
-            return { start, end, blocked, distance: squaredDistance(start, end) }
+            return {
+                start,
+                end,
+                blocked,
+                distance: squaredDistance(start, end),
+            }
         })
 
         const valid = candidates.filter((candidate) => !candidate.blocked)
@@ -636,17 +668,37 @@ const Link: React.FC<LinkProps> = ({
                 <>
                     <Line
                         points={pathPoints}
-                        stroke={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
-                        strokeWidth={isSelected ? LINK.STROKE_WIDTH_SELECTED : LINK.STROKE_WIDTH_NORMAL}
+                        stroke={
+                            isSelected
+                                ? COLORS.LINK_SELECTED
+                                : COLORS.LINK_NORMAL
+                        }
+                        strokeWidth={
+                            isSelected
+                                ? LINK.STROKE_WIDTH_SELECTED
+                                : LINK.STROKE_WIDTH_NORMAL
+                        }
                         onClick={handleClick}
                         onTap={handleClick}
                         hitStrokeWidth={LINK.HIT_STROKE_WIDTH}
                     />
                     <Arrow
                         points={arrowPoints}
-                        stroke={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
-                        strokeWidth={isSelected ? LINK.STROKE_WIDTH_SELECTED : LINK.STROKE_WIDTH_NORMAL}
-                        fill={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
+                        stroke={
+                            isSelected
+                                ? COLORS.LINK_SELECTED
+                                : COLORS.LINK_NORMAL
+                        }
+                        strokeWidth={
+                            isSelected
+                                ? LINK.STROKE_WIDTH_SELECTED
+                                : LINK.STROKE_WIDTH_NORMAL
+                        }
+                        fill={
+                            isSelected
+                                ? COLORS.LINK_SELECTED
+                                : COLORS.LINK_NORMAL
+                        }
                         pointerLength={LINK.POINTER_LENGTH}
                         pointerWidth={LINK.POINTER_WIDTH}
                         onClick={handleClick}
@@ -657,9 +709,17 @@ const Link: React.FC<LinkProps> = ({
             ) : (
                 <Arrow
                     points={arrowPoints}
-                    stroke={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
-                    strokeWidth={isSelected ? LINK.STROKE_WIDTH_SELECTED : LINK.STROKE_WIDTH_NORMAL}
-                    fill={isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL}
+                    stroke={
+                        isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL
+                    }
+                    strokeWidth={
+                        isSelected
+                            ? LINK.STROKE_WIDTH_SELECTED
+                            : LINK.STROKE_WIDTH_NORMAL
+                    }
+                    fill={
+                        isSelected ? COLORS.LINK_SELECTED : COLORS.LINK_NORMAL
+                    }
                     pointerLength={LINK.POINTER_LENGTH}
                     pointerWidth={LINK.POINTER_WIDTH}
                     onClick={handleClick}
@@ -713,7 +773,11 @@ const Link: React.FC<LinkProps> = ({
                                 y={LINK.ROUTE_AROUND_Y_OFFSET}
                                 width={LINK.CONTROL_BUTTON_WIDTH}
                                 height={LINK.CONTROL_BUTTON_HEIGHT}
-                                fill={routeAround ? COLORS.LINK_ROUTE_AROUND_ACTIVE : COLORS.LINK_ROUTE_AROUND_INACTIVE}
+                                fill={
+                                    routeAround
+                                        ? COLORS.LINK_ROUTE_AROUND_ACTIVE
+                                        : COLORS.LINK_ROUTE_AROUND_INACTIVE
+                                }
                                 cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
                                 onClick={handleRouteAroundToggle}
                                 onTap={handleRouteAroundToggle}

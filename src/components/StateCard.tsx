@@ -202,7 +202,11 @@ const StateCard: React.FC<StateCardProps> = ({
                 <Rect
                     width={width}
                     height={height}
-                    fill={isDragging ? COLORS.STATE_BG_DRAGGING : COLORS.STATE_BG_NORMAL}
+                    fill={
+                        isDragging
+                            ? COLORS.STATE_BG_DRAGGING
+                            : COLORS.STATE_BG_NORMAL
+                    }
                     stroke={
                         isSelected
                             ? COLORS.STATE_BORDER_SELECTED
@@ -210,10 +214,26 @@ const StateCard: React.FC<StateCardProps> = ({
                               ? COLORS.STATE_BORDER_DRAGGING
                               : COLORS.STATE_BORDER_NORMAL
                     }
-                    strokeWidth={isSelected ? STATE_CARD.STROKE_WIDTH_SELECTED : STATE_CARD.STROKE_WIDTH_NORMAL}
+                    strokeWidth={
+                        isSelected
+                            ? STATE_CARD.STROKE_WIDTH_SELECTED
+                            : STATE_CARD.STROKE_WIDTH_NORMAL
+                    }
                     shadowColor={COLORS.SHADOW_COLOR}
-                    shadowBlur={isDragging ? STATE_CARD.SHADOW_BLUR_DRAGGING : isSelected ? STATE_CARD.SHADOW_BLUR_SELECTED : STATE_CARD.SHADOW_BLUR_NORMAL}
-                    shadowOpacity={isDragging ? STATE_CARD.SHADOW_OPACITY_DRAGGING : isSelected ? STATE_CARD.SHADOW_OPACITY_SELECTED : STATE_CARD.SHADOW_OPACITY_NORMAL}
+                    shadowBlur={
+                        isDragging
+                            ? STATE_CARD.SHADOW_BLUR_DRAGGING
+                            : isSelected
+                              ? STATE_CARD.SHADOW_BLUR_SELECTED
+                              : STATE_CARD.SHADOW_BLUR_NORMAL
+                    }
+                    shadowOpacity={
+                        isDragging
+                            ? STATE_CARD.SHADOW_OPACITY_DRAGGING
+                            : isSelected
+                              ? STATE_CARD.SHADOW_OPACITY_SELECTED
+                              : STATE_CARD.SHADOW_OPACITY_NORMAL
+                    }
                     shadowOffsetX={STATE_CARD.SHADOW_OFFSET_X}
                     shadowOffsetY={STATE_CARD.SHADOW_OFFSET_Y}
                     cornerRadius={STATE_CARD.CORNER_RADIUS}

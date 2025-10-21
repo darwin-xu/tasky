@@ -90,9 +90,7 @@ describe('GridLayer Component', () => {
 
         // Verify effective on-screen spacing accounts for zoom level
         const uniqueXPositions = Array.from(
-            new Set(
-                circles.map((c) => Number(c.getAttribute('data-x')) || 0)
-            )
+            new Set(circles.map((c) => Number(c.getAttribute('data-x')) || 0))
         ).sort((a, b) => a - b)
 
         expect(uniqueXPositions.length).toBeGreaterThan(1)
