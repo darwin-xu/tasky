@@ -5,7 +5,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 ---
 
 ### Story 1: Create Link (Task ➜ State)
-- [ ] Not implemented yet
+- [x] Not implemented yet
 
 - **As a** user,
 - **I want** to create a directed visual link from a Task card to a State card,
@@ -51,7 +51,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 
 ---
 
-### Story 4: Select and Inspect Links
+### ~~Story 4: Select and Inspect Links~~
 - [ ] Not implemented yet
 
 - **As a** user,
@@ -66,7 +66,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 
 ---
 
-### Story 5: Delete Link
+### ~~Story 5: Delete Link~~
 - [ ] Not implemented yet
 
 - **As a** user,
@@ -82,7 +82,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 
 ---
 
-### Story 6: Reassign Link Endpoints
+### ~~Story 6: Reassign Link Endpoints~~
 - [ ] Not implemented yet
 
 - **As a** user,
@@ -98,7 +98,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 
 ---
 
-### Story 7: Visualize Relationship Hierarchy on Selection
+### ~~Story 7: Visualize Relationship Hierarchy on Selection~~
 - [ ] Not implemented yet
 
 - **As a** user,
@@ -113,7 +113,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 
 ---
 
-### Story 8: Link Validation Rules
+### ~~Story 8: Link Validation Rules~~
 - [ ] Not implemented yet
 
 - **As a** user,
@@ -144,7 +144,7 @@ This document breaks down EPIC 3 into individual user stories, following the INV
 
 ---
 
-### Story 10: Multiple Links and Fan-Out Management
+### ~~Story 10: Multiple Links and Fan-Out Management~~
 - [ ] Not implemented yet
 
 - **As a** user,
