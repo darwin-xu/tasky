@@ -16,7 +16,7 @@ jest.mock('konva', () => ({
 
 describe('InfiniteCanvas - Clear Canvas', () => {
     test('clearCanvas removes all tasks', async () => {
-        const ref = React.createRef<any>()
+        const ref = React.createRef<InfiniteCanvasRef>()
         render(<InfiniteCanvas ref={ref} />)
 
         // Create some tasks
