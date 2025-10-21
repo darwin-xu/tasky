@@ -18,6 +18,7 @@ import TaskEditorModal, { TaskEditorData } from './TaskEditorModal'
 import StateEditorModal, { StateEditorData } from './StateEditorModal'
 import ConfirmDialog from './ConfirmDialog'
 import { snapPositionToGrid } from '../utils/snapToGrid'
+import { generateId } from '../utils/idGenerator'
 import {
     VIEWPORT_DEFAULT_WIDTH,
     VIEWPORT_DEFAULT_HEIGHT,
@@ -381,7 +382,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
                 // Create the new state
                 const newState: State = {
-                    id: `state-${Date.now()}`,
+                    id: generateId('state'),
                     x: snapped.x,
                     y: snapped.y,
                     description: DEFAULTS.STATE_DESCRIPTION,
@@ -393,7 +394,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
                 // Create the link from task to new state
                 const newLink: Link = {
-                    id: `link-${Date.now()}`,
+                    id: generateId('link'),
                     sourceId: sourceId,
                     targetId: newState.id,
                     sourceType: 'task',
@@ -460,7 +461,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             )
 
             const newTask: Task = {
-                id: `task-${Date.now()}`,
+                id: generateId('task'),
                 x: snapped.x,
                 y: snapped.y,
                 title: DEFAULTS.TASK_TITLE,
@@ -496,7 +497,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             )
 
             const newState: State = {
-                id: `state-${Date.now()}`,
+                id: generateId('state'),
                 x: snapped.x,
                 y: snapped.y,
                 description: DEFAULTS.STATE_DESCRIPTION,
@@ -526,7 +527,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 )
 
                 const newTask: Task = {
-                    id: `task-${Date.now()}`,
+                    id: generateId('task'),
                     x: snapped.x,
                     y: snapped.y,
                     title: taskToDuplicate.title,
@@ -561,7 +562,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 )
 
                 const newState: State = {
-                    id: `state-${Date.now()}`,
+                    id: generateId('state'),
                     x: snapped.x,
                     y: snapped.y,
                     description: stateToDuplicate.description,
@@ -593,7 +594,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 )
 
                 const newState: State = {
-                    id: `state-${Date.now()}`,
+                    id: generateId('state'),
                     x: snapped.x,
                     y: snapped.y,
                     description: sourceState.description,
@@ -606,7 +607,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
                 // Create a link from source state to new state
                 const newLink: Link = {
-                    id: `link-${Date.now()}`,
+                    id: generateId('link'),
                     sourceId: stateId,
                     targetId: newState.id,
                     sourceType: 'state',
