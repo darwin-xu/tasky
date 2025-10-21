@@ -55,3 +55,58 @@
 .create-task-button {
     font-weight: 600;
 }
+
+.taskbar-menu {
+    position: relative;
+}
+
+.menu-button {
+    background-color: #4caf50;
+}
+
+.menu-button:hover {
+    background-color: #45a049;
+}
+
+.menu-button:active {
+    background-color: #3d8b40;
+}
+
+.taskbar-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.taskbar-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    background-color: transparent;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.taskbar-dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.taskbar-dropdown-item:active {
+    background-color: #e0e0e0;
+}
+
+.taskbar-dropdown-item:focus-visible {
+    outline: 2px solid #2196f3;
+    outline-offset: -2px;
+}

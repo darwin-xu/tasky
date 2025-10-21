@@ -36,6 +36,7 @@ export interface InfiniteCanvasRef {
     duplicateTask: (taskId: string) => void
     duplicateState: (stateId: string) => void
     forkState: (stateId: string) => void
+    clearCanvas: () => void
 }
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
@@ -95,6 +96,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             duplicateTask,
             duplicateState,
             forkState,
+            clearCanvas,
         }))
 
         // Handle container resize
@@ -614,6 +616,16 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             },
             [states, viewport.scale]
         )
+
+        // Clear canvas function - removes all tasks, states, and links
+        const clearCanvas = useCallback(() => {
+            setTasks([])
+            setStates([])
+            setLinks([])
+            setSelectedTaskId(null)
+            setSelectedStateId(null)
+            setSelectedLinkId(null)
+        }, [])
 
         // Handle delete request (opens confirmation dialog)
         const handleDeleteRequest = useCallback((id: string) => {
