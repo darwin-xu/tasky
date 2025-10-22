@@ -5,7 +5,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 1: Interface for Persistent Data
-- [ ] Not implemented yet
+- [x] Completed
 
 - **As a** user,
 - **I want** have a menu for persistent data,
@@ -22,7 +22,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 2: Persist Canvas
-- [ ] Not implemented yet
+- [x] Completed
 
 - **As a** user,
 - **I want** my canvas to be saved with their layout,
@@ -39,7 +39,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 3: Load Canvas
-- [ ] Not implemented yet
+- [x] Completed
 
 - **As a** user,
 - **I want** load a canvas with all its tasks, states, and links,
@@ -54,7 +54,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 4: Load Canvas on App Start
-- [ ] Not implemented yet
+- [x] Completed
 
 - **As a** user,
 - **I want** the canvas to load my data on app start,
@@ -68,7 +68,7 @@ This document breaks down EPIC 7 into individual user stories, following the INV
 ---
 
 ### Story 5: CRUD Endpoints for Tasks & States
-- [ ] Not implemented yet
+- [x] Completed
 
 - **As a** developer,
 - **I want** full CRUD endpoints for tasks and states,
