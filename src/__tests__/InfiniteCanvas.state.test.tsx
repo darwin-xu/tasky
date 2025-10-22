@@ -126,14 +126,13 @@ describe('InfiniteCanvas - State Card Creation', () => {
             return group.getAttribute('data-x') && group.getAttribute('data-y')
         })
 
-        if (groupWithCoords) {
-            const x = parseInt(groupWithCoords.getAttribute('data-x') || '0')
-            const y = parseInt(groupWithCoords.getAttribute('data-y') || '0')
+        expect(groupWithCoords).toBeTruthy()
+        const x = parseInt(groupWithCoords!.getAttribute('data-x') || '0')
+        const y = parseInt(groupWithCoords!.getAttribute('data-y') || '0')
 
-            // Coordinates should be multiples of grid spacing (20)
-            expect(x % 20).toBe(0)
-            expect(y % 20).toBe(0)
-        }
+        // Coordinates should be multiples of grid spacing (20)
+        expect(x % 20).toBe(0)
+        expect(y % 20).toBe(0)
     })
 
     test('state card can be selected independently from task cards', () => {

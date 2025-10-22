@@ -16,8 +16,10 @@
     },
     "scripts": {
         "start": "react-scripts start",
-        "build": "react-scripts build",
+        "build": "NODE_OPTIONS='--no-deprecation' react-scripts build",
         "test": "react-scripts test --watchAll=false --passWithNoTests",
+        "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+        "lint:fix": "eslint src --ext .ts,.tsx,.js,.jsx --fix",
         "eject": "react-scripts eject",
         "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
     },

@@ -1,6 +1,6 @@
 /* eslint-disable testing-library/prefer-screen-queries, testing-library/no-unnecessary-act, testing-library/no-container, testing-library/no-node-access */
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { act } from 'react'
 import InfiniteCanvas, { InfiniteCanvasRef } from '../components/InfiniteCanvas'
 

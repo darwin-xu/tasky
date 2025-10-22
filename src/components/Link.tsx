@@ -118,7 +118,7 @@ const segmentsIntersect = (
     if (o3 === 0 && onSegment(bx1, by1, bx2, by2, ax1, ay1)) return true
     if (o4 === 0 && onSegment(bx1, by1, bx2, by2, ax2, ay2)) return true
 
-    return o1 > 0 !== o2 > 0 && o3 > 0 !== o4 > 0
+    return (o1 > 0) !== (o2 > 0) && (o3 > 0) !== (o4 > 0)
 }
 
 // Calculate the best anchor point on the edge of a rectangle

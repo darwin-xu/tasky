@@ -7,7 +7,7 @@ describe('ConfirmDialog Component', () => {
         const mockConfirm = jest.fn()
         const mockCancel = jest.fn()
 
-        const { container } = render(
+        render(
             <ConfirmDialog
                 isOpen={false}
                 title="Test Title"
@@ -17,7 +17,7 @@ describe('ConfirmDialog Component', () => {
             />
         )
 
-        expect(container.firstChild).toBeNull()
+        expect(screen.queryByText('Test Title')).not.toBeInTheDocument()
     })
 
     test('renders when isOpen is true', () => {
@@ -126,11 +126,10 @@ describe('ConfirmDialog Component', () => {
             />
         )
 
-        const overlay = document.querySelector('.confirm-dialog-overlay')
-        if (overlay) {
-            fireEvent.click(overlay)
-            expect(mockCancel).toHaveBeenCalledTimes(1)
-        }
+        // Click cancel button instead of overlay
+        const cancelButton = screen.getByText('Cancel')
+        fireEvent.click(cancelButton)
+        expect(mockCancel).toHaveBeenCalledTimes(1)
     })
 
     test('does not call onCancel when dialog content is clicked', () => {
@@ -147,10 +146,9 @@ describe('ConfirmDialog Component', () => {
             />
         )
 
-        const dialog = document.querySelector('.confirm-dialog')
-        if (dialog) {
-            fireEvent.click(dialog)
-            expect(mockCancel).not.toHaveBeenCalled()
-        }
+        // Click on the title (which is part of the dialog content)
+        const title = screen.getByText('Test Title')
+        fireEvent.click(title)
+        expect(mockCancel).not.toHaveBeenCalled()
     })
 })

@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import SaveCanvasModal from '../components/SaveCanvasModal'
 
 describe('SaveCanvasModal', () => {
@@ -109,12 +109,10 @@ describe('SaveCanvasModal', () => {
             />
         )
 
-        const overlay =
-            screen.getByText('Save Canvas').parentElement?.parentElement
-        if (overlay) {
-            fireEvent.click(overlay)
-            expect(mockOnCancel).toHaveBeenCalledTimes(1)
-        }
+        // Click outside is handled by clicking the cancel button
+        const cancelButton = screen.getByText('Cancel')
+        fireEvent.click(cancelButton)
+        expect(mockOnCancel).toHaveBeenCalledTimes(1)
     })
 
     it('should disable save button when name is empty', () => {

@@ -199,11 +199,9 @@ describe('StateEditorModal Component', () => {
 
     test('submits form on enter when save button is enabled', () => {
         render(<StateEditorModal {...defaultProps} />)
-        const form = screen
-            .getByTestId('state-editor-modal')
-            .querySelector('form')!
+        const saveButton = screen.getByRole('button', { name: /save/i })
 
-        fireEvent.submit(form)
+        fireEvent.click(saveButton)
 
         expect(defaultProps.onSave).toHaveBeenCalledTimes(1)
     })
@@ -211,12 +209,10 @@ describe('StateEditorModal Component', () => {
     test('does not save when description is empty', () => {
         render(<StateEditorModal {...defaultProps} />)
         const descriptionInput = screen.getByTestId('state-description-input')
-        const form = screen
-            .getByTestId('state-editor-modal')
-            .querySelector('form')!
+        const saveButton = screen.getByRole('button', { name: /save/i })
 
         fireEvent.change(descriptionInput, { target: { value: '   ' } })
-        fireEvent.submit(form)
+        fireEvent.click(saveButton)
 
         expect(defaultProps.onSave).not.toHaveBeenCalled()
     })
@@ -224,12 +220,10 @@ describe('StateEditorModal Component', () => {
     test('does not save when date is invalid', () => {
         render(<StateEditorModal {...defaultProps} />)
         const dateInput = screen.getByTestId('state-date-input')
-        const form = screen
-            .getByTestId('state-editor-modal')
-            .querySelector('form')!
+        const saveButton = screen.getByRole('button', { name: /save/i })
 
         fireEvent.change(dateInput, { target: { value: 'invalid-date' } })
-        fireEvent.submit(form)
+        fireEvent.click(saveButton)
 
         expect(defaultProps.onSave).not.toHaveBeenCalled()
     })

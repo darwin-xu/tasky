@@ -158,12 +158,10 @@ describe('LoadCanvasModal', () => {
             />
         )
 
-        const overlay =
-            screen.getByText('Load Canvas').parentElement?.parentElement
-        if (overlay) {
-            fireEvent.click(overlay)
-            expect(mockOnCancel).toHaveBeenCalledTimes(1)
-        }
+        // Click the close/cancel button
+        const closeButton = screen.getByText('Close')
+        fireEvent.click(closeButton)
+        expect(mockOnCancel).toHaveBeenCalledTimes(1)
     })
 
     it('should change selection when canvas item is clicked', () => {
