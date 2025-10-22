@@ -176,9 +176,9 @@ describe('Canvas Service', () => {
             expect(result?.tasks).toHaveLength(1)
             expect(result?.createdAt).toBe(canvas.createdAt)
             // updatedAt should be greater than or equal to createdAt
-            expect(new Date(result!.updatedAt).getTime()).toBeGreaterThanOrEqual(
-                new Date(canvas.createdAt).getTime()
-            )
+            expect(
+                new Date(result!.updatedAt).getTime()
+            ).toBeGreaterThanOrEqual(new Date(canvas.createdAt).getTime())
         })
 
         it('should set updated canvas as current', () => {

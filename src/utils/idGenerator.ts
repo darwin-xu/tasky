@@ -1,6 +1,6 @@
 /**
  * ID Generator utility
- * 
+ *
  * Generates unique IDs with a counter to avoid collisions when Date.now()
  * returns the same timestamp for multiple calls in rapid succession.
  */
