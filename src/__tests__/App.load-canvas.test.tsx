@@ -171,9 +171,7 @@ describe('App - Load Canvas Integration', () => {
         })
 
         // Verify empty state message is shown
-        expect(
-            screen.getByText('No saved canvases found.')
-        ).toBeInTheDocument()
+        expect(screen.getByText('No saved canvases found.')).toBeInTheDocument()
     })
 
     test('cancels load canvas modal', async () => {
@@ -275,9 +273,7 @@ describe('App - Load Canvas Integration', () => {
         fireEvent.click(loadButton)
 
         // Verify the canvas was loaded with correct data
-        expect(canvasService.getCanvas).toHaveBeenCalledWith(
-            'canvas-positions'
-        )
+        expect(canvasService.getCanvas).toHaveBeenCalledWith('canvas-positions')
 
         // Verify that the positions are preserved by checking the getCanvas call
         const loadedCanvas = (canvasService.getCanvas as jest.Mock).mock
