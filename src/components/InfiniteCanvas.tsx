@@ -40,6 +40,8 @@ export interface InfiniteCanvasRef {
     clearCanvas: () => void
     getCanvasState: () => { tasks: Task[]; states: State[]; links: Link[] }
     loadCanvasState: (tasks: Task[], states: State[], links: Link[]) => void
+    isDirty: () => boolean
+    markClean: () => void
 }
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
@@ -79,6 +81,9 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             null
         )
 
+        // Dirty state tracking
+        const [isDirtyState, setIsDirtyState] = useState(false)
+
         // Delete confirmation dialog state
         const [deleteConfirmation, setDeleteConfirmation] = useState<{
             isOpen: boolean
@@ -102,6 +107,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             clearCanvas,
             getCanvasState,
             loadCanvasState,
+            isDirty: () => isDirtyState,
+            markClean: () => setIsDirtyState(false),
         }))
 
         // Handle container resize
@@ -257,6 +264,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                         task.id === id ? { ...task, x, y } : task
                     )
                 )
+                setIsDirtyState(true)
             },
             []
         )
@@ -268,6 +276,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                         state.id === id ? { ...state, x, y } : state
                     )
                 )
+                setIsDirtyState(true)
             },
             []
         )
@@ -310,6 +319,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 : task
                         )
                     )
+                    setIsDirtyState(true)
                 }
                 setEditorOpen(false)
                 setEditingTaskId(null)
@@ -337,6 +347,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                 : state
                         )
                     )
+                    setIsDirtyState(true)
                 }
                 setStateEditorOpen(false)
                 setEditingStateId(null)
@@ -407,6 +418,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 // Select the new state
                 setSelectedStateId(newState.id)
                 setSelectedTaskId(null)
+                setIsDirtyState(true)
             },
             [tasks, viewport.scale]
         )
@@ -426,6 +438,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             : link
                     )
                 )
+                setIsDirtyState(true)
             },
             []
         )
@@ -439,6 +452,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             : link
                     )
                 )
+                setIsDirtyState(true)
             },
             []
         )
@@ -472,6 +486,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
             setTasks((prevTasks) => [...prevTasks, newTask])
             setSelectedTaskId(newTask.id)
+            setIsDirtyState(true)
 
             // Notify parent if callback provided
             if (onCreateTask) {
@@ -507,6 +522,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
             setStates((prevStates) => [...prevStates, newState])
             setSelectedStateId(newState.id)
+            setIsDirtyState(true)
         }, [viewport, dimensions])
 
         // Duplicate task function
@@ -538,6 +554,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
                 setTasks((prevTasks) => [...prevTasks, newTask])
                 setSelectedTaskId(newTask.id)
+                setIsDirtyState(true)
             },
             [tasks, viewport.scale]
         )
@@ -572,6 +589,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
                 setStates((prevStates) => [...prevStates, newState])
                 setSelectedStateId(newState.id)
+                setIsDirtyState(true)
             },
             [states, viewport.scale]
         )
@@ -619,6 +637,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
                 // Focus the new state
                 setSelectedStateId(newState.id)
+                setIsDirtyState(true)
             },
             [states, viewport.scale]
         )
@@ -647,6 +666,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 setSelectedTaskId(null)
                 setSelectedStateId(null)
                 setSelectedLinkId(null)
+                setIsDirtyState(false)
             },
             []
         )
@@ -686,6 +706,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                         setSelectedStateId(null)
                     }
                 }
+                setIsDirtyState(true)
             }
             setDeleteConfirmation({
                 isOpen: false,
