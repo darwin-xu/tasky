@@ -28,9 +28,10 @@ function App() {
         isOpen: false,
         action: null,
     })
-    const [pendingActionAfterSave, setPendingActionAfterSave] = useState<
-        { action: 'load' | 'clear'; canvasId?: string } | null
-    >(null)
+    const [pendingActionAfterSave, setPendingActionAfterSave] = useState<{
+        action: 'load' | 'clear'
+        canvasId?: string
+    } | null>(null)
 
     // Load the last canvas on mount
     useEffect(() => {

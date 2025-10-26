@@ -1,5 +1,6 @@
 import React from 'react'
 import { render, waitFor } from '@testing-library/react'
+import { act } from 'react-dom/test-utils'
 import InfiniteCanvas, { InfiniteCanvasRef } from '../components/InfiniteCanvas'
 
 // Mock react-konva
@@ -21,7 +22,9 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
         expect(canvasRef.current?.isDirty()).toBe(false)
 
-        canvasRef.current?.createTask()
+        act(() => {
+            canvasRef.current?.createTask()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(true)
         })
@@ -31,7 +34,9 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
         expect(canvasRef.current?.isDirty()).toBe(false)
 
-        canvasRef.current?.createState()
+        act(() => {
+            canvasRef.current?.createState()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(true)
         })
@@ -41,7 +46,9 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
 
         // Create a task first
-        canvasRef.current?.createTask()
+        act(() => {
+            canvasRef.current?.createTask()
+        })
         await waitFor(() => {
             const state = canvasRef.current?.getCanvasState()
             expect(state?.tasks.length).toBe(1)
@@ -52,13 +59,17 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         expect(taskId).toBeDefined()
 
         // Mark clean
-        canvasRef.current?.markClean()
+        act(() => {
+            canvasRef.current?.markClean()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(false)
         })
 
         // Duplicate the task
-        canvasRef.current?.duplicateTask(taskId!)
+        act(() => {
+            canvasRef.current?.duplicateTask(taskId!)
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(true)
         })
@@ -68,7 +79,9 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
 
         // Create a state first
-        canvasRef.current?.createState()
+        act(() => {
+            canvasRef.current?.createState()
+        })
         await waitFor(() => {
             const canvasState = canvasRef.current?.getCanvasState()
             expect(canvasState?.states.length).toBe(1)
@@ -79,13 +92,17 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         expect(stateId).toBeDefined()
 
         // Mark clean
-        canvasRef.current?.markClean()
+        act(() => {
+            canvasRef.current?.markClean()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(false)
         })
 
         // Duplicate the state
-        canvasRef.current?.duplicateState(stateId!)
+        act(() => {
+            canvasRef.current?.duplicateState(stateId!)
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(true)
         })
@@ -95,7 +112,9 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
 
         // Create a state first
-        canvasRef.current?.createState()
+        act(() => {
+            canvasRef.current?.createState()
+        })
         await waitFor(() => {
             const canvasState = canvasRef.current?.getCanvasState()
             expect(canvasState?.states.length).toBe(1)
@@ -106,13 +125,17 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         expect(stateId).toBeDefined()
 
         // Mark clean
-        canvasRef.current?.markClean()
+        act(() => {
+            canvasRef.current?.markClean()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(false)
         })
 
         // Fork the state
-        canvasRef.current?.forkState(stateId!)
+        act(() => {
+            canvasRef.current?.forkState(stateId!)
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(true)
         })
@@ -122,13 +145,17 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
 
         // Create a task to make it dirty
-        canvasRef.current?.createTask()
+        act(() => {
+            canvasRef.current?.createTask()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(true)
         })
 
         // Mark as clean
-        canvasRef.current?.markClean()
+        act(() => {
+            canvasRef.current?.markClean()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(false)
         })
@@ -138,13 +165,17 @@ describe('InfiniteCanvas - Dirty State Tracking', () => {
         render(<InfiniteCanvas ref={canvasRef} />)
 
         // Create a task to make it dirty
-        canvasRef.current?.createTask()
+        act(() => {
+            canvasRef.current?.createTask()
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(true)
         })
 
         // Load a canvas state
-        canvasRef.current?.loadCanvasState([], [], [])
+        act(() => {
+            canvasRef.current?.loadCanvasState([], [], [])
+        })
         await waitFor(() => {
             expect(canvasRef.current?.isDirty()).toBe(false)
         })
