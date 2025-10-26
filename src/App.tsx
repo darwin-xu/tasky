@@ -3,6 +3,7 @@ import InfiniteCanvas, { InfiniteCanvasRef } from './components/InfiniteCanvas'
 import Taskbar from './components/Taskbar'
 import SaveCanvasModal from './components/SaveCanvasModal'
 import LoadCanvasModal from './components/LoadCanvasModal'
+import UnsavedChangesDialog from './components/UnsavedChangesDialog'
 import './App.css'
 import {
     saveCanvas,
@@ -19,6 +20,18 @@ function App() {
     const [currentCanvasName, setCurrentCanvasName] = useState<string>('')
     const [saveModalOpen, setSaveModalOpen] = useState(false)
     const [loadModalOpen, setLoadModalOpen] = useState(false)
+    const [unsavedChangesDialog, setUnsavedChangesDialog] = useState<{
+        isOpen: boolean
+        action: 'load' | 'clear' | null
+        pendingCanvasId?: string
+    }>({
+        isOpen: false,
+        action: null,
+    })
+    const [pendingActionAfterSave, setPendingActionAfterSave] = useState<{
+        action: 'load' | 'clear'
+        canvasId?: string
+    } | null>(null)
 
     // Load the last canvas on mount
     useEffect(() => {
@@ -63,7 +76,9 @@ function App() {
             if (savedCanvas) {
                 setCurrentCanvasId(savedCanvas.id)
                 setCurrentCanvasName(savedCanvas.name)
+                canvasRef.current?.markClean()
                 alert(`Canvas "${name}" saved successfully!`)
+                resumePendingAction()
             } else {
                 alert('Failed to save canvas.')
             }
@@ -80,6 +95,22 @@ function App() {
     }
 
     const handleLoadCanvasConfirm = (canvasId: string) => {
+        // Check if there are unsaved changes
+        if (canvasRef.current?.isDirty()) {
+            setUnsavedChangesDialog({
+                isOpen: true,
+                action: 'load',
+                pendingCanvasId: canvasId,
+            })
+            return
+        }
+
+        // No unsaved changes, proceed with loading
+        performLoadCanvas(canvasId)
+        setLoadModalOpen(false)
+    }
+
+    const performLoadCanvas = (canvasId: string) => {
         const canvas = getCanvas(canvasId)
         if (canvas) {
             canvasRef.current?.loadCanvasState(
@@ -93,20 +124,56 @@ function App() {
         } else {
             alert('Failed to load canvas.')
         }
-        setLoadModalOpen(false)
     }
 
     const handleClearCanvas = () => {
+        // Check if there are unsaved changes
+        if (canvasRef.current?.isDirty()) {
+            setUnsavedChangesDialog({
+                isOpen: true,
+                action: 'clear',
+            })
+            return
+        }
+
+        // No unsaved changes, confirm and proceed
         if (
             window.confirm(
                 'Are you sure you want to clear the canvas? This will remove all tasks, states, and links from the current view.'
             )
         ) {
-            canvasRef.current?.clearCanvas()
-            setCurrentCanvasId(null)
-            setCurrentCanvasName('')
-            clearCurrentCanvasId()
+            performClearCanvas()
         }
+    }
+
+    const performClearCanvas = () => {
+        canvasRef.current?.clearCanvas()
+        setCurrentCanvasId(null)
+        setCurrentCanvasName('')
+        clearCurrentCanvasId()
+    }
+
+    const resumePendingAction = () => {
+        if (!pendingActionAfterSave) return
+
+        if (pendingActionAfterSave.action === 'load') {
+            const { canvasId } = pendingActionAfterSave
+            if (canvasId) {
+                performLoadCanvas(canvasId)
+                setLoadModalOpen(false)
+            }
+        } else if (pendingActionAfterSave.action === 'clear') {
+            if (
+                window.confirm(
+                    'Are you sure you want to clear the canvas? This will remove all tasks, states, and links from the current view.'
+                )
+            ) {
+                performClearCanvas()
+            }
+        }
+
+        setPendingActionAfterSave(null)
+        setUnsavedChangesDialog({ isOpen: false, action: null })
     }
 
     const handleDeleteSavedCanvas = () => {
@@ -150,6 +217,66 @@ function App() {
         }
     }
 
+    const handleUnsavedChangesSave = () => {
+        if (unsavedChangesDialog.action) {
+            setPendingActionAfterSave({
+                action: unsavedChangesDialog.action,
+                canvasId: unsavedChangesDialog.pendingCanvasId,
+            })
+        } else {
+            setPendingActionAfterSave(null)
+        }
+
+        // Trigger save modal
+        setUnsavedChangesDialog((prev) => ({ ...prev, isOpen: false }))
+        setSaveModalOpen(true)
+    }
+
+    const handleUnsavedChangesDiscard = () => {
+        const { action, pendingCanvasId } = unsavedChangesDialog
+
+        setUnsavedChangesDialog({ isOpen: false, action: null })
+        setPendingActionAfterSave(null)
+
+        if (action === 'load' && pendingCanvasId) {
+            performLoadCanvas(pendingCanvasId)
+            setLoadModalOpen(false)
+        } else if (action === 'clear') {
+            if (
+                window.confirm(
+                    'Are you sure you want to clear the canvas? This will remove all tasks, states, and links from the current view.'
+                )
+            ) {
+                performClearCanvas()
+            }
+        }
+    }
+
+    const handleUnsavedChangesCancel = () => {
+        setUnsavedChangesDialog({ isOpen: false, action: null })
+        setPendingActionAfterSave(null)
+    }
+
+    const handleSaveCanvasCancel = () => {
+        setSaveModalOpen(false)
+        setPendingActionAfterSave(null)
+    }
+
+    // Handle beforeunload event to warn about unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (canvasRef.current?.isDirty()) {
+                e.preventDefault()
+                e.returnValue = ''
+            }
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+        }
+    }, [])
+
     return (
         <div className="App">
             <Taskbar
@@ -166,12 +293,18 @@ function App() {
                 isOpen={saveModalOpen}
                 currentName={currentCanvasName}
                 onSave={handleSaveCanvasConfirm}
-                onCancel={() => setSaveModalOpen(false)}
+                onCancel={handleSaveCanvasCancel}
             />
             <LoadCanvasModal
                 isOpen={loadModalOpen}
                 onLoad={handleLoadCanvasConfirm}
                 onCancel={() => setLoadModalOpen(false)}
+            />
+            <UnsavedChangesDialog
+                isOpen={unsavedChangesDialog.isOpen}
+                onSave={handleUnsavedChangesSave}
+                onDiscard={handleUnsavedChangesDiscard}
+                onCancel={handleUnsavedChangesCancel}
             />
         </div>
     )
