@@ -28,6 +28,9 @@ function App() {
         isOpen: false,
         action: null,
     })
+    const [pendingActionAfterSave, setPendingActionAfterSave] = useState<
+        { action: 'load' | 'clear'; canvasId?: string } | null
+    >(null)
 
     // Load the last canvas on mount
     useEffect(() => {
@@ -74,6 +77,7 @@ function App() {
                 setCurrentCanvasName(savedCanvas.name)
                 canvasRef.current?.markClean()
                 alert(`Canvas "${name}" saved successfully!`)
+                resumePendingAction()
             } else {
                 alert('Failed to save canvas.')
             }
@@ -148,6 +152,29 @@ function App() {
         clearCurrentCanvasId()
     }
 
+    const resumePendingAction = () => {
+        if (!pendingActionAfterSave) return
+
+        if (pendingActionAfterSave.action === 'load') {
+            const { canvasId } = pendingActionAfterSave
+            if (canvasId) {
+                performLoadCanvas(canvasId)
+                setLoadModalOpen(false)
+            }
+        } else if (pendingActionAfterSave.action === 'clear') {
+            if (
+                window.confirm(
+                    'Are you sure you want to clear the canvas? This will remove all tasks, states, and links from the current view.'
+                )
+            ) {
+                performClearCanvas()
+            }
+        }
+
+        setPendingActionAfterSave(null)
+        setUnsavedChangesDialog({ isOpen: false, action: null })
+    }
+
     const handleDeleteSavedCanvas = () => {
         const canvases = listCanvases()
         if (canvases.length === 0) {
@@ -190,8 +217,17 @@ function App() {
     }
 
     const handleUnsavedChangesSave = () => {
+        if (unsavedChangesDialog.action) {
+            setPendingActionAfterSave({
+                action: unsavedChangesDialog.action,
+                canvasId: unsavedChangesDialog.pendingCanvasId,
+            })
+        } else {
+            setPendingActionAfterSave(null)
+        }
+
         // Trigger save modal
-        setUnsavedChangesDialog({ isOpen: false, action: null })
+        setUnsavedChangesDialog((prev) => ({ ...prev, isOpen: false }))
         setSaveModalOpen(true)
     }
 
@@ -199,6 +235,7 @@ function App() {
         const { action, pendingCanvasId } = unsavedChangesDialog
 
         setUnsavedChangesDialog({ isOpen: false, action: null })
+        setPendingActionAfterSave(null)
 
         if (action === 'load' && pendingCanvasId) {
             performLoadCanvas(pendingCanvasId)
@@ -216,6 +253,12 @@ function App() {
 
     const handleUnsavedChangesCancel = () => {
         setUnsavedChangesDialog({ isOpen: false, action: null })
+        setPendingActionAfterSave(null)
+    }
+
+    const handleSaveCanvasCancel = () => {
+        setSaveModalOpen(false)
+        setPendingActionAfterSave(null)
     }
 
     // Handle beforeunload event to warn about unsaved changes
@@ -249,7 +292,7 @@ function App() {
                 isOpen={saveModalOpen}
                 currentName={currentCanvasName}
                 onSave={handleSaveCanvasConfirm}
-                onCancel={() => setSaveModalOpen(false)}
+                onCancel={handleSaveCanvasCancel}
             />
             <LoadCanvasModal
                 isOpen={loadModalOpen}
