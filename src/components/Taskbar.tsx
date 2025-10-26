@@ -4,6 +4,7 @@ import './Taskbar.css'
 interface TaskbarProps {
     onCreateTask: () => void
     onSaveCanvas?: () => void
+    onSaveAsCanvas?: () => void
     onLoadCanvas?: () => void
     onClearCanvas?: () => void
     onDeleteSavedCanvas?: () => void
@@ -12,6 +13,7 @@ interface TaskbarProps {
 const Taskbar: React.FC<TaskbarProps> = ({
     onCreateTask,
     onSaveCanvas,
+    onSaveAsCanvas,
     onLoadCanvas,
     onClearCanvas,
     onDeleteSavedCanvas,
@@ -74,6 +76,18 @@ const Taskbar: React.FC<TaskbarProps> = ({
                                 aria-label="Save Canvas"
                             >
                                 Save Canvas
+                            </button>
+                            <button
+                                className="taskbar-dropdown-item"
+                                onClick={() =>
+                                    handleMenuAction(
+                                        onSaveAsCanvas || (() => {})
+                                    )
+                                }
+                                role="menuitem"
+                                aria-label="Save Canvas As"
+                            >
+                                Save Canvas As
                             </button>
                             <button
                                 className="taskbar-dropdown-item"

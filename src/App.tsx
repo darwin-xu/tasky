@@ -55,6 +55,27 @@ function App() {
     }
 
     const handleSaveCanvas = () => {
+        // If canvas already has a name and ID, save directly without showing modal
+        if (currentCanvasId && currentCanvasName) {
+            // Check if the saved canvas still exists (edge case)
+            const existingCanvas = getCanvas(currentCanvasId)
+            if (existingCanvas) {
+                // Canvas exists, save directly
+                handleSaveCanvasConfirm(currentCanvasName)
+                return
+            } else {
+                // Canvas was deleted, reset ID and show modal for new save
+                setCurrentCanvasId(null)
+                setCurrentCanvasName('')
+                clearCurrentCanvasId()
+            }
+        }
+        // Show modal for first save or if canvas was deleted
+        setSaveModalOpen(true)
+    }
+
+    const handleSaveAsCanvas = () => {
+        // Always show modal for "Save As"
         setSaveModalOpen(true)
     }
 
@@ -282,6 +303,7 @@ function App() {
             <Taskbar
                 onCreateTask={handleCreateTask}
                 onSaveCanvas={handleSaveCanvas}
+                onSaveAsCanvas={handleSaveAsCanvas}
                 onLoadCanvas={handleLoadCanvas}
                 onClearCanvas={handleClearCanvas}
                 onDeleteSavedCanvas={handleDeleteSavedCanvas}
