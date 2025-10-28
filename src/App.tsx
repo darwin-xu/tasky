@@ -55,10 +55,32 @@ function App() {
     }
 
     const handleSaveCanvas = () => {
+        // AC2: If canvas already has a saved name, save directly without showing modal
+        // AC5: If the original saved file is deleted, revert to prompting for new name
+        if (currentCanvasId && currentCanvasName) {
+            // Check if the canvas still exists in storage
+            const existingCanvas = getCanvas(currentCanvasId)
+            if (existingCanvas) {
+                // Canvas exists, save directly
+                performSaveCanvas(currentCanvasName, currentCanvasId)
+                return
+            } else {
+                // Canvas was deleted, clear the current canvas ID and show modal
+                setCurrentCanvasId(null)
+                setCurrentCanvasName('')
+                clearCurrentCanvasId()
+            }
+        }
+        // AC1: First save - show modal to get name
         setSaveModalOpen(true)
     }
 
-    const handleSaveCanvasConfirm = (name: string) => {
+    const handleSaveAsCanvas = () => {
+        // AC3: Save As - always show modal for new name
+        setSaveModalOpen(true)
+    }
+
+    const performSaveCanvas = (name: string, canvasId?: string) => {
         const canvasState = canvasRef.current?.getCanvasState()
         if (!canvasState) return
 
@@ -70,7 +92,7 @@ function App() {
                     states: canvasState.states,
                     links: canvasState.links,
                 },
-                currentCanvasId || undefined
+                canvasId || undefined
             )
 
             if (savedCanvas) {
@@ -85,9 +107,12 @@ function App() {
         } catch (error) {
             console.error('Error saving canvas:', error)
             alert('An error occurred while saving the canvas.')
-        } finally {
-            setSaveModalOpen(false)
         }
+    }
+
+    const handleSaveCanvasConfirm = (name: string) => {
+        performSaveCanvas(name, currentCanvasId || undefined)
+        setSaveModalOpen(false)
     }
 
     const handleLoadCanvas = () => {
@@ -282,6 +307,7 @@ function App() {
             <Taskbar
                 onCreateTask={handleCreateTask}
                 onSaveCanvas={handleSaveCanvas}
+                onSaveAsCanvas={handleSaveAsCanvas}
                 onLoadCanvas={handleLoadCanvas}
                 onClearCanvas={handleClearCanvas}
                 onDeleteSavedCanvas={handleDeleteSavedCanvas}
