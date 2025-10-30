@@ -11,6 +11,16 @@ import * as canvasService from '../services/canvasService'
 import { CanvasData } from '../types'
 
 describe('Performance Optimizations', () => {
+    // Performance test thresholds
+    const THRESHOLDS = {
+        RAPID_READS_MS: 100,
+        COORDINATE_UPDATES_MS: 500,
+        INVALID_VALUES_MS: 500,
+        MEMORY_INCREASE_MB: 5,
+        CACHE_MAX_CALLS: 6, // Without caching, we'd have 3 listCanvases calls × 2 localStorage.getItem calls each
+        CACHE_TTL_WAIT_MS: 1100, // Slightly longer than the 1000ms cache TTL
+    }
+
     beforeEach(() => {
         localStorage.clear()
     })
@@ -71,13 +81,12 @@ describe('Performance Optimizations', () => {
     })
 
     describe('canvasService caching', () => {
-        const mockCanvas: Omit<CanvasData, 'id' | 'createdAt' | 'updatedAt'> =
-            {
-                name: 'Test Canvas',
-                tasks: [],
-                states: [],
-                links: [],
-            }
+        const mockCanvas: Omit<CanvasData, 'id' | 'createdAt' | 'updatedAt'> = {
+            name: 'Test Canvas',
+            tasks: [],
+            states: [],
+            links: [],
+        }
 
         beforeEach(() => {
             // Clear localStorage and the module cache before each test
@@ -89,9 +98,9 @@ describe('Performance Optimizations', () => {
         it('should cache parsed localStorage data', () => {
             // Ensure cache is clear
             localStorage.clear()
-            
+
             // Create a canvas
-            const canvas1 = canvasService.createCanvas(mockCanvas)
+            canvasService.createCanvas(mockCanvas)
 
             // Spy on localStorage.getItem to count calls
             const getItemSpy = jest.spyOn(Storage.prototype, 'getItem')
@@ -111,16 +120,18 @@ describe('Performance Optimizations', () => {
 
             // We should have made some calls, but caching should have reduced them
             expect(getItemCalls).toBeGreaterThan(0)
-            expect(getItemCalls).toBeLessThan(6) // Without caching, we'd have 3 calls for the key
+            expect(getItemCalls).toBeLessThan(THRESHOLDS.CACHE_MAX_CALLS)
         })
 
         it('should invalidate cache on data changes', async () => {
-            // Wait for cache to expire from previous test
-            await new Promise((resolve) => setTimeout(resolve, 1100))
-            
+            // Wait for cache to expire from previous test (cache TTL is 1000ms)
+            await new Promise((resolve) =>
+                setTimeout(resolve, THRESHOLDS.CACHE_TTL_WAIT_MS)
+            )
+
             // Ensure we start clean
             localStorage.clear()
-            
+
             // Create initial canvas
             const canvas1 = canvasService.createCanvas({
                 ...mockCanvas,
@@ -132,7 +143,7 @@ describe('Performance Optimizations', () => {
             expect(list1.length).toBe(1)
 
             // Create another canvas (should invalidate cache)
-            const canvas2 = canvasService.createCanvas({
+            canvasService.createCanvas({
                 ...mockCanvas,
                 name: 'Canvas 2',
             })
@@ -166,9 +177,9 @@ describe('Performance Optimizations', () => {
             const endTime = Date.now()
             const duration = endTime - startTime
 
-            // With caching, 100 reads should complete quickly (< 100ms)
-            // Without caching, JSON.parse would be called 100 times
-            expect(duration).toBeLessThan(100)
+            // With caching, 100 reads should complete quickly
+            // Note: Threshold may vary by environment; adjust if needed
+            expect(duration).toBeLessThan(THRESHOLDS.RAPID_READS_MS)
         })
     })
 
@@ -188,8 +199,9 @@ describe('Performance Optimizations', () => {
             const endTime = performance.now()
             const duration = endTime - startTime
 
-            // 1000 updates should complete reasonably fast (< 500ms)
-            expect(duration).toBeLessThan(500)
+            // 1000 updates should complete reasonably fast
+            // Note: Threshold may vary by environment
+            expect(duration).toBeLessThan(THRESHOLDS.COORDINATE_UPDATES_MS)
 
             // Final state should be correct
             expect(result.current.x).toBe(999)
@@ -202,9 +214,7 @@ describe('Performance Optimizations', () => {
             const startTime = performance.now()
 
             // Suppress console warnings for this test
-            const consoleSpy = jest
-                .spyOn(console, 'warn')
-                .mockImplementation()
+            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation()
 
             // Mix valid and invalid updates
             for (let i = 0; i < 500; i++) {
@@ -224,7 +234,8 @@ describe('Performance Optimizations', () => {
             consoleSpy.mockRestore()
 
             // Should still be fast even with validation
-            expect(duration).toBeLessThan(500)
+            // Note: Threshold may vary by environment
+            expect(duration).toBeLessThan(THRESHOLDS.INVALID_VALUES_MS)
 
             // Last update was invalid (i=499), so it used fallback (0)
             // But the valid update before it (i=498) was applied first
@@ -252,20 +263,24 @@ describe('Performance Optimizations', () => {
             }
 
             // Check final heap usage (if available)
-            const finalMemory =
-                (performance as any).memory?.usedJSHeapSize || 0
+            const finalMemory = (performance as any).memory?.usedJSHeapSize || 0
+
+            // Verify test completed successfully
+            expect(result.current).toBeDefined()
 
             // If memory API is available, verify no significant leak
-            if (initialMemory > 0 && finalMemory > 0) {
+            // Note: This is environment-dependent and may not be available in all browsers
+            const hasMemoryAPI = initialMemory > 0 && finalMemory > 0
+            if (hasMemoryAPI) {
                 const memoryIncrease = finalMemory - initialMemory
                 const memoryIncreaseInMB = memoryIncrease / (1024 * 1024)
 
-                // Memory increase should be minimal (< 5MB for 10k updates)
-                expect(memoryIncreaseInMB).toBeLessThan(5)
+                // Memory increase should be minimal
+                // eslint-disable-next-line jest/no-conditional-expect
+                expect(memoryIncreaseInMB).toBeLessThan(
+                    THRESHOLDS.MEMORY_INCREASE_MB
+                )
             }
-
-            // Test passes regardless of memory API availability
-            expect(true).toBe(true)
         })
     })
 
