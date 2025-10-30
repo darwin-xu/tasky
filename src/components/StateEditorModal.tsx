@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { isValidDate } from '../utils/dateValidation'
+import {
+    useModalEscapeHandler,
+    useDateValidation,
+    handleBackdropClick,
+} from '../hooks/useModalHelpers'
+import { DateField } from './DateField'
+import { PriorityField } from './PriorityField'
 import './StateEditorModal.css'
 
 export interface StateEditorData {
@@ -29,6 +36,10 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
     const [dateError, setDateError] = useState('')
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
 
+    const { validateDate } = useDateValidation(date)
+
+    useModalEscapeHandler({ isOpen, onCancel })
+
     useEffect(() => {
         if (isOpen) {
             setDescription(stateData.description)
@@ -42,28 +53,9 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
         }
     }, [isOpen, stateData])
 
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                onCancel()
-            }
-        }
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape)
-            return () => document.removeEventListener('keydown', handleEscape)
-        }
-    }, [isOpen, onCancel])
-
     const handleDateChange = (value: string) => {
         setDate(value)
-        if (value && !isValidDate(value)) {
-            setDateError(
-                'Invalid date format. Use YYYY-MM-DD (e.g., 2024-12-31)'
-            )
-        } else {
-            setDateError('')
-        }
+        validateDate(value, setDateError)
     }
 
     const handleSave = () => {
@@ -88,18 +80,12 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
         handleSave()
     }
 
-    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) {
-            onCancel()
-        }
-    }
-
     if (!isOpen) return null
 
     return (
         <div
             className="state-editor-overlay"
-            onClick={handleBackdropClick}
+            onClick={(e) => handleBackdropClick(e, onCancel)}
             data-testid="state-editor-overlay"
         >
             <div
@@ -124,43 +110,20 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
                         />
                     </div>
 
-                    <div className="state-editor-field">
-                        <label htmlFor="state-date">Date</label>
-                        <input
-                            id="state-date"
-                            type="text"
-                            value={date}
-                            onChange={(e) => handleDateChange(e.target.value)}
-                            placeholder="YYYY-MM-DD"
-                            data-testid="state-date-input"
-                        />
-                        {dateError && (
-                            <div
-                                className="state-editor-error"
-                                data-testid="date-error"
-                            >
-                                {dateError}
-                            </div>
-                        )}
-                    </div>
+                    <DateField
+                        id="state-date"
+                        value={date}
+                        onChange={handleDateChange}
+                        error={dateError}
+                        testId="state-date-input"
+                    />
 
-                    <div className="state-editor-field">
-                        <label htmlFor="state-priority">Priority</label>
-                        <select
-                            id="state-priority"
-                            value={priority}
-                            onChange={(e) =>
-                                setPriority(
-                                    e.target.value as 'Low' | 'Medium' | 'High'
-                                )
-                            }
-                            data-testid="state-priority-select"
-                        >
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                        </select>
-                    </div>
+                    <PriorityField
+                        id="state-priority"
+                        value={priority}
+                        onChange={setPriority}
+                        testId="state-priority-select"
+                    />
 
                     <div className="state-editor-actions">
                         <button
