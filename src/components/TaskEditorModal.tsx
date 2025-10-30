@@ -38,7 +38,7 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     const [dateError, setDateError] = useState('')
     const titleInputRef = useRef<HTMLInputElement>(null)
 
-    const { validateDate } = useDateValidation(date)
+    const { validateDate } = useDateValidation()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
@@ -129,6 +129,7 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
                         onChange={handleDateChange}
                         error={dateError}
                         testId="task-date-input"
+                        className="task-editor-field"
                     />
 
                     <PriorityField
@@ -136,6 +137,7 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
                         value={priority}
                         onChange={setPriority}
                         testId="task-priority-select"
+                        className="task-editor-field"
                     />
 
                     <div className="task-editor-actions">

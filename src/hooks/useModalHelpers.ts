@@ -24,12 +24,7 @@ export const useModalEscapeHandler = ({
     }, [isOpen, onCancel])
 }
 
-export interface UseDateValidationProps {
-    date: string
-    setDateError: (error: string) => void
-}
-
-export const useDateValidation = (date: string) => {
+export const useDateValidation = () => {
     const validateDate = (
         value: string,
         setDateError: (error: string) => void

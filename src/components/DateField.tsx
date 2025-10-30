@@ -7,6 +7,7 @@ interface DateFieldProps {
     error?: string
     label?: string
     testId?: string
+    className?: string
 }
 
 export const DateField: React.FC<DateFieldProps> = ({
@@ -16,9 +17,10 @@ export const DateField: React.FC<DateFieldProps> = ({
     error,
     label = 'Date',
     testId = 'date-input',
+    className = 'task-editor-field',
 }) => {
     return (
-        <div className="task-editor-field">
+        <div className={className}>
             <label htmlFor={id}>{label}</label>
             <input
                 id={id}

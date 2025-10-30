@@ -8,6 +8,7 @@ interface PriorityFieldProps {
     onChange: (value: Priority) => void
     label?: string
     testId?: string
+    className?: string
 }
 
 export const PriorityField: React.FC<PriorityFieldProps> = ({
@@ -16,9 +17,10 @@ export const PriorityField: React.FC<PriorityFieldProps> = ({
     onChange,
     label = 'Priority',
     testId = 'priority-select',
+    className = 'task-editor-field',
 }) => {
     return (
-        <div className="task-editor-field">
+        <div className={className}>
             <label htmlFor={id}>{label}</label>
             <select
                 id={id}

@@ -36,7 +36,7 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
     const [dateError, setDateError] = useState('')
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
 
-    const { validateDate } = useDateValidation(date)
+    const { validateDate } = useDateValidation()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
@@ -116,6 +116,7 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
                         onChange={handleDateChange}
                         error={dateError}
                         testId="state-date-input"
+                        className="state-editor-field"
                     />
 
                     <PriorityField
@@ -123,6 +124,7 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
                         value={priority}
                         onChange={setPriority}
                         testId="state-priority-select"
+                        className="state-editor-field"
                     />
 
                     <div className="state-editor-actions">
