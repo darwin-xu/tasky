@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Arrow, Group, Rect, Text, Line } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { LINK, COLORS, TEXT, SNAP_PREVIEW } from '../constants'
@@ -510,131 +510,156 @@ const Link: React.FC<LinkProps> = ({
     onUpdateRouteAround,
     allCards = [],
 }) => {
-    let pathPoints: number[]
-    let arrowPoints: number[]
+    // Memoize path calculation to avoid expensive computations on every render
+    const { pathPoints, arrowPoints } = useMemo(() => {
+        let pathPoints: number[]
+        let arrowPoints: number[]
 
-    if (linkStyle === 'orthogonal') {
-        // Calculate orthogonal path
-        pathPoints = calculateOrthogonalPath(
-            sourceX,
-            sourceY,
-            sourceWidth,
-            sourceHeight,
-            targetX,
-            targetY,
-            targetWidth,
-            targetHeight,
-            routeAround,
-            allCards
-        )
-
-        // For arrow, use the last two segments
-        const len = pathPoints.length
-        arrowPoints = [
-            pathPoints[len - 4],
-            pathPoints[len - 3],
-            pathPoints[len - 2],
-            pathPoints[len - 1],
-        ]
-    } else {
-        const sourceRect: RectLike = {
-            x: sourceX,
-            y: sourceY,
-            width: sourceWidth,
-            height: sourceHeight,
-        }
-        const targetRect: RectLike = {
-            x: targetX,
-            y: targetY,
-            width: targetWidth,
-            height: targetHeight,
-        }
-
-        if (rectsOverlap(sourceRect, targetRect)) {
-            return null
-        }
-
-        const connectionPairs: Array<{ sourceSide: Side; targetSide: Side }> = [
-            { sourceSide: 'left', targetSide: 'right' },
-            { sourceSide: 'right', targetSide: 'left' },
-            { sourceSide: 'top', targetSide: 'bottom' },
-            { sourceSide: 'bottom', targetSide: 'top' },
-        ]
-
-        const obstacles = (allCards || []).filter(
-            (card) =>
-                !(
-                    card.x === sourceRect.x &&
-                    card.y === sourceRect.y &&
-                    card.width === sourceRect.width &&
-                    card.height === sourceRect.height
-                ) &&
-                !(
-                    card.x === targetRect.x &&
-                    card.y === targetRect.y &&
-                    card.width === targetRect.width &&
-                    card.height === targetRect.height
-                )
-        )
-
-        const candidates = connectionPairs.map((pair) => {
-            const start = getSideMidpoint(sourceRect, pair.sourceSide)
-            const end = getSideMidpoint(targetRect, pair.targetSide)
-            const blocked = obstacles.some((obstacle) =>
-                lineSegmentIntersectsRect(
-                    start.x,
-                    start.y,
-                    end.x,
-                    end.y,
-                    obstacle
-                )
-            )
-            return {
-                start,
-                end,
-                blocked,
-                distance: squaredDistance(start, end),
-            }
-        })
-
-        const valid = candidates.filter((candidate) => !candidate.blocked)
-        const preferred = (valid.length > 0 ? valid : candidates).sort(
-            (a, b) => a.distance - b.distance
-        )[0]
-
-        if (!preferred) {
-            const fallbackSource = calculateAnchorPoint(
+        if (linkStyle === 'orthogonal') {
+            // Calculate orthogonal path
+            pathPoints = calculateOrthogonalPath(
                 sourceX,
                 sourceY,
                 sourceWidth,
                 sourceHeight,
-                targetX + targetWidth / 2,
-                targetY + targetHeight / 2
-            )
-            const fallbackTarget = calculateAnchorPoint(
                 targetX,
                 targetY,
                 targetWidth,
                 targetHeight,
-                sourceX + sourceWidth / 2,
-                sourceY + sourceHeight / 2
+                routeAround,
+                allCards
             )
+
+            // For arrow, use the last two segments
+            const len = pathPoints.length
             arrowPoints = [
-                fallbackSource.x,
-                fallbackSource.y,
-                fallbackTarget.x,
-                fallbackTarget.y,
+                pathPoints[len - 4],
+                pathPoints[len - 3],
+                pathPoints[len - 2],
+                pathPoints[len - 1],
             ]
-            pathPoints = arrowPoints
         } else {
-            arrowPoints = [
-                preferred.start.x,
-                preferred.start.y,
-                preferred.end.x,
-                preferred.end.y,
+            const sourceRect: RectLike = {
+                x: sourceX,
+                y: sourceY,
+                width: sourceWidth,
+                height: sourceHeight,
+            }
+            const targetRect: RectLike = {
+                x: targetX,
+                y: targetY,
+                width: targetWidth,
+                height: targetHeight,
+            }
+
+            if (rectsOverlap(sourceRect, targetRect)) {
+                return { pathPoints: [], arrowPoints: [] }
+            }
+
+            const connectionPairs: Array<{
+                sourceSide: Side
+                targetSide: Side
+            }> = [
+                { sourceSide: 'left', targetSide: 'right' },
+                { sourceSide: 'right', targetSide: 'left' },
+                { sourceSide: 'top', targetSide: 'bottom' },
+                { sourceSide: 'bottom', targetSide: 'top' },
             ]
-            pathPoints = arrowPoints
+
+            const obstacles = (allCards || []).filter(
+                (card) =>
+                    !(
+                        card.x === sourceRect.x &&
+                        card.y === sourceRect.y &&
+                        card.width === sourceRect.width &&
+                        card.height === sourceRect.height
+                    ) &&
+                    !(
+                        card.x === targetRect.x &&
+                        card.y === targetRect.y &&
+                        card.width === targetRect.width &&
+                        card.height === targetRect.height
+                    )
+            )
+
+            const candidates = connectionPairs.map((pair) => {
+                const start = getSideMidpoint(sourceRect, pair.sourceSide)
+                const end = getSideMidpoint(targetRect, pair.targetSide)
+                const blocked = obstacles.some((obstacle) =>
+                    lineSegmentIntersectsRect(
+                        start.x,
+                        start.y,
+                        end.x,
+                        end.y,
+                        obstacle
+                    )
+                )
+                return {
+                    start,
+                    end,
+                    blocked,
+                    distance: squaredDistance(start, end),
+                }
+            })
+
+            const valid = candidates.filter((candidate) => !candidate.blocked)
+            const preferred = (valid.length > 0 ? valid : candidates).sort(
+                (a, b) => a.distance - b.distance
+            )[0]
+
+            if (!preferred) {
+                const fallbackSource = calculateAnchorPoint(
+                    sourceX,
+                    sourceY,
+                    sourceWidth,
+                    sourceHeight,
+                    targetX + targetWidth / 2,
+                    targetY + targetHeight / 2
+                )
+                const fallbackTarget = calculateAnchorPoint(
+                    targetX,
+                    targetY,
+                    targetWidth,
+                    targetHeight,
+                    sourceX + sourceWidth / 2,
+                    sourceY + sourceHeight / 2
+                )
+                arrowPoints = [
+                    fallbackSource.x,
+                    fallbackSource.y,
+                    fallbackTarget.x,
+                    fallbackTarget.y,
+                ]
+                pathPoints = arrowPoints
+            } else {
+                arrowPoints = [
+                    preferred.start.x,
+                    preferred.start.y,
+                    preferred.end.x,
+                    preferred.end.y,
+                ]
+                pathPoints = arrowPoints
+            }
         }
+
+        return { pathPoints, arrowPoints }
+    }, [
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        targetX,
+        targetY,
+        targetWidth,
+        targetHeight,
+        linkStyle,
+        routeAround,
+        allCards,
+    ])
+
+    // Early return if overlapping rectangles in free mode
+    if (pathPoints.length === 0 && arrowPoints.length === 0) {
+        return null
     }
 
     // Calculate midpoint for control buttons
