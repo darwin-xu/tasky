@@ -696,6 +696,11 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     if (selectedTaskId === deleteConfirmation.itemId) {
                         setSelectedTaskId(null)
                     }
+                    // Close editor if deleted task was being edited
+                    if (editingTaskId === deleteConfirmation.itemId) {
+                        setEditingTaskId(null)
+                        setEditorOpen(false)
+                    }
                 } else if (deleteConfirmation.itemType === 'state') {
                     setStates((prevStates) =>
                         prevStates.filter(
@@ -705,6 +710,11 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     // Clear selection if deleted state was selected
                     if (selectedStateId === deleteConfirmation.itemId) {
                         setSelectedStateId(null)
+                    }
+                    // Close editor if deleted state was being edited
+                    if (editingStateId === deleteConfirmation.itemId) {
+                        setEditingStateId(null)
+                        setStateEditorOpen(false)
                     }
                 }
                 setIsDirtyState(true)
@@ -719,6 +729,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             deleteConfirmation.itemType,
             selectedTaskId,
             selectedStateId,
+            editingTaskId,
+            editingStateId,
         ])
 
         // Cancel deletion

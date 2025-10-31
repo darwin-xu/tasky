@@ -35,14 +35,16 @@ export const useViewportState = (): ViewportState & ViewportActions => {
     })
 
     const updatePosition = useCallback((x: number, y: number) => {
-        const validX = validateCoordinate(x)
-        const validY = validateCoordinate(y)
+        setState((prevState) => {
+            const validX = validateCoordinate(x, prevState.x)
+            const validY = validateCoordinate(y, prevState.y)
 
-        setState((prevState) => ({
-            ...prevState,
-            x: validX,
-            y: validY,
-        }))
+            return {
+                ...prevState,
+                x: validX,
+                y: validY,
+            }
+        })
     }, [])
 
     const updateScale = useCallback((scale: number) => {

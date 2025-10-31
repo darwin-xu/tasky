@@ -22,8 +22,9 @@ const getCanvasesFromStorage = (): CanvasData[] => {
     const now = Date.now()
 
     // Return cached data if still valid
+    // Return a shallow copy to prevent mutations to the cache
     if (canvasesCache && now - canvasesCache.timestamp < CACHE_TTL) {
-        return canvasesCache.data
+        return [...canvasesCache.data]
     }
 
     try {
@@ -35,7 +36,8 @@ const getCanvasesFromStorage = (): CanvasData[] => {
 
         const canvases: CanvasData[] = JSON.parse(data)
         canvasesCache = { data: canvases, timestamp: now }
-        return canvases
+        // Return a shallow copy to prevent mutations to the cache
+        return [...canvases]
     } catch (error) {
         console.error('Error parsing canvas data:', error)
         canvasesCache = { data: [], timestamp: now }

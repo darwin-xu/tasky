@@ -222,7 +222,7 @@ describe('Performance Optimizations', () => {
                     if (i % 2 === 0) {
                         result.current.updatePosition(i, i)
                     } else {
-                        // Invalid values will fallback to 0
+                        // Invalid values will preserve previous state (fallback to prevState)
                         result.current.updatePosition(NaN, Infinity)
                     }
                 })
@@ -237,11 +237,9 @@ describe('Performance Optimizations', () => {
             // Note: Threshold may vary by environment
             expect(duration).toBeLessThan(THRESHOLDS.INVALID_VALUES_MS)
 
-            // Last update was invalid (i=499), so it used fallback (0)
-            // But the valid update before it (i=498) was applied first
-            // Then invalid update set it to 0
-            expect(result.current.x).toBe(0)
-            expect(result.current.y).toBe(0)
+            // Last update was invalid (i=499), so it preserved the previous valid state (i=498)
+            expect(result.current.x).toBe(498)
+            expect(result.current.y).toBe(498)
         })
     })
 
