@@ -136,4 +136,87 @@ describe('StateCard Component', () => {
         )
         expect(deleteButton).toBeFalsy()
     })
+
+    test('shows fork button when selected and onFork is provided', () => {
+        const handleFork = jest.fn()
+        render(
+            <StateCard
+                {...defaultProps}
+                isSelected={true}
+                onFork={handleFork}
+            />
+        )
+
+        // Check for fork button (⑂ text)
+        const texts = screen.getAllByTestId('konva-text')
+        const forkButton = texts.find(
+            (text) => text.getAttribute('data-text') === '⑂'
+        )
+        expect(forkButton).toBeTruthy()
+    })
+
+    test('does not show fork button when not selected', () => {
+        const handleFork = jest.fn()
+        render(
+            <StateCard
+                {...defaultProps}
+                isSelected={false}
+                onFork={handleFork}
+            />
+        )
+
+        // Check for fork button (⑂ text)
+        const texts = screen.getAllByTestId('konva-text')
+        const forkButton = texts.find(
+            (text) => text.getAttribute('data-text') === '⑂'
+        )
+        expect(forkButton).toBeFalsy()
+    })
+
+    test('does not show fork button when onFork is not provided', () => {
+        render(<StateCard {...defaultProps} isSelected={true} />)
+
+        // Check for fork button (⑂ text)
+        const texts = screen.getAllByTestId('konva-text')
+        const forkButton = texts.find(
+            (text) => text.getAttribute('data-text') === '⑂'
+        )
+        expect(forkButton).toBeFalsy()
+    })
+
+    test('shows duplicate button when selected and onDuplicate is provided', () => {
+        const handleDuplicate = jest.fn()
+        render(
+            <StateCard
+                {...defaultProps}
+                isSelected={true}
+                onDuplicate={handleDuplicate}
+            />
+        )
+
+        // Check for duplicate button (⧉ text)
+        const texts = screen.getAllByTestId('konva-text')
+        const duplicateButton = texts.find(
+            (text) => text.getAttribute('data-text') === '⧉'
+        )
+        expect(duplicateButton).toBeTruthy()
+    })
+
+    test('does not show duplicate button when not selected', () => {
+        const handleDuplicate = jest.fn()
+        render(
+            <StateCard
+                {...defaultProps}
+                isSelected={false}
+                onDuplicate={handleDuplicate}
+            />
+        )
+
+        // Check for duplicate button (⧉ text)
+        const texts = screen.getAllByTestId('konva-text')
+        const duplicateButton = texts.find(
+            (text) => text.getAttribute('data-text') === '⧉'
+        )
+        expect(duplicateButton).toBeFalsy()
+    })
 })

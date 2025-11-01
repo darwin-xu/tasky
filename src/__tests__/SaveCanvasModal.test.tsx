@@ -128,6 +128,22 @@ describe('SaveCanvasModal', () => {
         expect(saveButton.disabled).toBe(true)
     })
 
+    it('should call onCancel when Escape key is pressed', () => {
+        const { container } = render(
+            <SaveCanvasModal
+                isOpen={true}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const modalContent = container.querySelector('.modal-content')
+        if (modalContent) {
+            fireEvent.keyDown(modalContent, { key: 'Escape' })
+            expect(mockOnCancel).toHaveBeenCalledTimes(1)
+        }
+    })
+
     it('should enable save button when name is not empty', () => {
         render(
             <SaveCanvasModal
