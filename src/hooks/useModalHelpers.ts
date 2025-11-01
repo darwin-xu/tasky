@@ -46,13 +46,11 @@ const FORM_ELEMENTS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
 // Hook to manage backdrop click behavior for modals
 export const useModalBackdropHandler = () => {
-    const mouseDownTargetRef = useRef<HTMLElement | null>(null)
+    const isMouseDownOnFormElementRef = useRef(false)
 
     const handleModalMouseDown = (e: MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement
-        mouseDownTargetRef.current = FORM_ELEMENTS.has(target.tagName)
-            ? target
-            : null
+        isMouseDownOnFormElementRef.current = FORM_ELEMENTS.has(target.tagName)
     }
 
     const handleBackdropClick = (
@@ -60,8 +58,8 @@ export const useModalBackdropHandler = () => {
         onCancel: () => void
     ) => {
         // Don't close if the mousedown was on a form element
-        if (mouseDownTargetRef.current) {
-            mouseDownTargetRef.current = null
+        if (isMouseDownOnFormElementRef.current) {
+            isMouseDownOnFormElementRef.current = false
             return
         }
 
