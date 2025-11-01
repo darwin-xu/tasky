@@ -4,6 +4,7 @@ import {
     useModalEscapeHandler,
     useDateValidation,
     handleBackdropClick,
+    handleModalMouseDown,
 } from '../hooks/useModalHelpers'
 import { DateField } from './DateField'
 import { PriorityField } from './PriorityField'
@@ -85,6 +86,7 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
     return (
         <div
             className="state-editor-overlay"
+            onMouseDown={handleModalMouseDown}
             onClick={(e) => handleBackdropClick(e, onCancel)}
             data-testid="state-editor-overlay"
         >

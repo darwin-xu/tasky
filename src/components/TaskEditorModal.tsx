@@ -4,6 +4,7 @@ import {
     useModalEscapeHandler,
     useDateValidation,
     handleBackdropClick,
+    handleModalMouseDown,
 } from '../hooks/useModalHelpers'
 import { DateField } from './DateField'
 import { PriorityField } from './PriorityField'
@@ -89,6 +90,7 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     return (
         <div
             className="task-editor-overlay"
+            onMouseDown={handleModalMouseDown}
             onClick={(e) => handleBackdropClick(e, onCancel)}
             data-testid="task-editor-overlay"
         >

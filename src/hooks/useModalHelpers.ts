@@ -41,11 +41,34 @@ export const useDateValidation = () => {
     return { validateDate }
 }
 
+// Track if mousedown occurred on a form element
+let mouseDownOnFormElement = false
+
 export const handleBackdropClick = (
     e: MouseEvent<HTMLDivElement>,
     onCancel: () => void
 ) => {
+    // Don't close if the mousedown was on a form element (prevents closing during text selection)
+    if (mouseDownOnFormElement) {
+        mouseDownOnFormElement = false
+        return
+    }
+
     if (e.target === e.currentTarget) {
         onCancel()
+    }
+}
+
+// Helper to track mousedown on form elements
+export const handleModalMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT'
+    ) {
+        mouseDownOnFormElement = true
+    } else {
+        mouseDownOnFormElement = false
     }
 }

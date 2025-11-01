@@ -227,4 +227,19 @@ describe('StateEditorModal Component', () => {
 
         expect(defaultProps.onSave).not.toHaveBeenCalled()
     })
+
+    test('does not close when mousedown on textarea and mouseup on overlay', () => {
+        render(<StateEditorModal {...defaultProps} />)
+        const descriptionInput = screen.getByTestId('state-description-input')
+        const overlay = screen.getByTestId('state-editor-overlay')
+
+        // Simulate text selection: mousedown on textarea
+        fireEvent.mouseDown(descriptionInput)
+
+        // Then click (mouseup) on overlay
+        fireEvent.click(overlay)
+
+        // Modal should NOT close
+        expect(defaultProps.onCancel).not.toHaveBeenCalled()
+    })
 })
