@@ -293,4 +293,60 @@ describe('Canvas Service', () => {
             expect(getCurrentCanvasId()).toBeNull()
         })
     })
+
+    describe('error handling', () => {
+        it('should handle corrupted canvas data gracefully', () => {
+            // Set invalid JSON in localStorage
+            localStorage.setItem('canvases', 'invalid-json{')
+
+            const result = listCanvases()
+            expect(result).toEqual([])
+        })
+
+        it('should handle corrupted current canvas ID', () => {
+            // Set a current canvas ID without any canvas data
+            localStorage.clear()
+            setCurrentCanvasId('non-existent-canvas-id')
+
+            const result = getCurrentCanvas()
+            expect(result).toBeNull()
+        })
+
+        it('should recover from corrupted data when creating new canvas', () => {
+            // Set invalid JSON in localStorage
+            localStorage.setItem('canvases', 'invalid-json{')
+
+            // Should still be able to create a new canvas
+            const result = createCanvas({
+                name: 'Recovery Canvas',
+                tasks: [],
+                states: [],
+                links: [],
+            })
+
+            expect(result).not.toBeNull()
+            expect(result.name).toBe('Recovery Canvas')
+
+            // Verify the canvases list is now valid
+            const canvases = listCanvases()
+            expect(canvases).toHaveLength(1)
+        })
+
+        it('should handle malformed canvas objects', () => {
+            // Set malformed canvas data
+            localStorage.setItem(
+                'canvases',
+                JSON.stringify([
+                    {
+                        // Missing required fields
+                        name: 'Incomplete',
+                    },
+                ])
+            )
+
+            // Should handle gracefully and return empty array
+            const result = listCanvases()
+            expect(Array.isArray(result)).toBe(true)
+        })
+    })
 })

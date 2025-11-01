@@ -293,4 +293,116 @@ describe('TaskCard Component', () => {
         expect(group).toBeTruthy()
         expect(onDelete).not.toHaveBeenCalled()
     })
+
+    test('shows link handle when selected and onLinkStart is provided', () => {
+        const onLinkStart = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+                onLinkStart={onLinkStart}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const linkHandle = texts.find(
+            (text) => text.getAttribute('data-text') === '→'
+        )
+        expect(linkHandle).toBeTruthy()
+    })
+
+    test('does not show link handle when not selected', () => {
+        const onLinkStart = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={false}
+                onLinkStart={onLinkStart}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const linkHandle = texts.find(
+            (text) => text.getAttribute('data-text') === '→'
+        )
+        expect(linkHandle).toBeFalsy()
+    })
+
+    test('does not show link handle when onLinkStart is not provided', () => {
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const linkHandle = texts.find(
+            (text) => text.getAttribute('data-text') === '→'
+        )
+        expect(linkHandle).toBeFalsy()
+    })
+
+    test('shows duplicate button when selected and onDuplicate is provided', () => {
+        const onDuplicate = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+                onDuplicate={onDuplicate}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const duplicateButton = texts.find(
+            (text) => text.getAttribute('data-text') === '⧉'
+        )
+        expect(duplicateButton).toBeTruthy()
+    })
+
+    test('does not show duplicate button when not selected', () => {
+        const onDuplicate = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={false}
+                onDuplicate={onDuplicate}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const duplicateButton = texts.find(
+            (text) => text.getAttribute('data-text') === '⧉'
+        )
+        expect(duplicateButton).toBeFalsy()
+    })
 })
