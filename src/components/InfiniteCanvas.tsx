@@ -5,6 +5,7 @@ import React, {
     useCallback,
     useImperativeHandle,
     forwardRef,
+    useMemo,
 } from 'react'
 import { Stage, Layer } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
@@ -695,6 +696,11 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     if (selectedTaskId === deleteConfirmation.itemId) {
                         setSelectedTaskId(null)
                     }
+                    // Close editor if deleted task was being edited
+                    if (editingTaskId === deleteConfirmation.itemId) {
+                        setEditingTaskId(null)
+                        setEditorOpen(false)
+                    }
                 } else if (deleteConfirmation.itemType === 'state') {
                     setStates((prevStates) =>
                         prevStates.filter(
@@ -704,6 +710,11 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     // Clear selection if deleted state was selected
                     if (selectedStateId === deleteConfirmation.itemId) {
                         setSelectedStateId(null)
+                    }
+                    // Close editor if deleted state was being edited
+                    if (editingStateId === deleteConfirmation.itemId) {
+                        setEditingStateId(null)
+                        setStateEditorOpen(false)
                     }
                 }
                 setIsDirtyState(true)
@@ -718,6 +729,8 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             deleteConfirmation.itemType,
             selectedTaskId,
             selectedStateId,
+            editingTaskId,
+            editingStateId,
         ])
 
         // Cancel deletion
@@ -746,6 +759,50 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             document.addEventListener('keydown', handleKeyDown)
             return () => document.removeEventListener('keydown', handleKeyDown)
         }, [selectedTaskId, selectedStateId, duplicateTask, duplicateState])
+
+        // Memoize allCards array to avoid recreating it on every render
+        const allCards = useMemo(
+            () => [
+                ...tasks.map((t) => ({
+                    x: t.x,
+                    y: t.y,
+                    width: CARD_WIDTH,
+                    height: CARD_HEIGHT,
+                })),
+                ...states.map((s) => ({
+                    x: s.x,
+                    y: s.y,
+                    width: CARD_WIDTH,
+                    height: CARD_HEIGHT,
+                })),
+            ],
+            [tasks, states]
+        )
+
+        // Memoize editing task data to avoid repeated lookups
+        const editingTaskData = useMemo(() => {
+            if (!editingTaskId) return null
+            const task = tasks.find((t) => t.id === editingTaskId)
+            if (!task) return null
+            return {
+                title: task.title,
+                description: task.description,
+                date: task.date,
+                priority: task.priority || 'Medium',
+            }
+        }, [editingTaskId, tasks])
+
+        // Memoize editing state data to avoid repeated lookups
+        const editingStateData = useMemo(() => {
+            if (!editingStateId) return null
+            const state = states.find((s) => s.id === editingStateId)
+            if (!state) return null
+            return {
+                description: state.description,
+                date: state.date,
+                priority: state.priority || 'Medium',
+            }
+        }, [editingStateId, states])
 
         return (
             <div
@@ -806,22 +863,6 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             const sourceHeight = CARD_HEIGHT
                             const targetWidth = CARD_WIDTH
                             const targetHeight = CARD_HEIGHT
-
-                            // Collect all card positions for route-around
-                            const allCards = [
-                                ...tasks.map((t) => ({
-                                    x: t.x,
-                                    y: t.y,
-                                    width: CARD_WIDTH,
-                                    height: CARD_HEIGHT,
-                                })),
-                                ...states.map((s) => ({
-                                    x: s.x,
-                                    y: s.y,
-                                    width: CARD_WIDTH,
-                                    height: CARD_HEIGHT,
-                                })),
-                            ]
 
                             return (
                                 <LinkComponent
@@ -898,41 +939,20 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 </Stage>
 
                 {/* Task Editor Modal */}
-                {editingTaskId && (
+                {editingTaskId && editingTaskData && (
                     <TaskEditorModal
                         isOpen={editorOpen}
-                        taskData={{
-                            title:
-                                tasks.find((t) => t.id === editingTaskId)
-                                    ?.title || '',
-                            description: tasks.find(
-                                (t) => t.id === editingTaskId
-                            )?.description,
-                            date: tasks.find((t) => t.id === editingTaskId)
-                                ?.date,
-                            priority:
-                                tasks.find((t) => t.id === editingTaskId)
-                                    ?.priority || 'Medium',
-                        }}
+                        taskData={editingTaskData}
                         onSave={handleEditorSave}
                         onCancel={handleEditorCancel}
                     />
                 )}
 
                 {/* State Editor Modal */}
-                {editingStateId && (
+                {editingStateId && editingStateData && (
                     <StateEditorModal
                         isOpen={stateEditorOpen}
-                        stateData={{
-                            description:
-                                states.find((s) => s.id === editingStateId)
-                                    ?.description || '',
-                            date: states.find((s) => s.id === editingStateId)
-                                ?.date,
-                            priority:
-                                states.find((s) => s.id === editingStateId)
-                                    ?.priority || 'Medium',
-                        }}
+                        stateData={editingStateData}
                         onSave={handleStateEditorSave}
                         onCancel={handleStateEditorCancel}
                     />

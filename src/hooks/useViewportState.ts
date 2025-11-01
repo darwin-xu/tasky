@@ -18,7 +18,9 @@ const validateScale = (scale: number): number => {
 
 const validateCoordinate = (value: number, fallback: number = 0): number => {
     if (isNaN(value) || !isFinite(value)) {
-        console.warn('Invalid coordinate value, using fallback', fallback)
+        if (process.env.NODE_ENV !== 'production') {
+            console.warn('Invalid coordinate value, using fallback', fallback)
+        }
         return fallback
     }
     return value
@@ -32,19 +34,18 @@ export const useViewportState = (): ViewportState & ViewportActions => {
         isDragging: false,
     })
 
-    const updatePosition = useCallback(
-        (x: number, y: number) => {
-            const validX = validateCoordinate(x, state.x)
-            const validY = validateCoordinate(y, state.y)
+    const updatePosition = useCallback((x: number, y: number) => {
+        setState((prevState) => {
+            const validX = validateCoordinate(x, prevState.x)
+            const validY = validateCoordinate(y, prevState.y)
 
-            setState((prevState) => ({
+            return {
                 ...prevState,
                 x: validX,
                 y: validY,
-            }))
-        },
-        [state.x, state.y]
-    )
+            }
+        })
+    }, [])
 
     const updateScale = useCallback((scale: number) => {
         const validScale = validateScale(scale)
@@ -63,27 +64,29 @@ export const useViewportState = (): ViewportState & ViewportActions => {
 
     const zoomToPoint = useCallback(
         (point: { x: number; y: number }, newScale: number) => {
-            const validScale = validateScale(newScale)
+            setState((prevState) => {
+                const validScale = validateScale(newScale)
 
-            // Calculate the world position of the point before zoom
-            const worldX = (point.x - state.x) / state.scale
-            const worldY = (point.y - state.y) / state.scale
+                // Calculate the world position of the point before zoom
+                const worldX = (point.x - prevState.x) / prevState.scale
+                const worldY = (point.y - prevState.y) / prevState.scale
 
-            // Calculate new viewport position to keep the point in the same screen position
-            const newX = point.x - worldX * validScale
-            const newY = point.y - worldY * validScale
+                // Calculate new viewport position to keep the point in the same screen position
+                const newX = point.x - worldX * validScale
+                const newY = point.y - worldY * validScale
 
-            const validX = validateCoordinate(newX, state.x)
-            const validY = validateCoordinate(newY, state.y)
+                const validX = validateCoordinate(newX, prevState.x)
+                const validY = validateCoordinate(newY, prevState.y)
 
-            setState((prevState) => ({
-                ...prevState,
-                x: validX,
-                y: validY,
-                scale: validScale,
-            }))
+                return {
+                    ...prevState,
+                    x: validX,
+                    y: validY,
+                    scale: validScale,
+                }
+            })
         },
-        [state.x, state.y, state.scale]
+        []
     )
 
     // Memoize the return object to prevent unnecessary re-renders
