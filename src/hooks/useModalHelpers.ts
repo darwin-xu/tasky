@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, type MouseEvent } from 'react'
 import { isValidDate } from '../utils/dateValidation'
 
 export interface UseModalEscapeHandlerProps {
@@ -42,7 +42,7 @@ export const useDateValidation = () => {
 }
 
 export const handleBackdropClick = (
-    e: React.MouseEvent<HTMLDivElement>,
+    e: MouseEvent<HTMLDivElement>,
     onCancel: () => void
 ) => {
     if (e.target === e.currentTarget) {
