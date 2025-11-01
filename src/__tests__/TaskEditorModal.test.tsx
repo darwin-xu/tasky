@@ -223,4 +223,46 @@ describe('TaskEditorModal', () => {
             })
         })
     })
+
+    test('does not save when title is empty', async () => {
+        render(
+            <TaskEditorModal
+                isOpen={true}
+                taskData={mockTaskData}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const titleInput = screen.getByTestId('task-title-input')
+        fireEvent.change(titleInput, { target: { value: '   ' } })
+
+        const saveButton = screen.getByTestId('save-button')
+        fireEvent.click(saveButton)
+
+        await waitFor(() => {
+            expect(mockOnSave).not.toHaveBeenCalled()
+        })
+    })
+
+    test('does not save when date is invalid', async () => {
+        render(
+            <TaskEditorModal
+                isOpen={true}
+                taskData={mockTaskData}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const dateInput = screen.getByTestId('task-date-input')
+        fireEvent.change(dateInput, { target: { value: 'invalid-date' } })
+
+        const saveButton = screen.getByTestId('save-button')
+        fireEvent.click(saveButton)
+
+        await waitFor(() => {
+            expect(mockOnSave).not.toHaveBeenCalled()
+        })
+    })
 })

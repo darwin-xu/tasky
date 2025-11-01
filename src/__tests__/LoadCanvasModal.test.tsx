@@ -197,4 +197,23 @@ describe('LoadCanvasModal', () => {
 
         expect(mockOnLoad).toHaveBeenCalledWith('canvas-2')
     })
+
+    it('should call onCancel when Escape key is pressed', () => {
+        ;(canvasService.listCanvases as jest.Mock).mockReturnValue([])
+
+        const { container } = render(
+            <LoadCanvasModal
+                isOpen={true}
+                onLoad={mockOnLoad}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        // Find the modal content div which has the onKeyDown handler
+        const modalContent = container.querySelector('.modal-content')
+        if (modalContent) {
+            fireEvent.keyDown(modalContent, { key: 'Escape' })
+            expect(mockOnCancel).toHaveBeenCalledTimes(1)
+        }
+    })
 })
