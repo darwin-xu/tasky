@@ -1,9 +1,13 @@
-import React, { useRef, useState } from 'react'
+import React from 'react'
 import { Rect, Text, Group } from 'react-konva'
-import Konva from 'konva'
 import { KonvaEventObject } from 'konva/lib/Node'
-import { snapPositionToGrid } from '../utils/snapToGrid'
 import { formatDateForDisplay } from '../utils/dateValidation'
+import { getPriorityColor, getPriorityLabel } from '../utils/priorityHelpers'
+import { useCardDrag } from '../hooks/useCardDrag'
+import { useCardClickHandlers } from '../hooks/useCardClickHandlers'
+import { SnapPreview } from './SnapPreview'
+import { DeleteButton } from './DeleteButton'
+import { DuplicateButton } from './DuplicateButton'
 import {
     CARD_WIDTH,
     CARD_HEIGHT,
@@ -53,87 +57,33 @@ const StateCard: React.FC<StateCardProps> = ({
     onDuplicate,
     onFork,
 }) => {
-    const groupRef = useRef<Konva.Group>(null)
-    const [isDragging, setIsDragging] = useState(false)
-    const [snapPreview, setSnapPreview] = useState<{
-        x: number
-        y: number
-    } | null>(null)
+    const {
+        groupRef,
+        isDragging,
+        snapPreview,
+        handleDragStart,
+        handleDragMove,
+        handleDragEnd,
+    } = useCardDrag({
+        id,
+        gridSpacing,
+        scale,
+        onPositionChange,
+        onClick,
+    })
 
-    const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
-        setIsDragging(true)
-        // Select the card when dragging starts
-        if (onClick) {
-            onClick(id)
-        }
-        e.cancelBubble = true // Prevent canvas panning
-    }
-
-    const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
-        const node = e.target
-        const pos = node.position()
-
-        // Calculate snap position for preview
-        const snapped = snapPositionToGrid(pos, gridSpacing, scale)
-        setSnapPreview(snapped)
-
-        // Update position in real-time during drag for link updates
-        if (onPositionChange) {
-            onPositionChange(id, pos.x, pos.y)
-        }
-
-        e.cancelBubble = true // Prevent canvas panning
-    }
-
-    const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
-        const node = e.target
-        const pos = node.position()
-
-        // Snap to grid
-        const snapped = snapPositionToGrid(pos, gridSpacing, scale)
-
-        // Update position
-        node.position(snapped)
-
-        // Clear preview
-        setSnapPreview(null)
-        setIsDragging(false)
-
-        // Notify parent
-        if (onPositionChange) {
-            onPositionChange(id, snapped.x, snapped.y)
-        }
-
-        e.cancelBubble = true // Prevent canvas panning
-    }
-
-    const handleClick = (e: KonvaEventObject<MouseEvent>) => {
-        if (onClick) {
-            onClick(id)
-        }
-        e.cancelBubble = true
-    }
-
-    const handleDoubleClick = (e: KonvaEventObject<MouseEvent>) => {
-        if (onDoubleClick) {
-            onDoubleClick(id)
-        }
-        e.cancelBubble = true
-    }
-
-    const handleDeleteClick = (e: KonvaEventObject<MouseEvent>) => {
-        e.cancelBubble = true
-        if (onDelete) {
-            onDelete(id)
-        }
-    }
-
-    const handleDuplicateClick = (e: KonvaEventObject<MouseEvent>) => {
-        e.cancelBubble = true
-        if (onDuplicate) {
-            onDuplicate(id)
-        }
-    }
+    const {
+        handleClick,
+        handleDoubleClick,
+        handleDeleteClick,
+        handleDuplicateClick,
+    } = useCardClickHandlers({
+        id,
+        onClick,
+        onDoubleClick,
+        onDelete,
+        onDuplicate,
+    })
 
     const handleForkClick = (e: KonvaEventObject<MouseEvent>) => {
         e.cancelBubble = true
@@ -142,49 +92,19 @@ const StateCard: React.FC<StateCardProps> = ({
         }
     }
 
-    // Priority color mapping
-    const getPriorityColor = () => {
-        switch (priority) {
-            case 'High':
-                return COLORS.PRIORITY_HIGH
-            case 'Medium':
-                return COLORS.PRIORITY_MEDIUM
-            case 'Low':
-                return COLORS.PRIORITY_LOW
-            default:
-                return COLORS.PRIORITY_DEFAULT
-        }
-    }
-
-    // Priority icon/label
-    const getPriorityLabel = () => {
-        switch (priority) {
-            case 'High':
-                return TEXT.PRIORITY_HIGH_LABEL
-            case 'Medium':
-                return TEXT.PRIORITY_MEDIUM_LABEL
-            case 'Low':
-                return TEXT.PRIORITY_LOW_LABEL
-            default:
-                return `Priority: ${priority}`
-        }
-    }
-
     return (
         <>
             {/* Snap preview indicator */}
             {isDragging && snapPreview && (
-                <Group x={snapPreview.x} y={snapPreview.y}>
-                    <Rect
-                        width={width}
-                        height={height}
-                        fill={COLORS.SNAP_PREVIEW_STATE_FILL}
-                        stroke={COLORS.SNAP_PREVIEW_STATE_STROKE}
-                        strokeWidth={SNAP_PREVIEW.STROKE_WIDTH}
-                        dash={SNAP_PREVIEW.DASH_PATTERN}
-                        cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_STATE}
-                    />
-                </Group>
+                <SnapPreview
+                    x={snapPreview.x}
+                    y={snapPreview.y}
+                    width={width}
+                    height={height}
+                    fill={COLORS.SNAP_PREVIEW_STATE_FILL}
+                    stroke={COLORS.SNAP_PREVIEW_STATE_STROKE}
+                    cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_STATE}
+                />
             )}
 
             {/* Actual draggable card */}
@@ -278,44 +198,25 @@ const StateCard: React.FC<StateCardProps> = ({
 
                 {/* Priority label */}
                 <Text
-                    text={getPriorityLabel()}
+                    text={getPriorityLabel(priority)}
                     x={STATE_CARD.DESCRIPTION_X}
                     y={height - STATE_CARD.PRIORITY_Y_OFFSET}
                     width={width - STATE_CARD.DESCRIPTION_WIDTH_PADDING}
                     fontSize={STATE_CARD.PRIORITY_FONT_SIZE}
                     fontFamily={TEXT.FONT_FAMILY}
-                    fill={getPriorityColor()}
+                    fill={getPriorityColor(priority)}
                     fontStyle="bold"
                 />
 
                 {/* Delete button - only visible when selected */}
                 {isSelected && onDelete && (
-                    <>
-                        <Rect
-                            x={width - STATE_CARD.DELETE_BUTTON_X_OFFSET}
-                            y={STATE_CARD.BUTTON_Y}
-                            width={STATE_CARD.BUTTON_SIZE}
-                            height={STATE_CARD.BUTTON_SIZE}
-                            fill={COLORS.BUTTON_DELETE}
-                            cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
-                            onClick={handleDeleteClick}
-                            onTap={handleDeleteClick}
-                        />
-                        <Text
-                            text="✕"
-                            x={width - STATE_CARD.DELETE_BUTTON_X_OFFSET}
-                            y={STATE_CARD.BUTTON_Y}
-                            width={STATE_CARD.BUTTON_SIZE}
-                            height={STATE_CARD.BUTTON_SIZE}
-                            fontSize={STATE_CARD.BUTTON_FONT_SIZE}
-                            fontFamily={TEXT.FONT_FAMILY}
-                            fill={COLORS.TEXT_WHITE}
-                            align={TEXT.ALIGN_CENTER}
-                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
-                            onClick={handleDeleteClick}
-                            onTap={handleDeleteClick}
-                        />
-                    </>
+                    <DeleteButton
+                        x={width - STATE_CARD.DELETE_BUTTON_X_OFFSET}
+                        y={STATE_CARD.BUTTON_Y}
+                        size={STATE_CARD.BUTTON_SIZE}
+                        fontSize={STATE_CARD.BUTTON_FONT_SIZE}
+                        onClick={handleDeleteClick}
+                    />
                 )}
 
                 {/* Fork button - only visible when selected */}
@@ -350,32 +251,14 @@ const StateCard: React.FC<StateCardProps> = ({
 
                 {/* Duplicate button - only visible when selected */}
                 {isSelected && onDuplicate && (
-                    <>
-                        <Rect
-                            x={width - STATE_CARD.DUPLICATE_BUTTON_X_OFFSET}
-                            y={STATE_CARD.BUTTON_Y}
-                            width={STATE_CARD.BUTTON_SIZE}
-                            height={STATE_CARD.BUTTON_SIZE}
-                            fill={COLORS.BUTTON_DUPLICATE_STATE}
-                            cornerRadius={SNAP_PREVIEW.CORNER_RADIUS_TASK}
-                            onClick={handleDuplicateClick}
-                            onTap={handleDuplicateClick}
-                        />
-                        <Text
-                            text="⧉"
-                            x={width - STATE_CARD.DUPLICATE_BUTTON_X_OFFSET}
-                            y={STATE_CARD.BUTTON_Y}
-                            width={STATE_CARD.BUTTON_SIZE}
-                            height={STATE_CARD.BUTTON_SIZE}
-                            fontSize={STATE_CARD.BUTTON_FONT_SIZE}
-                            fontFamily={TEXT.FONT_FAMILY}
-                            fill={COLORS.TEXT_WHITE}
-                            align={TEXT.ALIGN_CENTER}
-                            verticalAlign={TEXT.VERTICAL_ALIGN_MIDDLE}
-                            onClick={handleDuplicateClick}
-                            onTap={handleDuplicateClick}
-                        />
-                    </>
+                    <DuplicateButton
+                        x={width - STATE_CARD.DUPLICATE_BUTTON_X_OFFSET}
+                        y={STATE_CARD.BUTTON_Y}
+                        size={STATE_CARD.BUTTON_SIZE}
+                        fontSize={STATE_CARD.BUTTON_FONT_SIZE}
+                        fill={COLORS.BUTTON_DUPLICATE_STATE}
+                        onClick={handleDuplicateClick}
+                    />
                 )}
             </Group>
         </>

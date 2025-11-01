@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { isValidDate } from '../utils/dateValidation'
+import {
+    useModalEscapeHandler,
+    useDateValidation,
+    handleBackdropClick,
+} from '../hooks/useModalHelpers'
+import { DateField } from './DateField'
+import { PriorityField } from './PriorityField'
 import './TaskEditorModal.css'
 
 export interface TaskEditorData {
@@ -31,6 +38,10 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     const [dateError, setDateError] = useState('')
     const titleInputRef = useRef<HTMLInputElement>(null)
 
+    const { validateDate } = useDateValidation()
+
+    useModalEscapeHandler({ isOpen, onCancel })
+
     useEffect(() => {
         if (isOpen) {
             setTitle(taskData.title)
@@ -45,28 +56,9 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
         }
     }, [isOpen, taskData])
 
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                onCancel()
-            }
-        }
-
-        if (isOpen) {
-            document.addEventListener('keydown', handleEscape)
-            return () => document.removeEventListener('keydown', handleEscape)
-        }
-    }, [isOpen, onCancel])
-
     const handleDateChange = (value: string) => {
         setDate(value)
-        if (value && !isValidDate(value)) {
-            setDateError(
-                'Invalid date format. Use YYYY-MM-DD (e.g., 2024-12-31)'
-            )
-        } else {
-            setDateError('')
-        }
+        validateDate(value, setDateError)
     }
 
     const handleSave = () => {
@@ -92,18 +84,12 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
         handleSave()
     }
 
-    const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) {
-            onCancel()
-        }
-    }
-
     if (!isOpen) return null
 
     return (
         <div
             className="task-editor-overlay"
-            onClick={handleBackdropClick}
+            onClick={(e) => handleBackdropClick(e, onCancel)}
             data-testid="task-editor-overlay"
         >
             <div className="task-editor-modal" data-testid="task-editor-modal">
@@ -137,43 +123,22 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
                         />
                     </div>
 
-                    <div className="task-editor-field">
-                        <label htmlFor="task-date">Date</label>
-                        <input
-                            id="task-date"
-                            type="text"
-                            value={date}
-                            onChange={(e) => handleDateChange(e.target.value)}
-                            placeholder="YYYY-MM-DD"
-                            data-testid="task-date-input"
-                        />
-                        {dateError && (
-                            <div
-                                className="task-editor-error"
-                                data-testid="date-error"
-                            >
-                                {dateError}
-                            </div>
-                        )}
-                    </div>
+                    <DateField
+                        id="task-date"
+                        value={date}
+                        onChange={handleDateChange}
+                        error={dateError}
+                        testId="task-date-input"
+                        className="task-editor-field"
+                    />
 
-                    <div className="task-editor-field">
-                        <label htmlFor="task-priority">Priority</label>
-                        <select
-                            id="task-priority"
-                            value={priority}
-                            onChange={(e) =>
-                                setPriority(
-                                    e.target.value as 'Low' | 'Medium' | 'High'
-                                )
-                            }
-                            data-testid="task-priority-select"
-                        >
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                        </select>
-                    </div>
+                    <PriorityField
+                        id="task-priority"
+                        value={priority}
+                        onChange={setPriority}
+                        testId="task-priority-select"
+                        className="task-editor-field"
+                    />
 
                     <div className="task-editor-actions">
                         <button
