@@ -42,15 +42,22 @@ export const useDateValidation = () => {
 }
 
 // Form elements that should prevent backdrop close during interaction
-const FORM_ELEMENTS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
+const FORM_ELEMENTS = new Set(['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'])
 
 // Hook to manage backdrop click behavior for modals
 export const useModalBackdropHandler = () => {
     const isMouseDownOnFormElementRef = useRef(false)
 
     const handleModalMouseDown = (e: MouseEvent<HTMLDivElement>) => {
-        const target = e.target as HTMLElement
-        isMouseDownOnFormElementRef.current = FORM_ELEMENTS.has(target.tagName)
+        let el = e.target as HTMLElement | null
+        isMouseDownOnFormElementRef.current = false
+        while (el) {
+            if (FORM_ELEMENTS.has(el.tagName)) {
+                isMouseDownOnFormElementRef.current = true
+                break
+            }
+            el = el.parentElement
+        }
     }
 
     const handleBackdropClick = (
