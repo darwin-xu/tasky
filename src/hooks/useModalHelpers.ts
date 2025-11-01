@@ -1,4 +1,4 @@
-import { useEffect, type MouseEvent } from 'react'
+import { useEffect, useRef, type MouseEvent } from 'react'
 import { isValidDate } from '../utils/dateValidation'
 
 export interface UseModalEscapeHandlerProps {
@@ -41,34 +41,34 @@ export const useDateValidation = () => {
     return { validateDate }
 }
 
-// Track if mousedown occurred on a form element
-let mouseDownOnFormElement = false
+// Form elements that should prevent backdrop close during interaction
+const FORM_ELEMENTS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
-export const handleBackdropClick = (
-    e: MouseEvent<HTMLDivElement>,
-    onCancel: () => void
-) => {
-    // Don't close if the mousedown was on a form element (prevents closing during text selection)
-    if (mouseDownOnFormElement) {
-        mouseDownOnFormElement = false
-        return
+// Hook to manage backdrop click behavior for modals
+export const useModalBackdropHandler = () => {
+    const mouseDownTargetRef = useRef<HTMLElement | null>(null)
+
+    const handleModalMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement
+        mouseDownTargetRef.current = FORM_ELEMENTS.has(target.tagName)
+            ? target
+            : null
     }
 
-    if (e.target === e.currentTarget) {
-        onCancel()
-    }
-}
+    const handleBackdropClick = (
+        e: MouseEvent<HTMLDivElement>,
+        onCancel: () => void
+    ) => {
+        // Don't close if the mousedown was on a form element
+        if (mouseDownTargetRef.current) {
+            mouseDownTargetRef.current = null
+            return
+        }
 
-// Helper to track mousedown on form elements
-export const handleModalMouseDown = (e: MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement
-    if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT'
-    ) {
-        mouseDownOnFormElement = true
-    } else {
-        mouseDownOnFormElement = false
+        if (e.target === e.currentTarget) {
+            onCancel()
+        }
     }
+
+    return { handleModalMouseDown, handleBackdropClick }
 }

@@ -3,8 +3,7 @@ import { isValidDate } from '../utils/dateValidation'
 import {
     useModalEscapeHandler,
     useDateValidation,
-    handleBackdropClick,
-    handleModalMouseDown,
+    useModalBackdropHandler,
 } from '../hooks/useModalHelpers'
 import { DateField } from './DateField'
 import { PriorityField } from './PriorityField'
@@ -38,6 +37,8 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
     const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
 
     const { validateDate } = useDateValidation()
+    const { handleModalMouseDown, handleBackdropClick } =
+        useModalBackdropHandler()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
