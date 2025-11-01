@@ -1,6 +1,5 @@
 import React from 'react'
-
-type Priority = 'Low' | 'Medium' | 'High'
+import { Priority } from '../utils/priorityHelpers'
 
 interface PriorityFieldProps {
     id: string
