@@ -3,7 +3,7 @@ import { isValidDate } from '../utils/dateValidation'
 import {
     useModalEscapeHandler,
     useDateValidation,
-    handleBackdropClick,
+    useModalBackdropHandler,
 } from '../hooks/useModalHelpers'
 import { DateField } from './DateField'
 import { PriorityField } from './PriorityField'
@@ -39,6 +39,8 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     const titleInputRef = useRef<HTMLInputElement>(null)
 
     const { validateDate } = useDateValidation()
+    const { handleModalMouseDown, handleBackdropClick } =
+        useModalBackdropHandler()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
@@ -89,6 +91,7 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     return (
         <div
             className="task-editor-overlay"
+            onMouseDown={handleModalMouseDown}
             onClick={(e) => handleBackdropClick(e, onCancel)}
             data-testid="task-editor-overlay"
         >

@@ -265,4 +265,50 @@ describe('TaskEditorModal', () => {
             expect(mockOnSave).not.toHaveBeenCalled()
         })
     })
+
+    test('does not close when mousedown on input and mouseup on overlay', () => {
+        render(
+            <TaskEditorModal
+                isOpen={true}
+                taskData={mockTaskData}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const titleInput = screen.getByTestId('task-title-input')
+        const overlay = screen.getByTestId('task-editor-overlay')
+
+        // Simulate text selection: mousedown on input
+        fireEvent.mouseDown(titleInput)
+
+        // Then click (mouseup) on overlay
+        fireEvent.click(overlay)
+
+        // Modal should NOT close
+        expect(mockOnCancel).not.toHaveBeenCalled()
+    })
+
+    test('does not close when mousedown on textarea and mouseup on overlay', () => {
+        render(
+            <TaskEditorModal
+                isOpen={true}
+                taskData={mockTaskData}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const descriptionInput = screen.getByTestId('task-description-input')
+        const overlay = screen.getByTestId('task-editor-overlay')
+
+        // Simulate text selection: mousedown on textarea
+        fireEvent.mouseDown(descriptionInput)
+
+        // Then click (mouseup) on overlay
+        fireEvent.click(overlay)
+
+        // Modal should NOT close
+        expect(mockOnCancel).not.toHaveBeenCalled()
+    })
 })
