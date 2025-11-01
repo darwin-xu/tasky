@@ -164,22 +164,32 @@ describe('Performance Optimizations', () => {
         })
 
         it('should handle rapid reads efficiently', () => {
-            // Create test data
+            // Freeze Date.now so the cache never expires during the loop
+            const nowSpy = jest.spyOn(Date, 'now')
+            let fakeNow = 1_700_000_000_000
+            nowSpy.mockImplementation(() => fakeNow)
+
+            // Create test data (uses mocked Date.now for determinism)
             canvasService.createCanvas(mockCanvas)
 
-            const startTime = Date.now()
+            const getItemSpy = jest.spyOn(Storage.prototype, 'getItem')
 
-            // Perform many reads in quick succession
-            for (let i = 0; i < 100; i++) {
-                canvasService.listCanvases()
+            try {
+                // Perform many reads in quick succession while advancing fake time slightly
+                for (let i = 0; i < 100; i++) {
+                    canvasService.listCanvases()
+                    fakeNow += 5 // Keep TTL under 1000ms so cache stays valid
+                }
+
+                // With caching we should read the canvas payload exactly once
+                const canvasReads = getItemSpy.mock.calls.filter(
+                    ([key]) => key === 'tasky_canvases'
+                )
+                expect(canvasReads).toHaveLength(1)
+            } finally {
+                getItemSpy.mockRestore()
+                nowSpy.mockRestore()
             }
-
-            const endTime = Date.now()
-            const duration = endTime - startTime
-
-            // With caching, 100 reads should complete quickly
-            // Note: Threshold may vary by environment; adjust if needed
-            expect(duration).toBeLessThan(THRESHOLDS.RAPID_READS_MS)
         })
     })
 

@@ -9,10 +9,15 @@ import { CanvasData, CanvasMetadata } from '../types'
  */
 
 const STORAGE_KEY = 'tasky_canvases'
+const STORAGE_VERSION_KEY = 'tasky_canvases_version'
 const CURRENT_CANVAS_KEY = 'tasky_current_canvas_id'
 
 // Simple cache to avoid repeated JSON parsing
-let canvasesCache: { data: CanvasData[]; timestamp: number } | null = null
+let canvasesCache: {
+    data: CanvasData[]
+    timestamp: number
+    version: string | null
+} | null = null
 const CACHE_TTL = 1000 // Cache for 1 second to balance performance and data freshness
 
 /**
@@ -20,27 +25,36 @@ const CACHE_TTL = 1000 // Cache for 1 second to balance performance and data fre
  */
 const getCanvasesFromStorage = (): CanvasData[] => {
     const now = Date.now()
+    const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY)
 
-    // Return cached data if still valid
+    // Return cached data if still valid and version matches storage
     // Return a shallow copy to prevent mutations to the cache
-    if (canvasesCache && now - canvasesCache.timestamp < CACHE_TTL) {
+    if (
+        canvasesCache &&
+        now - canvasesCache.timestamp < CACHE_TTL &&
+        canvasesCache.version === storedVersion
+    ) {
         return [...canvasesCache.data]
     }
 
     try {
         const data = localStorage.getItem(STORAGE_KEY)
         if (!data) {
-            canvasesCache = { data: [], timestamp: now }
+            canvasesCache = { data: [], timestamp: now, version: storedVersion }
             return []
         }
 
         const canvases: CanvasData[] = JSON.parse(data)
-        canvasesCache = { data: canvases, timestamp: now }
+        canvasesCache = {
+            data: canvases,
+            timestamp: now,
+            version: storedVersion,
+        }
         // Return a shallow copy to prevent mutations to the cache
         return [...canvases]
     } catch (error) {
         console.error('Error parsing canvas data:', error)
-        canvasesCache = { data: [], timestamp: now }
+        canvasesCache = { data: [], timestamp: now, version: storedVersion }
         return []
     }
 }
@@ -50,6 +64,10 @@ const getCanvasesFromStorage = (): CanvasData[] => {
  */
 const invalidateCache = (): void => {
     canvasesCache = null
+}
+
+const updateStorageVersion = (): void => {
+    localStorage.setItem(STORAGE_VERSION_KEY, `${Date.now()}`)
 }
 
 /**
@@ -116,6 +134,7 @@ export const createCanvas = (
         const canvases = getCanvasesFromStorage()
         canvases.push(newCanvas)
         localStorage.setItem(STORAGE_KEY, JSON.stringify(canvases))
+        updateStorageVersion()
         localStorage.setItem(CURRENT_CANVAS_KEY, newCanvas.id)
         invalidateCache()
 
@@ -148,6 +167,7 @@ export const updateCanvas = (
 
         canvases[index] = updatedCanvas
         localStorage.setItem(STORAGE_KEY, JSON.stringify(canvases))
+        updateStorageVersion()
         localStorage.setItem(CURRENT_CANVAS_KEY, id)
         invalidateCache()
 
@@ -171,6 +191,7 @@ export const deleteCanvas = (id: string): boolean => {
         }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredCanvases))
+        updateStorageVersion()
         invalidateCache()
 
         // Clear current canvas if it was deleted
