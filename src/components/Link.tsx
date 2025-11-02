@@ -579,8 +579,8 @@ const Link: React.FC<LinkProps> = ({
             })
 
             // Select the shortest path without considering obstacles
-            const preferred = candidates.reduce(
-                (min, curr) => curr.distance < min.distance ? curr : min
+            const preferred = candidates.reduce((min, curr) =>
+                curr.distance < min.distance ? curr : min
             )
 
             if (!preferred) {
