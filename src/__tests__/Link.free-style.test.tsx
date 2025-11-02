@@ -275,7 +275,8 @@ describe('Free Style Link Behavior', () => {
             const pointsOrtho = JSON.parse(
                 linesOrtho[0].getAttribute('data-points')!
             )
-            // Orthogonal should have complex path (more than 8 values)
+            // Orthogonal should have complex path with routing around obstacle
+            // Simple path has 8 values (4 points), complex path has more
             expect(pointsOrtho.length).toBeGreaterThan(8)
 
             unmount()
