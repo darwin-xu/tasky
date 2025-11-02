@@ -539,6 +539,7 @@ const Link: React.FC<LinkProps> = ({
                 pathPoints[len - 1],
             ]
         } else {
+            // Free style: draw direct path without considering obstacles
             const sourceRect: RectLike = {
                 x: sourceX,
                 y: sourceY,
@@ -566,46 +567,21 @@ const Link: React.FC<LinkProps> = ({
                 { sourceSide: 'bottom', targetSide: 'top' },
             ]
 
-            const obstacles = (allCards || []).filter(
-                (card) =>
-                    !(
-                        card.x === sourceRect.x &&
-                        card.y === sourceRect.y &&
-                        card.width === sourceRect.width &&
-                        card.height === sourceRect.height
-                    ) &&
-                    !(
-                        card.x === targetRect.x &&
-                        card.y === targetRect.y &&
-                        card.width === targetRect.width &&
-                        card.height === targetRect.height
-                    )
-            )
-
+            // Calculate all possible connection points without obstacle checking
             const candidates = connectionPairs.map((pair) => {
                 const start = getSideMidpoint(sourceRect, pair.sourceSide)
                 const end = getSideMidpoint(targetRect, pair.targetSide)
-                const blocked = obstacles.some((obstacle) =>
-                    lineSegmentIntersectsRect(
-                        start.x,
-                        start.y,
-                        end.x,
-                        end.y,
-                        obstacle
-                    )
-                )
                 return {
                     start,
                     end,
-                    blocked,
                     distance: squaredDistance(start, end),
                 }
             })
 
-            const valid = candidates.filter((candidate) => !candidate.blocked)
-            const preferred = (valid.length > 0 ? valid : candidates).sort(
-                (a, b) => a.distance - b.distance
-            )[0]
+            // Select the shortest path without considering obstacles
+            const preferred = candidates.reduce(
+                (min, curr) => curr.distance < min.distance ? curr : min
+            )
 
             if (!preferred) {
                 const fallbackSource = calculateAnchorPoint(

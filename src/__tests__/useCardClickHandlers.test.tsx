@@ -148,7 +148,9 @@ describe('useCardClickHandlers', () => {
             cancelBubble: false,
         } as KonvaEventObject<MouseEvent>
 
-        expect(() => result.current.handleDuplicateClick(mockEvent)).not.toThrow()
+        expect(() =>
+            result.current.handleDuplicateClick(mockEvent)
+        ).not.toThrow()
         expect(mockEvent.cancelBubble).toBe(true)
     })
 })
