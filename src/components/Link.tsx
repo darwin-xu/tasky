@@ -579,9 +579,9 @@ const Link: React.FC<LinkProps> = ({
             })
 
             // Select the shortest path without considering obstacles
-            const preferred = candidates.sort(
-                (a, b) => a.distance - b.distance
-            )[0]
+            const preferred = candidates.reduce(
+                (min, curr) => curr.distance < min.distance ? curr : min
+            )
 
             if (!preferred) {
                 const fallbackSource = calculateAnchorPoint(
