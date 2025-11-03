@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import TaskCard from '../components/TaskCard'
 
 // Mock react-konva components with DOM-safe wrappers
@@ -404,5 +404,69 @@ describe('TaskCard Component', () => {
             (text) => text.getAttribute('data-text') === '⧉'
         )
         expect(duplicateButton).toBeFalsy()
+    })
+
+    test('handles link handle mouse down event', () => {
+        const onLinkStart = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+                onLinkStart={onLinkStart}
+            />
+        )
+
+        const rects = screen.getAllByTestId('konva-rect')
+        const linkHandleRect = rects.find(
+            (rect) => rect.getAttribute('data-fill') === '#10b981'
+        )
+
+        expect(linkHandleRect).toBeTruthy()
+
+        if (linkHandleRect && linkHandleRect.onMouseDown) {
+            const mouseDownEvent = {
+                cancelBubble: false,
+            }
+            fireEvent.mouseDown(linkHandleRect, mouseDownEvent)
+            expect(onLinkStart).toHaveBeenCalledWith('test-task')
+        }
+    })
+
+    test('handles link handle text mouse down event', () => {
+        const onLinkStart = jest.fn()
+
+        render(
+            <TaskCard
+                id="test-task"
+                x={0}
+                y={0}
+                title="Test Task"
+                gridSpacing={20}
+                scale={1}
+                isSelected={true}
+                onLinkStart={onLinkStart}
+            />
+        )
+
+        const texts = screen.getAllByTestId('konva-text')
+        const linkHandleText = texts.find(
+            (text) => text.getAttribute('data-text') === '→'
+        )
+
+        expect(linkHandleText).toBeTruthy()
+
+        if (linkHandleText) {
+            const mouseDownEvent = {
+                cancelBubble: false,
+            }
+            fireEvent.mouseDown(linkHandleText, mouseDownEvent)
+            expect(onLinkStart).toHaveBeenCalledWith('test-task')
+        }
     })
 })
