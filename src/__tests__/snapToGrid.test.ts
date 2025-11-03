@@ -4,6 +4,7 @@ import {
     screenToWorld,
     worldToScreen,
 } from '../utils/snapToGrid'
+import { GRID_SPACING, VIEWPORT_INITIAL_SCALE } from '../constants'
 
 describe('Snap-to-Grid Utilities', () => {
     describe('snapToGrid', () => {
@@ -51,6 +52,22 @@ describe('Snap-to-Grid Utilities', () => {
             expect(snapToGrid(-30, 20, 1)).toBe(-20) // -30 is exactly halfway, Math.round rounds to -0 which becomes -20 after multiplication
             expect(snapToGrid(-31, 20, 1)).toBe(-40)
         })
+
+        test('uses default parameters when not provided', () => {
+            // Test with default gridSpacing and scale
+            expect(snapToGrid(25)).toBe(
+                Math.round(25 / (GRID_SPACING * VIEWPORT_INITIAL_SCALE)) *
+                    (GRID_SPACING * VIEWPORT_INITIAL_SCALE)
+            )
+        })
+
+        test('uses default scale when only gridSpacing is provided', () => {
+            // Test with custom gridSpacing but default scale
+            expect(snapToGrid(50, 30)).toBe(
+                Math.round(50 / (30 * VIEWPORT_INITIAL_SCALE)) *
+                    (30 * VIEWPORT_INITIAL_SCALE)
+            )
+        })
     })
 
     describe('snapPositionToGrid', () => {
@@ -71,6 +88,32 @@ describe('Snap-to-Grid Utilities', () => {
             const pos = { x: -15, y: -26 }
             const snapped = snapPositionToGrid(pos, 20, 1)
             expect(snapped).toEqual({ x: -20, y: -20 })
+        })
+
+        test('uses default parameters when not provided', () => {
+            const pos = { x: 25, y: 35 }
+            const snapped = snapPositionToGrid(pos)
+            expect(snapped.x).toBe(
+                Math.round(25 / (GRID_SPACING * VIEWPORT_INITIAL_SCALE)) *
+                    (GRID_SPACING * VIEWPORT_INITIAL_SCALE)
+            )
+            expect(snapped.y).toBe(
+                Math.round(35 / (GRID_SPACING * VIEWPORT_INITIAL_SCALE)) *
+                    (GRID_SPACING * VIEWPORT_INITIAL_SCALE)
+            )
+        })
+
+        test('uses default scale when only gridSpacing is provided', () => {
+            const pos = { x: 50, y: 70 }
+            const snapped = snapPositionToGrid(pos, 30)
+            expect(snapped.x).toBe(
+                Math.round(50 / (30 * VIEWPORT_INITIAL_SCALE)) *
+                    (30 * VIEWPORT_INITIAL_SCALE)
+            )
+            expect(snapped.y).toBe(
+                Math.round(70 / (30 * VIEWPORT_INITIAL_SCALE)) *
+                    (30 * VIEWPORT_INITIAL_SCALE)
+            )
         })
     })
 
