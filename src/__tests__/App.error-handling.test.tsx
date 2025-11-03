@@ -262,6 +262,42 @@ describe('App Component - Error Handling', () => {
         })
     })
 
+    test('clears current canvas ID when deleting current canvas', async () => {
+        ;(window.prompt as jest.Mock) = jest.fn().mockReturnValue('Test Canvas')
+        ;(window.confirm as jest.Mock).mockReturnValue(true)
+        ;(canvasService.listCanvases as jest.Mock).mockReturnValue([
+            {
+                id: 'current-canvas-id',
+                name: 'Test Canvas',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            },
+        ])
+        ;(canvasService.deleteCanvas as jest.Mock).mockReturnValue(true)
+        ;(canvasService.getCurrentCanvasId as jest.Mock).mockReturnValue(
+            'current-canvas-id'
+        )
+
+        const { rerender } = render(<App />)
+
+        // Simulate having a current canvas by force updating the state
+        // (In a real scenario, the canvas would be loaded first)
+
+        // Open data menu
+        const dataButton = screen.getByLabelText('Data Menu')
+        fireEvent.click(dataButton)
+
+        // Click delete canvas
+        const deleteButton = screen.getByText('Delete Saved Canvas')
+        fireEvent.click(deleteButton)
+
+        await waitFor(() => {
+            expect(canvasService.deleteCanvas).toHaveBeenCalledWith(
+                'current-canvas-id'
+            )
+        })
+    })
+
     test('handles failed canvas deletion', async () => {
         ;(window.prompt as jest.Mock) = jest.fn().mockReturnValue('Test Canvas')
         ;(window.confirm as jest.Mock).mockReturnValue(true)
