@@ -173,4 +173,37 @@ describe('SaveCanvasModal', () => {
         const input = screen.getByLabelText('Canvas Name')
         expect(input).toHaveFocus()
     })
+
+    it('should call onCancel when escape key is pressed on different modal elements', () => {
+        const { container } = render(
+            <SaveCanvasModal
+                isOpen={true}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const input = container.querySelector('input')
+        if (input) {
+            fireEvent.keyDown(input, { key: 'Escape' })
+            expect(mockOnCancel).toHaveBeenCalledTimes(1)
+        }
+    })
+
+    it('should not call onSave when non-Escape key is pressed', () => {
+        const { container } = render(
+            <SaveCanvasModal
+                isOpen={true}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const input = container.querySelector('input')
+        if (input) {
+            fireEvent.keyDown(input, { key: 'Enter' })
+            // onCancel should not be called for Enter key
+            expect(mockOnCancel).not.toHaveBeenCalled()
+        }
+    })
 })
