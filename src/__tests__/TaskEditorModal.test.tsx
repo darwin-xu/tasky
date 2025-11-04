@@ -311,4 +311,21 @@ describe('TaskEditorModal', () => {
         // Modal should NOT close
         expect(mockOnCancel).not.toHaveBeenCalled()
     })
+
+    test('focuses title input when modal opens', async () => {
+        render(
+            <TaskEditorModal
+                isOpen={true}
+                taskData={mockTaskData}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        const titleInput = screen.getByTestId('task-title-input')
+
+        await waitFor(() => {
+            expect(titleInput).toHaveFocus()
+        })
+    })
 })

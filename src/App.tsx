@@ -105,7 +105,9 @@ function App() {
                 alert('Failed to save canvas.')
             }
         } catch (error) {
-            console.error('Error saving canvas:', error)
+            if (process.env.NODE_ENV !== 'test') {
+                console.error('Error saving canvas:', error)
+            }
             alert('An error occurred while saving the canvas.')
         }
     }

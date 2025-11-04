@@ -1,6 +1,6 @@
 /* eslint-disable testing-library/prefer-screen-queries */
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import StateCard from '../components/StateCard'
 
 // Mock Konva for testing environment
@@ -218,5 +218,31 @@ describe('StateCard Component', () => {
             (text) => text.getAttribute('data-text') === '⧉'
         )
         expect(duplicateButton).toBeFalsy()
+    })
+
+    test('handles fork button click event', () => {
+        const handleFork = jest.fn()
+        render(
+            <StateCard
+                {...defaultProps}
+                isSelected={true}
+                onFork={handleFork}
+            />
+        )
+
+        const rects = screen.getAllByTestId('konva-rect')
+        const forkButtonRect = rects.find(
+            (rect) => rect.getAttribute('data-fill') === '#10b981'
+        )
+
+        expect(forkButtonRect).toBeTruthy()
+
+        if (forkButtonRect) {
+            const clickEvent = {
+                cancelBubble: false,
+            }
+            fireEvent.click(forkButtonRect, clickEvent)
+            expect(handleFork).toHaveBeenCalledWith('state-1')
+        }
     })
 })

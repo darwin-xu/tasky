@@ -242,4 +242,28 @@ describe('StateEditorModal Component', () => {
         // Modal should NOT close
         expect(defaultProps.onCancel).not.toHaveBeenCalled()
     })
+
+    test('does not save when description is empty', () => {
+        render(<StateEditorModal {...defaultProps} />)
+
+        const descriptionInput = screen.getByTestId('state-description-input')
+        fireEvent.change(descriptionInput, { target: { value: '   ' } })
+
+        const saveButton = screen.getByTestId('save-button')
+        fireEvent.click(saveButton)
+
+        expect(defaultProps.onSave).not.toHaveBeenCalled()
+    })
+
+    test('does not save when date is invalid', () => {
+        render(<StateEditorModal {...defaultProps} />)
+
+        const dateInput = screen.getByTestId('state-date-input')
+        fireEvent.change(dateInput, { target: { value: 'invalid-date' } })
+
+        const saveButton = screen.getByTestId('save-button')
+        fireEvent.click(saveButton)
+
+        expect(defaultProps.onSave).not.toHaveBeenCalled()
+    })
 })
