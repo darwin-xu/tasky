@@ -793,7 +793,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         // Memoize editing task data to avoid repeated lookups
         const editingTaskData = useMemo(() => {
             if (!editingTaskId) return null
-            const task = taskById[editingTaskId]
+            const task = tasks.find((t) => t.id === editingTaskId)
             if (!task) return null
             return {
                 title: task.title,
@@ -801,19 +801,19 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                 date: task.date,
                 priority: task.priority || 'Medium',
             }
-        }, [editingTaskId, taskById])
+        }, [editingTaskId, tasks])
 
         // Memoize editing state data to avoid repeated lookups
         const editingStateData = useMemo(() => {
             if (!editingStateId) return null
-            const state = stateById[editingStateId]
+            const state = states.find((s) => s.id === editingStateId)
             if (!state) return null
             return {
                 description: state.description,
                 date: state.date,
                 priority: state.priority || 'Medium',
             }
-        }, [editingStateId, stateById])
+        }, [editingStateId, states])
 
         return (
             <div
