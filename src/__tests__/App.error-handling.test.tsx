@@ -278,7 +278,7 @@ describe('App Component - Error Handling', () => {
             'current-canvas-id'
         )
 
-        const { rerender } = render(<App />)
+        render(<App />)
 
         // Simulate having a current canvas by force updating the state
         // (In a real scenario, the canvas would be loaded first)
