@@ -779,6 +779,17 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             [tasks, states]
         )
 
+        // Memoize lookup maps for O(1) access to tasks and states by ID
+        const taskById = useMemo(
+            () => Object.fromEntries(tasks.map((t) => [t.id, t])),
+            [tasks]
+        )
+
+        const stateById = useMemo(
+            () => Object.fromEntries(states.map((s) => [s.id, s])),
+            [states]
+        )
+
         // Memoize editing task data to avoid repeated lookups
         const editingTaskData = useMemo(() => {
             if (!editingTaskId) return null
@@ -844,17 +855,17 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                     {/* Links layer - rendered above grid but behind cards */}
                     <Layer>
                         {links.map((link) => {
-                            // Find source card (could be Task or State)
+                            // Find source card (could be Task or State) using O(1) lookup
                             const sourceCard =
                                 link.sourceType === 'task'
-                                    ? tasks.find((t) => t.id === link.sourceId)
-                                    : states.find((s) => s.id === link.sourceId)
+                                    ? taskById[link.sourceId]
+                                    : stateById[link.sourceId]
 
-                            // Find target card (could be Task or State)
+                            // Find target card (could be Task or State) using O(1) lookup
                             const targetCard =
                                 link.targetType === 'task'
-                                    ? tasks.find((t) => t.id === link.targetId)
-                                    : states.find((s) => s.id === link.targetId)
+                                    ? taskById[link.targetId]
+                                    : stateById[link.targetId]
 
                             if (!sourceCard || !targetCard) return null
 
