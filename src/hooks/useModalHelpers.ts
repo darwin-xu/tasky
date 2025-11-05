@@ -12,7 +12,7 @@ export const useModalEscapeHandler = ({
 }: UseModalEscapeHandlerProps) => {
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && !e.isComposing) {
                 onCancel()
             }
         }
