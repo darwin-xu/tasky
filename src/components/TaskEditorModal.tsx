@@ -42,7 +42,8 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     const { validateDate } = useDateValidation()
     const { handleModalMouseDown, handleBackdropClick } =
         useModalBackdropHandler()
-    const { position, handleDragStart, resetPosition } = useModalDrag()
+    const { position, isDragging, handleDragStart, resetPosition } =
+        useModalDrag()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
@@ -101,17 +102,13 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
             <div
                 className="task-editor-modal"
                 data-testid="task-editor-modal"
+                onMouseDown={handleDragStart}
                 style={{
                     transform: `translate(${position.x}px, ${position.y}px)`,
+                    cursor: isDragging ? 'grabbing' : 'grab',
                 }}
             >
-                <h2
-                    className="task-editor-title"
-                    onMouseDown={handleDragStart}
-                    style={{ cursor: 'move' }}
-                >
-                    Edit Task
-                </h2>
+                <h2 className="task-editor-title">Edit Task</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="task-editor-field">
                         <label htmlFor="task-title">

@@ -1,4 +1,10 @@
-import { useState, useRef, useCallback, type MouseEvent } from 'react'
+import {
+    useState,
+    useRef,
+    useCallback,
+    useEffect,
+    type MouseEvent,
+} from 'react'
 
 interface Position {
     x: number
@@ -25,6 +31,20 @@ export const useModalDrag = (): UseModalDragReturn => {
     const [isDragging, setIsDragging] = useState(false)
     const dragStartPos = useRef<Position>({ x: 0, y: 0 })
     const initialModalPos = useRef<Position>({ x: 0, y: 0 })
+    const cleanupRef = useRef<(() => void) | null>(null)
+    const rafRef = useRef<number | null>(null)
+
+    // Cleanup on unmount to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            if (cleanupRef.current) {
+                cleanupRef.current()
+            }
+            if (rafRef.current !== null) {
+                cancelAnimationFrame(rafRef.current)
+            }
+        }
+    }, [])
 
     const handleDragStart = useCallback(
         (e: MouseEvent<HTMLElement>) => {
@@ -44,25 +64,56 @@ export const useModalDrag = (): UseModalDragReturn => {
 
             e.preventDefault()
 
+            let currentMousePos = { x: e.clientX, y: e.clientY }
+
             // Set up mouse move and mouse up handlers
             const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
-                const deltaX = moveEvent.clientX - dragStartPos.current.x
-                const deltaY = moveEvent.clientY - dragStartPos.current.y
+                currentMousePos = {
+                    x: moveEvent.clientX,
+                    y: moveEvent.clientY,
+                }
 
-                setPosition({
-                    x: initialModalPos.current.x + deltaX,
-                    y: initialModalPos.current.y + deltaY,
-                })
+                // Use requestAnimationFrame to throttle updates
+                if (rafRef.current === null) {
+                    rafRef.current = requestAnimationFrame(() => {
+                        const deltaX =
+                            currentMousePos.x - dragStartPos.current.x
+                        const deltaY =
+                            currentMousePos.y - dragStartPos.current.y
+
+                        setPosition({
+                            x: initialModalPos.current.x + deltaX,
+                            y: initialModalPos.current.y + deltaY,
+                        })
+
+                        rafRef.current = null
+                    })
+                }
             }
 
             const handleMouseUp = () => {
                 setIsDragging(false)
                 document.removeEventListener('mousemove', handleMouseMove)
                 document.removeEventListener('mouseup', handleMouseUp)
+                if (rafRef.current !== null) {
+                    cancelAnimationFrame(rafRef.current)
+                    rafRef.current = null
+                }
+                cleanupRef.current = null
             }
 
             document.addEventListener('mousemove', handleMouseMove)
             document.addEventListener('mouseup', handleMouseUp)
+
+            // Store cleanup function
+            cleanupRef.current = () => {
+                document.removeEventListener('mousemove', handleMouseMove)
+                document.removeEventListener('mouseup', handleMouseUp)
+                if (rafRef.current !== null) {
+                    cancelAnimationFrame(rafRef.current)
+                    rafRef.current = null
+                }
+            }
         },
         [position]
     )

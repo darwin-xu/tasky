@@ -29,7 +29,7 @@ describe('useModalDrag', () => {
         expect(result.current.isDragging).toBe(false)
     })
 
-    test('resets position when resetPosition is called', () => {
+    test('resets position when resetPosition is called', async () => {
         const { result } = renderHook(() => useModalDrag())
 
         // Manually set position (simulating a drag)
@@ -46,6 +46,11 @@ describe('useModalDrag', () => {
                 clientY: 150,
             })
             document.dispatchEvent(mouseMoveEvent)
+        })
+
+        // Wait for requestAnimationFrame to process
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 50))
         })
 
         // Position should have changed
@@ -125,7 +130,7 @@ describe('useModalDrag', () => {
         expect(mouseDownEvent.preventDefault).toHaveBeenCalled()
     })
 
-    test('updates position during drag', () => {
+    test('updates position during drag', async () => {
         const { result } = renderHook(() => useModalDrag())
 
         // Start drag
@@ -144,6 +149,11 @@ describe('useModalDrag', () => {
                 clientY: 200,
             })
             document.dispatchEvent(mouseMoveEvent)
+        })
+
+        // Wait for requestAnimationFrame to process
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 50))
         })
 
         // Position should be updated

@@ -40,7 +40,8 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
     const { validateDate } = useDateValidation()
     const { handleModalMouseDown, handleBackdropClick } =
         useModalBackdropHandler()
-    const { position, handleDragStart, resetPosition } = useModalDrag()
+    const { position, isDragging, handleDragStart, resetPosition } =
+        useModalDrag()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
@@ -97,17 +98,13 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
             <div
                 className="state-editor-modal"
                 data-testid="state-editor-modal"
+                onMouseDown={handleDragStart}
                 style={{
                     transform: `translate(${position.x}px, ${position.y}px)`,
+                    cursor: isDragging ? 'grabbing' : 'grab',
                 }}
             >
-                <h2
-                    className="state-editor-title"
-                    onMouseDown={handleDragStart}
-                    style={{ cursor: 'move' }}
-                >
-                    Edit State
-                </h2>
+                <h2 className="state-editor-title">Edit State</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="state-editor-field">
                         <label htmlFor="state-description">
