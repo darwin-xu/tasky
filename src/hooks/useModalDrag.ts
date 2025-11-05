@@ -43,40 +43,28 @@ export const useModalDrag = (): UseModalDragReturn => {
             initialModalPos.current = { ...position }
 
             e.preventDefault()
+
+            // Set up mouse move and mouse up handlers
+            const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
+                const deltaX = moveEvent.clientX - dragStartPos.current.x
+                const deltaY = moveEvent.clientY - dragStartPos.current.y
+
+                setPosition({
+                    x: initialModalPos.current.x + deltaX,
+                    y: initialModalPos.current.y + deltaY,
+                })
+            }
+
+            const handleMouseUp = () => {
+                setIsDragging(false)
+                document.removeEventListener('mousemove', handleMouseMove)
+                document.removeEventListener('mouseup', handleMouseUp)
+            }
+
+            document.addEventListener('mousemove', handleMouseMove)
+            document.addEventListener('mouseup', handleMouseUp)
         },
         [position]
-    )
-
-    // Handle mouse move during drag
-    const handleMouseMove = useCallback((e: globalThis.MouseEvent) => {
-        const deltaX = e.clientX - dragStartPos.current.x
-        const deltaY = e.clientY - dragStartPos.current.y
-
-        setPosition({
-            x: initialModalPos.current.x + deltaX,
-            y: initialModalPos.current.y + deltaY,
-        })
-    }, [])
-
-    // Set up and clean up event listeners
-    const startDrag = useCallback(
-        (e: MouseEvent<HTMLElement>) => {
-            handleDragStart(e)
-
-            const handleMove = (moveEvent: globalThis.MouseEvent) => {
-                handleMouseMove(moveEvent)
-            }
-
-            const handleUp = () => {
-                setIsDragging(false)
-                document.removeEventListener('mousemove', handleMove)
-                document.removeEventListener('mouseup', handleUp)
-            }
-
-            document.addEventListener('mousemove', handleMove)
-            document.addEventListener('mouseup', handleUp)
-        },
-        [handleDragStart, handleMouseMove]
     )
 
     const resetPosition = useCallback(() => {
@@ -86,7 +74,7 @@ export const useModalDrag = (): UseModalDragReturn => {
     return {
         position,
         isDragging,
-        handleDragStart: startDrag,
+        handleDragStart,
         resetPosition,
     }
 }

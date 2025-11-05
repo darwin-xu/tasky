@@ -76,12 +76,7 @@ describe('useModalDrag', () => {
         const { result } = renderHook(() => useModalDrag())
 
         const textarea = document.createElement('textarea')
-        const mouseDownEvent = createMouseEvent(
-            'mousedown',
-            textarea,
-            100,
-            100
-        )
+        const mouseDownEvent = createMouseEvent('mousedown', textarea, 100, 100)
 
         act(() => {
             result.current.handleDragStart(mouseDownEvent)
