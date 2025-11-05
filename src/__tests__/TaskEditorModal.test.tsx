@@ -328,4 +328,39 @@ describe('TaskEditorModal', () => {
             expect(titleInput).toHaveFocus()
         })
     })
+
+    test('calls onCancel when Escape is pressed and IME is not active', async () => {
+        render(
+            <TaskEditorModal
+                isOpen={true}
+                taskData={mockTaskData}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        fireEvent.keyDown(document, { key: 'Escape', isComposing: false })
+
+        await waitFor(() => {
+            expect(mockOnCancel).toHaveBeenCalled()
+        })
+    })
+
+    test('does not call onCancel when Escape is pressed during IME composition', async () => {
+        render(
+            <TaskEditorModal
+                isOpen={true}
+                taskData={mockTaskData}
+                onSave={mockOnSave}
+                onCancel={mockOnCancel}
+            />
+        )
+
+        fireEvent.keyDown(document, { key: 'Escape', isComposing: true })
+
+        // Wait a bit to ensure the handler doesn't fire
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        expect(mockOnCancel).not.toHaveBeenCalled()
+    })
 })

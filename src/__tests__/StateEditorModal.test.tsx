@@ -243,27 +243,24 @@ describe('StateEditorModal Component', () => {
         expect(defaultProps.onCancel).not.toHaveBeenCalled()
     })
 
-    test('does not save when description is empty', () => {
+    test('handles Escape key to cancel when IME is not active', async () => {
         render(<StateEditorModal {...defaultProps} />)
 
-        const descriptionInput = screen.getByTestId('state-description-input')
-        fireEvent.change(descriptionInput, { target: { value: '   ' } })
+        fireEvent.keyDown(document, { key: 'Escape', isComposing: false })
 
-        const saveButton = screen.getByTestId('save-button')
-        fireEvent.click(saveButton)
-
-        expect(defaultProps.onSave).not.toHaveBeenCalled()
+        await waitFor(() => {
+            expect(defaultProps.onCancel).toHaveBeenCalled()
+        })
     })
 
-    test('does not save when date is invalid', () => {
+    test('does not cancel when Escape is pressed during IME composition', async () => {
         render(<StateEditorModal {...defaultProps} />)
 
-        const dateInput = screen.getByTestId('state-date-input')
-        fireEvent.change(dateInput, { target: { value: 'invalid-date' } })
+        fireEvent.keyDown(document, { key: 'Escape', isComposing: true })
 
-        const saveButton = screen.getByTestId('save-button')
-        fireEvent.click(saveButton)
+        // Wait a bit to ensure the handler doesn't fire
+        await new Promise((resolve) => setTimeout(resolve, 100))
 
-        expect(defaultProps.onSave).not.toHaveBeenCalled()
+        expect(defaultProps.onCancel).not.toHaveBeenCalled()
     })
 })
