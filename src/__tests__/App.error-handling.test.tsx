@@ -207,7 +207,9 @@ describe('App Component - Error Handling', () => {
     })
 
     test('handles delete canvas when canvas not found', async () => {
-        ;(window.prompt as jest.Mock) = jest.fn().mockReturnValue('Non-existent')
+        ;(window.prompt as jest.Mock) = jest
+            .fn()
+            .mockReturnValue('Non-existent')
         ;(canvasService.listCanvases as jest.Mock).mockReturnValue([
             {
                 id: 'test-id',
@@ -322,7 +324,9 @@ describe('App Component - Error Handling', () => {
         fireEvent.click(deleteButton)
 
         await waitFor(() => {
-            expect(window.alert).toHaveBeenCalledWith('Failed to delete canvas.')
+            expect(window.alert).toHaveBeenCalledWith(
+                'Failed to delete canvas.'
+            )
         })
     })
 })
