@@ -27,6 +27,7 @@
     font-size: 24px;
     font-weight: 600;
     color: #1f2937;
+    cursor: inherit;
 }
 
 .state-editor-field {
@@ -39,10 +40,12 @@
     font-size: 14px;
     font-weight: 500;
     color: #374151;
+    cursor: inherit;
 }
 
 .state-editor-field .required {
     color: #ef4444;
+    cursor: inherit;
 }
 
 .state-editor-field input[type='text'],
