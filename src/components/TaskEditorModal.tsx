@@ -5,6 +5,7 @@ import {
     useDateValidation,
     useModalBackdropHandler,
 } from '../hooks/useModalHelpers'
+import { useModalDrag } from '../hooks/useModalDrag'
 import { DateField } from './DateField'
 import { PriorityField } from './PriorityField'
 import './TaskEditorModal.css'
@@ -41,6 +42,8 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
     const { validateDate } = useDateValidation()
     const { handleModalMouseDown, handleBackdropClick } =
         useModalBackdropHandler()
+    const { position, isDragging, handleDragStart, resetPosition } =
+        useModalDrag()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
@@ -51,12 +54,13 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
             setDate(taskData.date || '')
             setPriority(taskData.priority)
             setDateError('')
+            resetPosition() // Reset modal position when opened
             // Focus title input when modal opens
             setTimeout(() => {
                 titleInputRef.current?.focus()
             }, 0)
         }
-    }, [isOpen, taskData])
+    }, [isOpen, taskData, resetPosition])
 
     const handleDateChange = (value: string) => {
         setDate(value)
@@ -95,7 +99,15 @@ const TaskEditorModal: React.FC<TaskEditorModalProps> = ({
             onClick={(e) => handleBackdropClick(e, onCancel)}
             data-testid="task-editor-overlay"
         >
-            <div className="task-editor-modal" data-testid="task-editor-modal">
+            <div
+                className="task-editor-modal"
+                data-testid="task-editor-modal"
+                onMouseDown={handleDragStart}
+                style={{
+                    transform: `translate(${position.x}px, ${position.y}px)`,
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                }}
+            >
                 <h2 className="task-editor-title">Edit Task</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="task-editor-field">

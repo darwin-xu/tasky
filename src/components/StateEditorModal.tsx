@@ -5,6 +5,7 @@ import {
     useDateValidation,
     useModalBackdropHandler,
 } from '../hooks/useModalHelpers'
+import { useModalDrag } from '../hooks/useModalDrag'
 import { DateField } from './DateField'
 import { PriorityField } from './PriorityField'
 import './StateEditorModal.css'
@@ -39,6 +40,8 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
     const { validateDate } = useDateValidation()
     const { handleModalMouseDown, handleBackdropClick } =
         useModalBackdropHandler()
+    const { position, isDragging, handleDragStart, resetPosition } =
+        useModalDrag()
 
     useModalEscapeHandler({ isOpen, onCancel })
 
@@ -48,12 +51,13 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
             setDate(stateData.date || '')
             setPriority(stateData.priority)
             setDateError('')
+            resetPosition() // Reset modal position when opened
             // Focus description input when modal opens
             setTimeout(() => {
                 descriptionInputRef.current?.focus()
             }, 0)
         }
-    }, [isOpen, stateData])
+    }, [isOpen, stateData, resetPosition])
 
     const handleDateChange = (value: string) => {
         setDate(value)
@@ -94,6 +98,11 @@ const StateEditorModal: React.FC<StateEditorModalProps> = ({
             <div
                 className="state-editor-modal"
                 data-testid="state-editor-modal"
+                onMouseDown={handleDragStart}
+                style={{
+                    transform: `translate(${position.x}px, ${position.y}px)`,
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                }}
             >
                 <h2 className="state-editor-title">Edit State</h2>
                 <form onSubmit={handleSubmit}>
