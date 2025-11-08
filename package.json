@@ -4,9 +4,11 @@
     "private": true,
     "dependencies": {
         "@types/node": "^16.18.0",
+        "@types/pathfinding": "^0.1.0",
         "@types/react": "^18.2.0",
         "@types/react-dom": "^18.2.0",
         "konva": "^9.2.0",
+        "pathfinding": "^0.4.18",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-konva": "^18.2.10",

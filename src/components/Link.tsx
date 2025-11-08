@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { Arrow, Group, Rect, Text, Line } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { LINK, COLORS, TEXT, SNAP_PREVIEW } from '../constants'
+import PF from 'pathfinding'
 
 export interface LinkProps {
     id: string
@@ -254,35 +255,7 @@ const pathIntersectsObstacles = (
     return false
 }
 
-// Count the number of turns in a path
-const countTurns = (points: number[]): number => {
-    let turns = 0
-    for (let i = 0; i < points.length - 4; i += 2) {
-        const dx1 = points[i + 2] - points[i]
-        const dy1 = points[i + 3] - points[i + 1]
-        const dx2 = points[i + 4] - points[i + 2]
-        const dy2 = points[i + 5] - points[i + 3]
-
-        // Check if direction changed (turn occurred)
-        if ((dx1 === 0 && dy2 === 0) || (dy1 === 0 && dx2 === 0)) {
-            turns++
-        }
-    }
-    return turns
-}
-
-// Calculate the total distance of a path
-const calculatePathDistance = (points: number[]): number => {
-    let distance = 0
-    for (let i = 0; i < points.length - 2; i += 2) {
-        const dx = points[i + 2] - points[i]
-        const dy = points[i + 3] - points[i + 1]
-        distance += Math.sqrt(dx * dx + dy * dy)
-    }
-    return distance
-}
-
-// Calculate orthogonal path points using heuristic routing
+// Calculate orthogonal path points using A* pathfinding algorithm
 const calculateOrthogonalPath = (
     sourceX: number,
     sourceY: number,
@@ -324,180 +297,163 @@ const calculateOrthogonalPath = (
         return simplePath
     }
 
-    // Try different routing strategies
-    const strategies: number[][] = []
+    // Use A* pathfinding on a grid
+    try {
+        // Define grid cell size (smaller = more precise but slower)
+        const gridSize = 20
 
-    // Find the leftmost and rightmost obstacle bounds
-    const obstacleLeft = Math.min(...obstacles.map((o) => o.x - padding))
-    const obstacleRight = Math.max(
-        ...obstacles.map((o) => o.x + o.width + padding)
-    )
-
-    // Strategy 1: Route far above all obstacles
-    const maxTop = Math.min(sourceY, targetY, ...obstacles.map((o) => o.y))
-    const routeAbove = maxTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
-
-    // Go straight out past obstacles before turning up
-    const clearRightX = Math.min(
-        obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL,
-        startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
-    )
-    const pathAbove = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
-    if (!pathIntersectsObstacles(pathAbove, obstacles, padding)) {
-        strategies.push(pathAbove)
-    }
-
-    // Strategy 2: Route far below all obstacles
-    const maxBottom = Math.max(
-        sourceY + sourceHeight,
-        targetY + targetHeight,
-        ...obstacles.map((o) => o.y + o.height)
-    )
-    const routeBelow = maxBottom + padding + LINK.ROUTE_ABOVE_BELOW_OFFSET
-
-    const pathBelow = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
-    if (!pathIntersectsObstacles(pathBelow, obstacles, padding)) {
-        strategies.push(pathBelow)
-    }
-
-    // Strategy 3: Route far to the right of all obstacles
-    const farRight = obstacleRight + LINK.FAR_RIGHT_OFFSET
-    if (farRight < endX - LINK.CLEARANCE_OFFSET_LARGE) {
-        const pathFarRight = [
+        // Find the bounding box for the grid
+        const minX = Math.min(
             startX,
-            startY,
-            farRight,
-            startY,
-            farRight,
-            endY,
             endX,
-            endY,
-        ]
-        if (!pathIntersectsObstacles(pathFarRight, obstacles, padding)) {
-            strategies.push(pathFarRight)
-        }
-    }
-
-    // Strategy 4: Route around individual obstacles (above and below)
-    for (const obstacle of obstacles) {
-        const obsLeft = obstacle.x - padding
-        const obsRight = obstacle.x + obstacle.width + padding
-        const obsTop = obstacle.y - padding
-        const obsBottom = obstacle.y + obstacle.height + padding
-
-        // Only consider obstacles that are actually in the way
-        if (obsRight > startX && obsLeft < endX) {
-            // Calculate the optimal X coordinates to route around the obstacle
-            // Go just past the obstacle's left edge on approach
-            const beforeObsX = Math.max(startX + LINK.OBSTACLE_PADDING, obsLeft)
-            // Continue just past the obstacle's right edge after routing around
-            const afterObsX = Math.min(endX - LINK.OBSTACLE_PADDING, obsRight)
-
-            // Try routing above this obstacle
-            const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
-            const pathAroundTop = [
-                startX,
-                startY,
-                beforeObsX,
-                startY,
-                beforeObsX,
-                aboveY,
-                afterObsX,
-                aboveY,
-                afterObsX,
-                endY,
-                endX,
-                endY,
-            ]
-            if (!pathIntersectsObstacles(pathAroundTop, obstacles, padding)) {
-                strategies.push(pathAroundTop)
-            }
-
-            // Try routing below this obstacle
-            const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
-            const pathAroundBottom = [
-                startX,
-                startY,
-                beforeObsX,
-                startY,
-                beforeObsX,
-                belowY,
-                afterObsX,
-                belowY,
-                afterObsX,
-                endY,
-                endX,
-                endY,
-            ]
-            if (
-                !pathIntersectsObstacles(pathAroundBottom, obstacles, padding)
-            ) {
-                strategies.push(pathAroundBottom)
-            }
-        }
-    }
-
-    // Strategy 5: Direct vertical-horizontal path if very close
-    if (Math.abs(endX - startX) < LINK.DIRECT_PATH_THRESHOLD) {
-        const pathDirect = [
+            ...obstacles.map((o) => o.x - padding)
+        )
+        const maxX = Math.max(
             startX,
-            startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
-            startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
-            endY,
             endX,
+            ...obstacles.map((o) => o.x + o.width + padding)
+        )
+        const minY = Math.min(
+            startY,
             endY,
-        ]
-        if (!pathIntersectsObstacles(pathDirect, obstacles, padding)) {
-            strategies.push(pathDirect)
-        }
-    }
+            ...obstacles.map((o) => o.y - padding)
+        )
+        const maxY = Math.max(
+            startY,
+            endY,
+            ...obstacles.map((o) => o.y + o.height + padding)
+        )
 
-    // If we found valid strategies, pick the shortest one
-    if (strategies.length > 0) {
-        strategies.sort((a, b) => {
-            const distanceA = calculatePathDistance(a)
-            const distanceB = calculatePathDistance(b)
-            // Prioritize shorter paths
-            if (Math.abs(distanceA - distanceB) > 1) {
-                return distanceA - distanceB
+        // Add some margin to the grid
+        const margin = gridSize * 5
+        const gridMinX = minX - margin
+        const gridMinY = minY - margin
+        const gridMaxX = maxX + margin
+        const gridMaxY = maxY + margin
+
+        // Calculate grid dimensions
+        const gridWidth = Math.ceil((gridMaxX - gridMinX) / gridSize)
+        const gridHeight = Math.ceil((gridMaxY - gridMinY) / gridSize)
+
+        // Create grid (0 = walkable, 1 = obstacle)
+        const grid = new PF.Grid(gridWidth, gridHeight)
+
+        // Mark obstacles on the grid
+        for (const obstacle of obstacles) {
+            const obsMinX = obstacle.x - padding
+            const obsMinY = obstacle.y - padding
+            const obsMaxX = obstacle.x + obstacle.width + padding
+            const obsMaxY = obstacle.y + obstacle.height + padding
+
+            // Convert to grid coordinates
+            const gridObsMinX = Math.floor((obsMinX - gridMinX) / gridSize)
+            const gridObsMinY = Math.floor((obsMinY - gridMinY) / gridSize)
+            const gridObsMaxX = Math.ceil((obsMaxX - gridMinX) / gridSize)
+            const gridObsMaxY = Math.ceil((obsMaxY - gridMinY) / gridSize)
+
+            // Mark cells as unwalkable
+            for (let gx = gridObsMinX; gx <= gridObsMaxX; gx++) {
+                for (let gy = gridObsMinY; gy <= gridObsMaxY; gy++) {
+                    if (
+                        gx >= 0 &&
+                        gx < gridWidth &&
+                        gy >= 0 &&
+                        gy < gridHeight
+                    ) {
+                        grid.setWalkableAt(gx, gy, false)
+                    }
+                }
             }
-            // If distances are very similar, prefer fewer turns
-            const turnsA = countTurns(a)
-            const turnsB = countTurns(b)
-            return turnsA - turnsB
+        }
+
+        // Convert start and end to grid coordinates
+        const gridStartX = Math.floor((startX - gridMinX) / gridSize)
+        const gridStartY = Math.floor((startY - gridMinY) / gridSize)
+        const gridEndX = Math.floor((endX - gridMinX) / gridSize)
+        const gridEndY = Math.floor((endY - gridMinY) / gridSize)
+
+        // Make sure start and end are walkable
+        if (
+            gridStartX >= 0 &&
+            gridStartX < gridWidth &&
+            gridStartY >= 0 &&
+            gridStartY < gridHeight
+        ) {
+            grid.setWalkableAt(gridStartX, gridStartY, true)
+        }
+        if (
+            gridEndX >= 0 &&
+            gridEndX < gridWidth &&
+            gridEndY >= 0 &&
+            gridEndY < gridHeight
+        ) {
+            grid.setWalkableAt(gridEndX, gridEndY, true)
+        }
+
+        // Use A* to find the path (orthogonal movement only)
+        const finder = new PF.AStarFinder({
+            allowDiagonal: false,
+            dontCrossCorners: true,
         })
-        return strategies[0]
+
+        const gridPath = finder.findPath(
+            gridStartX,
+            gridStartY,
+            gridEndX,
+            gridEndY,
+            grid
+        )
+
+        if (gridPath && gridPath.length > 0) {
+            // Convert grid path back to world coordinates
+            const worldPath: number[] = []
+
+            // Always start at the exact start point
+            worldPath.push(startX, startY)
+
+            // Convert grid coordinates to world coordinates, skipping colinear points
+            for (let i = 1; i < gridPath.length - 1; i++) {
+                const [gx, gy] = gridPath[i]
+                const x = gridMinX + gx * gridSize
+                const y = gridMinY + gy * gridSize
+
+                // Check if this point creates a turn (not colinear with previous segment)
+                if (worldPath.length >= 4) {
+                    const prevX = worldPath[worldPath.length - 2]
+                    const prevY = worldPath[worldPath.length - 1]
+                    const prevPrevX = worldPath[worldPath.length - 4]
+                    const prevPrevY = worldPath[worldPath.length - 3]
+
+                    // Skip if colinear (same direction as previous segment)
+                    const dx1 = prevX - prevPrevX
+                    const dy1 = prevY - prevPrevY
+                    const dx2 = x - prevX
+                    const dy2 = y - prevY
+
+                    if ((dx1 === 0 && dx2 === 0) || (dy1 === 0 && dy2 === 0)) {
+                        // Colinear, skip this point but update the last point
+                        worldPath[worldPath.length - 2] = x
+                        worldPath[worldPath.length - 1] = y
+                        continue
+                    }
+                }
+
+                worldPath.push(x, y)
+            }
+
+            // Always end at the exact end point
+            worldPath.push(endX, endY)
+
+            return worldPath
+        }
+    } catch (error) {
+        console.warn(
+            'A* pathfinding failed, falling back to simple path',
+            error
+        )
     }
 
-    // If no valid strategy found, return simple path (best effort)
+    // If pathfinding fails, return simple path (best effort)
     return simplePath
 }
 
