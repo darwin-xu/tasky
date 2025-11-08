@@ -23,6 +23,17 @@ jest.mock('konva', () => ({
     default: {},
 }))
 
+// Helper function to calculate path distance
+const calculatePathDistance = (points: number[]): number => {
+    let distance = 0
+    for (let i = 0; i < points.length - 2; i += 2) {
+        const dx = points[i + 2] - points[i]
+        const dy = points[i + 3] - points[i + 1]
+        distance += Math.sqrt(dx * dx + dy * dy)
+    }
+    return distance
+}
+
 describe('Orthogonal Routing Algorithm', () => {
     describe('Basic Path Generation', () => {
         test('uses simple 3-segment path when no obstacles present', () => {
@@ -489,6 +500,159 @@ describe('Orthogonal Routing Algorithm', () => {
             const points = JSON.parse(pointsStr!)
             // Should route around the obstacle
             expect(points.length > 8).toBe(true)
+        })
+    })
+
+    describe('Efficient Routing - Shortest Path Selection', () => {
+        test('chooses shortest path around obstacle in center', () => {
+            // Obstacle between source and target (similar to screenshot scenario)
+            const obstacles = [{ x: 300, y: 30, width: 200, height: 120 }]
+
+            render(
+                <LinkComponent
+                    id="test-link"
+                    sourceX={100}
+                    sourceY={60}
+                    sourceWidth={200}
+                    sourceHeight={120}
+                    targetX={600}
+                    targetY={60}
+                    targetWidth={200}
+                    targetHeight={120}
+                    linkStyle="orthogonal"
+                    routeAround={true}
+                    allCards={obstacles}
+                />
+            )
+
+            const lines = screen.queryAllByTestId('konva-line')
+            expect(lines.length).toBeGreaterThan(0)
+
+            const line = lines[0]
+            const pointsStr = line.getAttribute('data-points')
+            expect(pointsStr).toBeTruthy()
+
+            const points = JSON.parse(pointsStr!)
+            const distance = calculatePathDistance(points)
+
+            // The path should be reasonably efficient
+            // Direct distance from start to end is about 300 pixels
+            // Routed path should be less than 2x the direct distance
+            expect(distance).toBeLessThan(600)
+        })
+
+        test('routes close to obstacle when going around', () => {
+            // Obstacle slightly offset from direct path
+            const obstacles = [{ x: 350, y: 100, width: 100, height: 120 }]
+
+            render(
+                <LinkComponent
+                    id="test-link"
+                    sourceX={100}
+                    sourceY={100}
+                    sourceWidth={200}
+                    sourceHeight={120}
+                    targetX={600}
+                    targetY={100}
+                    targetWidth={200}
+                    targetHeight={120}
+                    linkStyle="orthogonal"
+                    routeAround={true}
+                    allCards={obstacles}
+                />
+            )
+
+            const lines = screen.queryAllByTestId('konva-line')
+            const line = lines[0]
+            const pointsStr = line.getAttribute('data-points')
+            expect(pointsStr).toBeTruthy()
+
+            const points = JSON.parse(pointsStr!)
+
+            // Check that the path doesn't deviate too far from the obstacle
+            // The routing should pass close to the obstacle (within reasonable distance)
+            let minYDist = Infinity
+            for (let i = 1; i < points.length; i += 2) {
+                const y = points[i]
+                // Distance from obstacle top or bottom
+                const distTop = Math.abs(y - (100 - 20)) // obstacle.y - padding
+                const distBottom = Math.abs(y - (220 + 20)) // obstacle.y + obstacle.height + padding
+                minYDist = Math.min(minYDist, distTop, distBottom)
+            }
+
+            // Path should pass within 50 pixels of the obstacle (allowing for AROUND_OBSTACLE_OFFSET)
+            expect(minYDist).toBeLessThan(50)
+        })
+
+        test('prefers shorter path over path with fewer turns', () => {
+            // Create a scenario where a slightly longer path with fewer turns
+            // vs a shorter path with more turns - should choose shorter
+            const obstacles = [
+                { x: 350, y: 50, width: 100, height: 50 },
+                { x: 350, y: 150, width: 100, height: 50 },
+            ]
+
+            render(
+                <LinkComponent
+                    id="test-link"
+                    sourceX={100}
+                    sourceY={100}
+                    sourceWidth={200}
+                    sourceHeight={120}
+                    targetX={600}
+                    targetY={100}
+                    targetWidth={200}
+                    targetHeight={120}
+                    linkStyle="orthogonal"
+                    routeAround={true}
+                    allCards={obstacles}
+                />
+            )
+
+            const lines = screen.queryAllByTestId('konva-line')
+            const line = lines[0]
+            const pointsStr = line.getAttribute('data-points')
+            expect(pointsStr).toBeTruthy()
+
+            const points = JSON.parse(pointsStr!)
+            const distance = calculatePathDistance(points)
+
+            // Should find an efficient path (not going extremely far around)
+            // Direct distance is ~300, so routed path should be reasonable
+            expect(distance).toBeLessThan(700)
+        })
+
+        test('finds tight route around nearby obstacle', () => {
+            // Obstacle very close to the path
+            const obstacles = [{ x: 280, y: 80, width: 150, height: 100 }]
+
+            render(
+                <LinkComponent
+                    id="test-link"
+                    sourceX={100}
+                    sourceY={100}
+                    sourceWidth={200}
+                    sourceHeight={120}
+                    targetX={500}
+                    targetY={100}
+                    targetWidth={200}
+                    targetHeight={120}
+                    linkStyle="orthogonal"
+                    routeAround={true}
+                    allCards={obstacles}
+                />
+            )
+
+            const lines = screen.queryAllByTestId('konva-line')
+            const line = lines[0]
+            const pointsStr = line.getAttribute('data-points')
+            expect(pointsStr).toBeTruthy()
+
+            const points = JSON.parse(pointsStr!)
+            const distance = calculatePathDistance(points)
+
+            // Should route efficiently around the obstacle
+            expect(distance).toBeLessThan(500)
         })
     })
 

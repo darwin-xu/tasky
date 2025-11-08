@@ -271,6 +271,17 @@ const countTurns = (points: number[]): number => {
     return turns
 }
 
+// Calculate the total distance of a path
+const calculatePathDistance = (points: number[]): number => {
+    let distance = 0
+    for (let i = 0; i < points.length - 2; i += 2) {
+        const dx = points[i + 2] - points[i]
+        const dy = points[i + 3] - points[i + 1]
+        distance += Math.sqrt(dx * dx + dy * dy)
+    }
+    return distance
+}
+
 // Calculate orthogonal path points using heuristic routing
 const calculateOrthogonalPath = (
     sourceX: number,
@@ -402,17 +413,14 @@ const calculateOrthogonalPath = (
 
         // Only consider obstacles that are actually in the way
         if (obsRight > startX && obsLeft < endX) {
+            // Calculate the optimal X coordinates to route around the obstacle
+            // Go just past the obstacle's left edge on approach
+            const beforeObsX = Math.max(startX + LINK.OBSTACLE_PADDING, obsLeft)
+            // Continue just past the obstacle's right edge after routing around
+            const afterObsX = Math.min(endX - LINK.OBSTACLE_PADDING, obsRight)
+
             // Try routing above this obstacle
             const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
-            const beforeObsX = Math.max(
-                startX + LINK.OBSTACLE_PADDING,
-                obsLeft - LINK.AROUND_OBSTACLE_OFFSET
-            )
-            const afterObsX = Math.min(
-                endX - LINK.OBSTACLE_PADDING,
-                obsRight + LINK.AROUND_OBSTACLE_OFFSET
-            )
-
             const pathAroundTop = [
                 startX,
                 startY,
@@ -472,18 +480,19 @@ const calculateOrthogonalPath = (
         }
     }
 
-    // If we found valid strategies, pick the one with fewest turns
+    // If we found valid strategies, pick the shortest one
     if (strategies.length > 0) {
         strategies.sort((a, b) => {
+            const distanceA = calculatePathDistance(a)
+            const distanceB = calculatePathDistance(b)
+            // Prioritize shorter paths
+            if (Math.abs(distanceA - distanceB) > 1) {
+                return distanceA - distanceB
+            }
+            // If distances are very similar, prefer fewer turns
             const turnsA = countTurns(a)
             const turnsB = countTurns(b)
-            if (turnsA !== turnsB) {
-                return turnsA - turnsB
-            }
-            // If same number of turns, prefer shorter path
-            const lengthA = a.length
-            const lengthB = b.length
-            return lengthA - lengthB
+            return turnsA - turnsB
         })
         return strategies[0]
     }
