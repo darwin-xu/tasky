@@ -299,9 +299,46 @@ const calculateOrthogonalPath = (
             !(card.x === targetX && card.y === targetY)
     )
 
-    // Simple 3-segment path (right, down/up, right)
-    const midX = (startX + endX) / 2
-    const simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+    // Rule 4: Always move away from source first by going right
+    // Calculate the minimum clearance needed from the source
+    const minClearanceX = startX + LINK.CLEARANCE_OFFSET_LARGE
+
+    // Rule 5: When approaching target from above, use left → down → right pattern
+    // Determine the approach pattern based on relative positions
+    const needsLeftApproach = endX < startX || endX < minClearanceX
+
+    let simplePath: number[]
+
+    if (needsLeftApproach) {
+        // Target is to the left or requires wrapping around
+        // Go right to clear source, up/down to target level, left past target, then right to connect
+        const clearanceX = Math.max(
+            minClearanceX,
+            endX + targetWidth + LINK.CLEARANCE_OFFSET_LARGE
+        )
+        const approachX = endX - LINK.CLEARANCE_OFFSET_LARGE
+
+        simplePath = [
+            startX,
+            startY,
+            clearanceX,
+            startY,
+            clearanceX,
+            endY,
+            approachX,
+            endY,
+            approachX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        // Target is to the right - use standard path
+        // Rule 4: Use max to ensure we always go right first, never left
+        const midX = Math.max((startX + endX) / 2, minClearanceX)
+
+        simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+    }
 
     // If no obstacles or route around is disabled, return simple path
     if (!routeAround || obstacles.length === 0) {
@@ -322,29 +359,71 @@ const calculateOrthogonalPath = (
         ...obstacles.map((o) => o.x + o.width + padding)
     )
 
+    // Common variables for routing strategies
+    // Find if any obstacles would block a vertical path upward from minClearanceX
+    const wouldBlockVertical = obstacles.some(o => {
+        const oLeft = o.x - padding
+        const oRight = o.x + o.width + padding
+        const oTop = o.y - padding
+        const oBottom = o.y + o.height + padding
+        const minTop = Math.min(sourceY, targetY, ...obstacles.map((o) => o.y))
+        const routeAboveY = minTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
+        // Obstacle blocks vertical if it overlaps minClearanceX and spans from routeAbove to startY
+        return oLeft <= minClearanceX && oRight >= minClearanceX &&
+               oTop <= startY && oBottom >= routeAboveY
+    })
+
+    // If vertical path is blocked, go right past all obstacles first
+    const initialRightX = wouldBlockVertical 
+        ? obstacleRight + LINK.CLEARANCE_OFFSET_LARGE
+        : minClearanceX
+
+    // If we went past the target, we need to come back left
+    const needsWrapAround = initialRightX >= endX
+
+    // Approach X for wrapping around
+    const approachTargetX = endX - LINK.CLEARANCE_OFFSET_LARGE
+
     // Strategy 1: Route far above all obstacles
     const maxTop = Math.min(sourceY, targetY, ...obstacles.map((o) => o.y))
     const routeAbove = maxTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
 
-    // Go straight out past obstacles before turning up
-    const clearRightX = Math.min(
-        obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL,
-        startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
-    )
-    const pathAbove = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
+    let pathAbove: number[]
+    if (needsWrapAround) {
+        // Go right past obstacles, up, left past target, down, right to target
+        const beyondTarget = Math.max(initialRightX, endX + LINK.CLEARANCE_OFFSET_LARGE)
+        pathAbove = [
+            startX,
+            startY,
+            beyondTarget,
+            startY,
+            beyondTarget,
+            routeAbove,
+            approachTargetX,
+            routeAbove,
+            approachTargetX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        // Standard above routing
+        pathAbove = [
+            startX,
+            startY,
+            initialRightX,
+            startY,
+            initialRightX,
+            routeAbove,
+            approachTargetX,
+            routeAbove,
+            approachTargetX,
+            endY,
+            endX,
+            endY,
+        ]
+    }
+
     if (!pathIntersectsObstacles(pathAbove, obstacles, padding)) {
         strategies.push(pathAbove)
     }
@@ -357,27 +436,68 @@ const calculateOrthogonalPath = (
     )
     const routeBelow = maxBottom + padding + LINK.ROUTE_ABOVE_BELOW_OFFSET
 
-    const pathBelow = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
+    // Use same logic as above strategy
+    let pathBelow: number[]
+    if (needsWrapAround) {
+        const beyondTarget = Math.max(initialRightX, endX + LINK.CLEARANCE_OFFSET_LARGE)
+        pathBelow = [
+            startX,
+            startY,
+            beyondTarget,
+            startY,
+            beyondTarget,
+            routeBelow,
+            approachTargetX,
+            routeBelow,
+            approachTargetX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        pathBelow = [
+            startX,
+            startY,
+            initialRightX,
+            startY,
+            initialRightX,
+            routeBelow,
+            approachTargetX,
+            routeBelow,
+            approachTargetX,
+            endY,
+            endX,
+            endY,
+        ]
+    }
     if (!pathIntersectsObstacles(pathBelow, obstacles, padding)) {
         strategies.push(pathBelow)
     }
 
     // Strategy 3: Route far to the right of all obstacles
-    const farRight = obstacleRight + LINK.FAR_RIGHT_OFFSET
-    if (farRight < endX - LINK.CLEARANCE_OFFSET_LARGE) {
+    const farRight = Math.max(
+        minClearanceX,
+        obstacleRight + LINK.FAR_RIGHT_OFFSET
+    )
+    // Rule 5: Ensure we approach from the left if target is reachable
+    if (farRight >= endX) {
+        // Need to wrap around
+        const pathFarRight = [
+            startX,
+            startY,
+            farRight,
+            startY,
+            farRight,
+            endY,
+            approachTargetX,
+            endY,
+            endX,
+            endY,
+        ]
+        if (!pathIntersectsObstacles(pathFarRight, obstacles, padding)) {
+            strategies.push(pathFarRight)
+        }
+    } else {
         const pathFarRight = [
             startX,
             startY,
@@ -402,67 +522,191 @@ const calculateOrthogonalPath = (
 
         // Only consider obstacles that are actually in the way
         if (obsRight > startX && obsLeft < endX) {
-            // Try routing above this obstacle
-            const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
-            const beforeObsX = Math.max(
-                startX + LINK.OBSTACLE_PADDING,
-                obsLeft - LINK.AROUND_OBSTACLE_OFFSET
-            )
-            const afterObsX = Math.min(
-                endX - LINK.OBSTACLE_PADDING,
-                obsRight + LINK.AROUND_OBSTACLE_OFFSET
-            )
+            // Check if obstacle is at source Y level (blocks horizontal movement)
+            const blocksHorizontal = obsTop <= startY && obsBottom >= startY
 
-            const pathAroundTop = [
-                startX,
-                startY,
-                beforeObsX,
-                startY,
-                beforeObsX,
-                aboveY,
-                afterObsX,
-                aboveY,
-                afterObsX,
-                endY,
-                endX,
-                endY,
-            ]
-            if (!pathIntersectsObstacles(pathAroundTop, obstacles, padding)) {
-                strategies.push(pathAroundTop)
-            }
+            if (blocksHorizontal) {
+                console.log('DEBUG: Strategy 4 - Obstacle blocks horizontal, using special routing')
+                // Special handling: go right minimally, then up/down to clear, then continue
+                // Go right just to clear source, BUT ALSO need to clear the obstacle's left edge
+                // to avoid hitting it when going up/down
+                const initialX = Math.max(
+                    minClearanceX,
+                    obsRight + LINK.CLEARANCE_OFFSET_SMALL  // Go past obstacle's right edge before going up/down
+                )
 
-            // Try routing below this obstacle
-            const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
-            const pathAroundBottom = [
-                startX,
-                startY,
-                beforeObsX,
-                startY,
-                beforeObsX,
-                belowY,
-                afterObsX,
-                belowY,
-                afterObsX,
-                endY,
-                endX,
-                endY,
-            ]
-            if (
-                !pathIntersectsObstacles(pathAroundBottom, obstacles, padding)
-            ) {
-                strategies.push(pathAroundBottom)
+                // Try going above the obstacle
+                const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
+                // After clearing above, can stay at same X or adjust as needed
+                const pastObstacleX = initialX  // Already past the obstacle
+
+                console.log('DEBUG: initialX:', initialX, 'aboveY:', aboveY, 'pastObstacleX:', pastObstacleX)
+
+                let pathAroundTop: number[]
+                if (pastObstacleX >= endX) {
+                    // Wrap around to approach from left
+                    const beyondX = Math.max(pastObstacleX, endX + LINK.CLEARANCE_OFFSET_LARGE)
+                    const approachTargetX_local = endX - LINK.CLEARANCE_OFFSET_LARGE
+                    pathAroundTop = [
+                        startX, startY,
+                        initialX, startY,
+                        initialX, aboveY,
+                        beyondX, aboveY,
+                        beyondX, endY,
+                        approachTargetX_local, endY,
+                        endX, endY,
+                    ]
+                } else {
+                    pathAroundTop = [
+                        startX, startY,
+                        initialX, startY,
+                        initialX, aboveY,
+                        pastObstacleX, aboveY,
+                        pastObstacleX, endY,
+                        endX, endY,
+                    ]
+                }
+                console.log('DEBUG: pathAroundTop:', pathAroundTop)
+                if (!pathIntersectsObstacles(pathAroundTop, obstacles, padding)) {
+                    strategies.push(pathAroundTop)
+                    console.log('DEBUG: pathAroundTop added!')
+                } else {
+                    console.log('DEBUG: pathAroundTop blocked')
+                }
+
+                // Try going below the obstacle
+                const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
+                let pathAroundBottom: number[]
+                if (pastObstacleX >= endX) {
+                    const beyondX = Math.max(pastObstacleX, endX + LINK.CLEARANCE_OFFSET_LARGE)
+                    const approachTargetX = endX - LINK.CLEARANCE_OFFSET_LARGE
+                    pathAroundBottom = [
+                        startX, startY,
+                        initialX, startY,
+                        initialX, belowY,
+                        beyondX, belowY,
+                        beyondX, endY,
+                        approachTargetX, endY,
+                        endX, endY,
+                    ]
+                } else {
+                    pathAroundBottom = [
+                        startX, startY,
+                        initialX, startY,
+                        initialX, belowY,
+                        pastObstacleX, belowY,
+                        pastObstacleX, endY,
+                        endX, endY,
+                    ]
+                }
+                if (!pathIntersectsObstacles(pathAroundBottom, obstacles, padding)) {
+                    strategies.push(pathAroundBottom)
+                }
+            } else {
+                // Original logic for obstacles not at source Y level
+                // Rule 4: Ensure we start by moving right from source
+                const beforeObsX = Math.max(minClearanceX, obsLeft - LINK.AROUND_OBSTACLE_OFFSET)
+                const afterObsX = Math.max(beforeObsX, obsRight + LINK.AROUND_OBSTACLE_OFFSET)
+
+                // Try routing above this obstacle
+                const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
+
+                // Rule 5: Check if we need to approach target from left
+                let pathAroundTop: number[]
+                if (afterObsX >= endX) {
+                    // Need to approach from left
+                    const approachTargetX = endX - LINK.CLEARANCE_OFFSET_LARGE
+                    pathAroundTop = [
+                        startX,
+                        startY,
+                        beforeObsX,
+                        startY,
+                        beforeObsX,
+                        aboveY,
+                        afterObsX,
+                        aboveY,
+                        afterObsX,
+                        endY,
+                        approachTargetX,
+                        endY,
+                        endX,
+                        endY,
+                    ]
+                } else {
+                    pathAroundTop = [
+                        startX,
+                        startY,
+                        beforeObsX,
+                        startY,
+                        beforeObsX,
+                        aboveY,
+                        afterObsX,
+                        aboveY,
+                        afterObsX,
+                        endY,
+                        endX,
+                        endY,
+                    ]
+                }
+                if (!pathIntersectsObstacles(pathAroundTop, obstacles, padding)) {
+                    strategies.push(pathAroundTop)
+                }
+
+                // Try routing below this obstacle
+                const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
+                let pathAroundBottom: number[]
+                if (afterObsX >= endX) {
+                    // Need to approach from left
+                    const approachTargetX = endX - LINK.CLEARANCE_OFFSET_LARGE
+                    pathAroundBottom = [
+                        startX,
+                        startY,
+                        beforeObsX,
+                        startY,
+                        beforeObsX,
+                        belowY,
+                        afterObsX,
+                        belowY,
+                        afterObsX,
+                        endY,
+                        approachTargetX,
+                        endY,
+                        endX,
+                        endY,
+                    ]
+                } else {
+                    pathAroundBottom = [
+                        startX,
+                        startY,
+                        beforeObsX,
+                        startY,
+                        beforeObsX,
+                        belowY,
+                        afterObsX,
+                        belowY,
+                        afterObsX,
+                        endY,
+                        endX,
+                        endY,
+                    ]
+                }
+                if (
+                    !pathIntersectsObstacles(pathAroundBottom, obstacles, padding)
+                ) {
+                    strategies.push(pathAroundBottom)
+                }
             }
         }
     }
 
-    // Strategy 5: Direct vertical-horizontal path if very close
-    if (Math.abs(endX - startX) < LINK.DIRECT_PATH_THRESHOLD) {
+    // Strategy 5: Direct path with proper clearance (Rule 4 compliant)
+    if (endX > minClearanceX) {
         const pathDirect = [
             startX,
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            minClearanceX,
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            minClearanceX,
             endY,
             endX,
             endY,
@@ -473,6 +717,7 @@ const calculateOrthogonalPath = (
     }
 
     // If we found valid strategies, pick the one with fewest turns
+    console.log('DEBUG: Found', strategies.length, 'valid strategies')
     if (strategies.length > 0) {
         strategies.sort((a, b) => {
             const turnsA = countTurns(a)
@@ -485,10 +730,12 @@ const calculateOrthogonalPath = (
             const lengthB = b.length
             return lengthA - lengthB
         })
+        console.log('DEBUG: Chose strategy with', strategies[0].length, 'values')
         return strategies[0]
     }
 
     // If no valid strategy found, return simple path (best effort)
+    console.log('DEBUG: No valid strategy found, returning simple path as fallback')
     return simplePath
 }
 
