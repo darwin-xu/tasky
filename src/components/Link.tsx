@@ -299,9 +299,77 @@ const calculateOrthogonalPath = (
             !(card.x === targetX && card.y === targetY)
     )
 
-    // Simple 3-segment path (right, down/up, right)
+    // Rule 4: Ensure we move away from source card outline
+    // Calculate minimum clearance to avoid tracing source outline
+    let minClearanceX = startX + LINK.CLEARANCE_OFFSET_LARGE
+
+    // Ensure minClearanceX doesn't intersect with any obstacle's padded area
+    for (const obs of obstacles) {
+        const obsPaddedRight = obs.x + obs.width + padding
+        if (
+            minClearanceX >= obs.x - padding &&
+            minClearanceX <= obsPaddedRight &&
+            ((startY >= obs.y - padding &&
+                startY <= obs.y + obs.height + padding) ||
+                (endY >= obs.y - padding &&
+                    endY <= obs.y + obs.height + padding))
+        ) {
+            // minClearanceX is inside an obstacle's padded X range and the Y ranges overlap
+            // Push it past the obstacle
+            minClearanceX = Math.max(minClearanceX, obsPaddedRight + 2)
+        }
+    }
+
+    // Rule 5: Create proper entry approach to target
+    // When approaching target, use left→down→right sequence
+    const targetApproachX = endX - LINK.CLEARANCE_OFFSET_LARGE
+
+    // Simple 3-segment path with proper clearances
     const midX = (startX + endX) / 2
-    const simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+    let simplePath: number[]
+
+    // Rule 4 & 5: Ensure first segment goes right, and proper target approach
+    // Check various scenarios based on relative positions
+
+    // Check if we're approaching target from above and from the right side
+    // In this case, we should use left→down→right approach (Rule 5)
+    const approachingFromAboveRight = startY < endY && startX > endX
+
+    // Check if target is directly or nearly directly below source (Rule 4 case)
+    const sourceRight = sourceX + sourceWidth
+    const targetDirectlyBelow =
+        targetX >= sourceX - LINK.CLEARANCE_OFFSET_LARGE &&
+        targetX <= sourceRight + LINK.CLEARANCE_OFFSET_LARGE
+
+    if (approachingFromAboveRight && !targetDirectlyBelow) {
+        // Source is above and to the right, target is offset horizontally
+        // Rule 5: Use left→down→right approach
+        simplePath = [
+            startX,
+            startY,
+            targetApproachX,
+            startY,
+            targetApproachX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else if (endX < startX) {
+        // Target is to the left - use extended path to go right first
+        simplePath = [
+            startX,
+            startY,
+            minClearanceX,
+            startY,
+            minClearanceX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        // Standard 3-segment path
+        simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+    }
 
     // If no obstacles or route around is disabled, return simple path
     if (!routeAround || obstacles.length === 0) {
@@ -322,29 +390,65 @@ const calculateOrthogonalPath = (
         ...obstacles.map((o) => o.x + o.width + padding)
     )
 
+    // Calculate approach X for target (used by multiple strategies)
+    const baseApproachX = endX - LINK.CLEARANCE_OFFSET_LARGE
+
     // Strategy 1: Route far above all obstacles
     const maxTop = Math.min(sourceY, targetY, ...obstacles.map((o) => o.y))
     const routeAbove = maxTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
 
-    // Go straight out past obstacles before turning up
-    const clearRightX = Math.min(
-        obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL,
-        startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
-    )
-    const pathAbove = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
+    // Determine the X positions for routing
+    // If minClearanceX is already past obstacles, go up first then right
+    // Otherwise, go right to before obstacles, then up
+    let pathAbove: number[]
+    if (minClearanceX > obstacleRight) {
+        // minClearanceX is already past all obstacles
+        // Go right a bit, then up, then continue right
+        const initialX = startX + LINK.CLEARANCE_OFFSET_SMALL
+        pathAbove = [
+            startX,
+            startY,
+            initialX,
+            startY,
+            initialX,
+            routeAbove - 1,
+            baseApproachX,
+            routeAbove - 1,
+            baseApproachX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        // Normal case: go right past obstacles first
+        const clearRightX = Math.max(
+            minClearanceX + 1,
+            Math.min(
+                obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL - 1,
+                startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
+            )
+        )
+        const approachX =
+            endX > clearRightX + LINK.CLEARANCE_OFFSET_LARGE
+                ? baseApproachX - 1
+                : clearRightX
+
+        pathAbove = [
+            startX,
+            startY,
+            clearRightX,
+            startY,
+            clearRightX,
+            routeAbove - 1,
+            approachX,
+            routeAbove - 1,
+            approachX,
+            endY,
+            endX,
+            endY,
+        ]
+    }
+
     if (!pathIntersectsObstacles(pathAbove, obstacles, padding)) {
         strategies.push(pathAbove)
     }
@@ -357,26 +461,62 @@ const calculateOrthogonalPath = (
     )
     const routeBelow = maxBottom + padding + LINK.ROUTE_ABOVE_BELOW_OFFSET
 
-    const pathBelow = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
+    let pathBelow: number[]
+    if (minClearanceX > obstacleRight) {
+        // minClearanceX is already past all obstacles
+        const initialX = startX + LINK.CLEARANCE_OFFSET_SMALL
+        pathBelow = [
+            startX,
+            startY,
+            initialX,
+            startY,
+            initialX,
+            routeBelow + 1,
+            baseApproachX,
+            routeBelow + 1,
+            baseApproachX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        const clearRightX = Math.max(
+            minClearanceX + 1,
+            Math.min(
+                obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL - 1,
+                startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
+            )
+        )
+        const approachX =
+            endX > clearRightX + LINK.CLEARANCE_OFFSET_LARGE
+                ? baseApproachX - 1
+                : clearRightX
+
+        pathBelow = [
+            startX,
+            startY,
+            clearRightX,
+            startY,
+            clearRightX,
+            routeBelow + 1,
+            approachX,
+            routeBelow + 1,
+            approachX,
+            endY,
+            endX,
+            endY,
+        ]
+    }
+
     if (!pathIntersectsObstacles(pathBelow, obstacles, padding)) {
         strategies.push(pathBelow)
     }
 
     // Strategy 3: Route far to the right of all obstacles
-    const farRight = obstacleRight + LINK.FAR_RIGHT_OFFSET
+    const farRight = Math.max(
+        obstacleRight + LINK.FAR_RIGHT_OFFSET + 1, // Add buffer
+        minClearanceX + 1
+    )
     if (farRight < endX - LINK.CLEARANCE_OFFSET_LARGE) {
         const pathFarRight = [
             startX,
@@ -402,17 +542,19 @@ const calculateOrthogonalPath = (
 
         // Only consider obstacles that are actually in the way
         if (obsRight > startX && obsLeft < endX) {
-            // Try routing above this obstacle
-            const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
+            // Rule 6: Keep close to obstacle while maintaining padding distance
+            // Use slightly more clearance to ensure we stay outside the padded area
             const beforeObsX = Math.max(
-                startX + LINK.OBSTACLE_PADDING,
-                obsLeft - LINK.AROUND_OBSTACLE_OFFSET
+                minClearanceX + 1,
+                obsLeft - LINK.CLEARANCE_OFFSET_SMALL - 1
             )
             const afterObsX = Math.min(
-                endX - LINK.OBSTACLE_PADDING,
-                obsRight + LINK.AROUND_OBSTACLE_OFFSET
+                targetApproachX - 1,
+                obsRight + LINK.CLEARANCE_OFFSET_SMALL + 1
             )
 
+            // Try routing above this obstacle (stay outside padded area)
+            const aboveY = obsTop - LINK.CLEARANCE_OFFSET_SMALL - 1
             const pathAroundTop = [
                 startX,
                 startY,
@@ -431,8 +573,8 @@ const calculateOrthogonalPath = (
                 strategies.push(pathAroundTop)
             }
 
-            // Try routing below this obstacle
-            const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
+            // Try routing below this obstacle (stay outside padded area)
+            const belowY = obsBottom + LINK.CLEARANCE_OFFSET_SMALL + 1
             const pathAroundBottom = [
                 startX,
                 startY,
@@ -460,9 +602,9 @@ const calculateOrthogonalPath = (
         const pathDirect = [
             startX,
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            minClearanceX + 1, // Add buffer
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            minClearanceX + 1,
             endY,
             endX,
             endY,
