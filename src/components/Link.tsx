@@ -271,6 +271,17 @@ const countTurns = (points: number[]): number => {
     return turns
 }
 
+// Calculate total path length
+const calculatePathLength = (points: number[]): number => {
+    let length = 0
+    for (let i = 0; i < points.length - 2; i += 2) {
+        const dx = points[i + 2] - points[i]
+        const dy = points[i + 3] - points[i + 1]
+        length += Math.abs(dx) + Math.abs(dy) // Manhattan distance for orthogonal paths
+    }
+    return length
+}
+
 // Calculate orthogonal path points using heuristic routing
 const calculateOrthogonalPath = (
     sourceX: number,
@@ -533,17 +544,70 @@ const calculateOrthogonalPath = (
         }
     }
 
-    // Strategy 4: Route around individual obstacles (above and below)
+    // Strategy 4: Minimal adjustment - shift vertical segment around obstacles
+    // This tries to make the smallest change to the simple path
     for (const obstacle of obstacles) {
         const obsLeft = obstacle.x - padding
         const obsRight = obstacle.x + obstacle.width + padding
         const obsTop = obstacle.y - padding
         const obsBottom = obstacle.y + obstacle.height + padding
 
+        // Check if obstacle blocks the simple path's vertical segment
+        // Simple path goes: startX -> midX (horizontal), midX -> endY (vertical), midX -> endX (horizontal)
+        if (
+            midX >= obsLeft &&
+            midX <= obsRight &&
+            ((startY < endY && obsTop < endY && obsBottom > startY) ||
+                (startY > endY && obsTop < startY && obsBottom > endY))
+        ) {
+            // Obstacle blocks vertical segment at midX
+            // Try shifting to the left or right of obstacle, whichever is closer
+
+            // Option 1: Shift to the left of obstacle
+            const leftShiftX = obsLeft - LINK.CLEARANCE_OFFSET_SMALL
+            if (leftShiftX > startX) {
+                const pathShiftLeft = [
+                    startX,
+                    startY,
+                    leftShiftX,
+                    startY,
+                    leftShiftX,
+                    endY,
+                    endX,
+                    endY,
+                ]
+                if (
+                    !pathIntersectsObstacles(pathShiftLeft, obstacles, padding)
+                ) {
+                    strategies.push(pathShiftLeft)
+                }
+            }
+
+            // Option 2: Shift to the right of obstacle
+            const rightShiftX = obsRight + LINK.CLEARANCE_OFFSET_SMALL
+            if (rightShiftX < endX) {
+                const pathShiftRight = [
+                    startX,
+                    startY,
+                    rightShiftX,
+                    startY,
+                    rightShiftX,
+                    endY,
+                    endX,
+                    endY,
+                ]
+                if (
+                    !pathIntersectsObstacles(pathShiftRight, obstacles, padding)
+                ) {
+                    strategies.push(pathShiftRight)
+                }
+            }
+        }
+
+        // Also try routing around obstacles horizontally (above/below)
         // Only consider obstacles that are actually in the way
         if (obsRight > startX && obsLeft < endX) {
             // Rule 6: Keep close to obstacle while maintaining padding distance
-            // Use slightly more clearance to ensure we stay outside the padded area
             const beforeObsX = Math.max(
                 minClearanceX + 1,
                 obsLeft - LINK.CLEARANCE_OFFSET_SMALL - 1
@@ -553,7 +617,7 @@ const calculateOrthogonalPath = (
                 obsRight + LINK.CLEARANCE_OFFSET_SMALL + 1
             )
 
-            // Try routing above this obstacle (stay outside padded area)
+            // Try routing above this obstacle
             const aboveY = obsTop - LINK.CLEARANCE_OFFSET_SMALL - 1
             const pathAroundTop = [
                 startX,
@@ -573,7 +637,7 @@ const calculateOrthogonalPath = (
                 strategies.push(pathAroundTop)
             }
 
-            // Try routing below this obstacle (stay outside padded area)
+            // Try routing below this obstacle
             const belowY = obsBottom + LINK.CLEARANCE_OFFSET_SMALL + 1
             const pathAroundBottom = [
                 startX,
@@ -614,7 +678,7 @@ const calculateOrthogonalPath = (
         }
     }
 
-    // If we found valid strategies, pick the one with fewest turns
+    // If we found valid strategies, pick the one with fewest turns and shortest path
     if (strategies.length > 0) {
         strategies.sort((a, b) => {
             const turnsA = countTurns(a)
@@ -622,9 +686,9 @@ const calculateOrthogonalPath = (
             if (turnsA !== turnsB) {
                 return turnsA - turnsB
             }
-            // If same number of turns, prefer shorter path
-            const lengthA = a.length
-            const lengthB = b.length
+            // If same number of turns, prefer shorter actual distance
+            const lengthA = calculatePathLength(a)
+            const lengthB = calculatePathLength(b)
             return lengthA - lengthB
         })
         return strategies[0]
