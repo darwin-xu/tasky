@@ -8,6 +8,8 @@ interface TaskbarProps {
     onLoadCanvas?: () => void
     onClearCanvas?: () => void
     onDeleteSavedCanvas?: () => void
+    debugMode?: boolean
+    onDebugModeToggle?: (enabled: boolean) => void
 }
 
 const Taskbar: React.FC<TaskbarProps> = ({
@@ -17,6 +19,8 @@ const Taskbar: React.FC<TaskbarProps> = ({
     onLoadCanvas,
     onClearCanvas,
     onDeleteSavedCanvas,
+    debugMode = false,
+    onDebugModeToggle,
 }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
@@ -126,6 +130,19 @@ const Taskbar: React.FC<TaskbarProps> = ({
                         </div>
                     )}
                 </div>
+                {onDebugModeToggle && (
+                    <label className="taskbar-debug-toggle">
+                        <input
+                            type="checkbox"
+                            checked={debugMode}
+                            onChange={(e) =>
+                                onDebugModeToggle(e.target.checked)
+                            }
+                            aria-label="Debug Mode"
+                        />
+                        <span>Debug Routing</span>
+                    </label>
+                )}
                 <button
                     className="taskbar-button create-task-button"
                     onClick={onCreateTask}

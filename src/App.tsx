@@ -32,6 +32,7 @@ function App() {
         action: 'load' | 'clear'
         canvasId?: string
     } | null>(null)
+    const [debugMode, setDebugMode] = useState(false)
 
     // Load the last canvas on mount
     useEffect(() => {
@@ -313,9 +314,11 @@ function App() {
                 onLoadCanvas={handleLoadCanvas}
                 onClearCanvas={handleClearCanvas}
                 onDeleteSavedCanvas={handleDeleteSavedCanvas}
+                debugMode={debugMode}
+                onDebugModeToggle={setDebugMode}
             />
             <main className="App-main">
-                <InfiniteCanvas ref={canvasRef} />
+                <InfiniteCanvas ref={canvasRef} debugMode={debugMode} />
             </main>
             <SaveCanvasModal
                 isOpen={saveModalOpen}

@@ -18,6 +18,7 @@ import LinkComponent from './Link'
 import TaskEditorModal, { TaskEditorData } from './TaskEditorModal'
 import StateEditorModal, { StateEditorData } from './StateEditorModal'
 import ConfirmDialog from './ConfirmDialog'
+import RoutingDebugOverlay from './RoutingDebugOverlay'
 import { snapPositionToGrid } from '../utils/snapToGrid'
 import { generateId } from '../utils/idGenerator'
 import {
@@ -46,7 +47,10 @@ export interface InfiniteCanvasRef {
 }
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
-    ({ width, height, className = '', onCreateTask }, ref) => {
+    (
+        { width, height, className = '', onCreateTask, debugMode = false },
+        ref
+    ) => {
         const stageRef = useRef<any>(null)
         const containerRef = useRef<HTMLDivElement>(null)
         const [dimensions, setDimensions] = useState({
@@ -947,6 +951,22 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                             )
                         })}
                     </Layer>
+
+                    {/* Debug overlay layer - rendered on top of everything */}
+                    {debugMode && (
+                        <Layer>
+                            <RoutingDebugOverlay
+                                cards={allCards}
+                                viewport={{
+                                    x: viewport.x,
+                                    y: viewport.y,
+                                    scale: viewport.scale,
+                                }}
+                                stageWidth={dimensions.width}
+                                stageHeight={dimensions.height}
+                            />
+                        </Layer>
+                    )}
                 </Stage>
 
                 {/* Task Editor Modal */}

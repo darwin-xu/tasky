@@ -17,6 +17,7 @@ export interface InfiniteCanvasProps {
     height?: number
     className?: string
     onCreateTask?: () => void
+    debugMode?: boolean
 }
 
 export interface GridLayerProps {

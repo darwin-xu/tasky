@@ -110,3 +110,23 @@
     outline: 2px solid #2196f3;
     outline-offset: -2px;
 }
+
+.taskbar-debug-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #ffffff;
+    cursor: pointer;
+    user-select: none;
+}
+
+.taskbar-debug-toggle input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.taskbar-debug-toggle span {
+    font-weight: 500;
+}
