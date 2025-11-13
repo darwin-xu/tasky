@@ -983,6 +983,7 @@ const Link: React.FC<LinkProps> = ({
         linkStyle,
         routeAround,
         allCards,
+        id,
     ])
 
     // Early return if overlapping rectangles in free mode

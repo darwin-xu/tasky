@@ -19,16 +19,37 @@ const RoutingDebugWindow: React.FC = () => {
             setSelectedSessionIndex(loadedSessions.length - 1)
         }
 
-        // Auto-refresh every second to catch new sessions
+        // Listen for storage events from other windows
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'routing-debug-sessions') {
+                const updatedSessions = routingDebugService.getSessions()
+                setSessions(updatedSessions)
+                if (
+                    updatedSessions.length > 0 &&
+                    updatedSessions.length !== sessions.length
+                ) {
+                    setSelectedSessionIndex(updatedSessions.length - 1)
+                }
+            }
+        }
+
+        window.addEventListener('storage', handleStorageChange)
+
+        // Also poll for updates in case we miss storage events
         const interval = setInterval(() => {
             const updatedSessions = routingDebugService.getSessions()
             if (updatedSessions.length !== sessions.length) {
                 setSessions(updatedSessions)
-                setSelectedSessionIndex(updatedSessions.length - 1)
+                if (updatedSessions.length > 0) {
+                    setSelectedSessionIndex(updatedSessions.length - 1)
+                }
             }
         }, 1000)
 
-        return () => clearInterval(interval)
+        return () => {
+            window.removeEventListener('storage', handleStorageChange)
+            clearInterval(interval)
+        }
     }, [sessions.length])
 
     const selectedSession =

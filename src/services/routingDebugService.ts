@@ -20,21 +20,40 @@ export interface RoutingDebugSession {
     finalStrategy: string
 }
 
+const STORAGE_KEY = 'routing-debug-sessions'
+const ENABLED_KEY = 'routing-debug-enabled'
+
 class RoutingDebugService {
-    private sessions: RoutingDebugSession[] = []
     private currentSession: RoutingDebugSession | null = null
-    private enabled: boolean = false
 
     enable() {
-        this.enabled = true
+        localStorage.setItem(ENABLED_KEY, 'true')
     }
 
     disable() {
-        this.enabled = false
+        localStorage.setItem(ENABLED_KEY, 'false')
     }
 
     isEnabled(): boolean {
-        return this.enabled
+        return localStorage.getItem(ENABLED_KEY) === 'true'
+    }
+
+    private loadSessions(): RoutingDebugSession[] {
+        try {
+            const data = localStorage.getItem(STORAGE_KEY)
+            return data ? JSON.parse(data) : []
+        } catch (e) {
+            console.error('Failed to load debug sessions:', e)
+            return []
+        }
+    }
+
+    private saveSessions(sessions: RoutingDebugSession[]) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions))
+        } catch (e) {
+            console.error('Failed to save debug sessions:', e)
+        }
     }
 
     startSession(
@@ -83,30 +102,80 @@ class RoutingDebugService {
         })
     }
 
-    endSession(finalPath: number[], finalStrategy: string) {
-        if (!this.enabled || !this.currentSession) return
+    startSession(
+        sourceId: string,
+        targetId: string,
+        startPoint: { x: number; y: number },
+        endPoint: { x: number; y: number },
+        obstacles: Array<{
+            x: number
+            y: number
+            width: number
+            height: number
+        }>
+    ) {
+        if (!this.isEnabled()) return
 
-        this.currentSession.finalPath = finalPath
-        this.currentSession.finalStrategy = finalStrategy
-        this.sessions.push(this.currentSession)
-        this.currentSession = null
-
-        // Keep only last 50 sessions
-        if (this.sessions.length > 50) {
-            this.sessions = this.sessions.slice(-50)
+        this.currentSession = {
+            sourceId,
+            targetId,
+            timestamp: Date.now(),
+            startPoint,
+            endPoint,
+            obstacles: [...obstacles],
+            steps: [],
+            finalPath: [],
+            finalStrategy: '',
         }
     }
 
+    addStep(
+        description: string,
+        decision: string,
+        pathPoints?: number[],
+        rejected?: boolean,
+        reason?: string
+    ) {
+        if (!this.isEnabled() || !this.currentSession) return
+
+        this.currentSession.steps.push({
+            step: this.currentSession.steps.length + 1,
+            description,
+            decision,
+            pathPoints,
+            rejected,
+            reason,
+        })
+    }
+
+    endSession(finalPath: number[], finalStrategy: string) {
+        if (!this.isEnabled() || !this.currentSession) return
+
+        this.currentSession.finalPath = finalPath
+        this.currentSession.finalStrategy = finalStrategy
+
+        const sessions = this.loadSessions()
+        sessions.push(this.currentSession)
+
+        // Keep only last 50 sessions
+        const trimmedSessions =
+            sessions.length > 50 ? sessions.slice(-50) : sessions
+        this.saveSessions(trimmedSessions)
+
+        this.currentSession = null
+    }
+
     getSessions(): RoutingDebugSession[] {
-        return this.sessions
+        return this.loadSessions()
     }
 
     getLatestSession(): RoutingDebugSession | null {
-        return this.sessions[this.sessions.length - 1] || null
+        const sessions = this.loadSessions()
+        return sessions[sessions.length - 1] || null
     }
 
     clearSessions() {
-        this.sessions = []
+        this.saveSessions([])
         this.currentSession = null
     }
 }
