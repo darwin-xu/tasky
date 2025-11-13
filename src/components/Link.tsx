@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { Arrow, Group, Rect, Text, Line } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { LINK, COLORS, TEXT, SNAP_PREVIEW } from '../constants'
+import { routingDebugService } from '../services/routingDebugService'
 
 export interface LinkProps {
     id: string
@@ -293,7 +294,8 @@ const calculateOrthogonalPath = (
     targetWidth: number,
     targetHeight: number,
     routeAround: boolean,
-    allCards?: Array<{ x: number; y: number; width: number; height: number }>
+    allCards?: Array<{ x: number; y: number; width: number; height: number }>,
+    linkId?: string
 ): number[] => {
     const padding = LINK.OBSTACLE_PADDING
 
@@ -309,6 +311,23 @@ const calculateOrthogonalPath = (
             !(card.x === sourceX && card.y === sourceY) &&
             !(card.x === targetX && card.y === targetY)
     )
+
+    // Start debug session if enabled
+    if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.startSession(
+            linkId,
+            linkId,
+            { x: startX, y: startY },
+            { x: endX, y: endY },
+            obstacles
+        )
+        routingDebugService.addStep(
+            'Initialization',
+            `Starting pathfinding from (${startX}, ${startY}) to (${endX}, ${endY}) with ${obstacles.length} obstacles`,
+            undefined,
+            false
+        )
+    }
 
     // Rule 4: Ensure we move away from source card outline
     // Calculate minimum clearance to avoid tracing source outline
@@ -365,6 +384,14 @@ const calculateOrthogonalPath = (
             endX,
             endY,
         ]
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path (Rule 5)',
+                'Using left→down→right approach because source is above-right of target',
+                simplePath,
+                false
+            )
+        }
     } else if (endX < startX) {
         // Target is to the left - use extended path to go right first
         simplePath = [
@@ -377,19 +404,76 @@ const calculateOrthogonalPath = (
             endX,
             endY,
         ]
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path (Rule 4)',
+                'Using extended path because target is to the left (going right first to avoid outline)',
+                simplePath,
+                false
+            )
+        }
     } else {
         // Standard 3-segment path
         simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path (Standard)',
+                'Using standard 3-segment path (right → down/up → right)',
+                simplePath,
+                false
+            )
+        }
     }
 
     // If no obstacles or route around is disabled, return simple path
     if (!routeAround || obstacles.length === 0) {
+        if (routingDebugService.isEnabled() && linkId) {
+            const reason = !routeAround
+                ? 'Route around is disabled'
+                : 'No obstacles detected'
+            routingDebugService.addStep(
+                'Early Return',
+                `Returning simple path: ${reason}`,
+                simplePath,
+                false,
+                reason
+            )
+            routingDebugService.endSession(
+                simplePath,
+                'Simple Path (No Routing)'
+            )
+        }
         return simplePath
     }
 
     // Check if simple path is clear
-    if (!pathIntersectsObstacles(simplePath, obstacles, padding)) {
+    const simplePathClear = !pathIntersectsObstacles(
+        simplePath,
+        obstacles,
+        padding
+    )
+    if (simplePathClear) {
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path Clear',
+                'Simple path does not intersect any obstacles',
+                simplePath,
+                false,
+                'No obstacles in the way'
+            )
+            routingDebugService.endSession(simplePath, 'Simple Path (Clear)')
+        }
         return simplePath
+    }
+
+    if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.addStep(
+            'Simple Path Blocked',
+            'Simple path intersects obstacles, trying alternative strategies',
+            simplePath,
+            true,
+            'Path blocked by obstacles'
+        )
     }
 
     // Try different routing strategies
@@ -460,8 +544,30 @@ const calculateOrthogonalPath = (
         ]
     }
 
-    if (!pathIntersectsObstacles(pathAbove, obstacles, padding)) {
+    const pathAboveWorks = !pathIntersectsObstacles(
+        pathAbove,
+        obstacles,
+        padding
+    )
+    if (pathAboveWorks) {
         strategies.push(pathAbove)
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Strategy 1: Route Above',
+                `Routing above all obstacles at y=${routeAbove - 1}`,
+                pathAbove,
+                false,
+                'Path clears all obstacles by going above'
+            )
+        }
+    } else if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.addStep(
+            'Strategy 1: Route Above',
+            `Attempted to route above obstacles at y=${routeAbove - 1}`,
+            pathAbove,
+            true,
+            'Path still intersects obstacles even when routing above'
+        )
     }
 
     // Strategy 2: Route far below all obstacles
@@ -680,6 +786,16 @@ const calculateOrthogonalPath = (
 
     // If we found valid strategies, pick the one with fewest turns and shortest path
     if (strategies.length > 0) {
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Strategy Selection',
+                `Found ${strategies.length} valid strategies, selecting best one`,
+                undefined,
+                false,
+                'Sorting by turns, then by path length'
+            )
+        }
+
         strategies.sort((a, b) => {
             const turnsA = countTurns(a)
             const turnsB = countTurns(b)
@@ -691,10 +807,39 @@ const calculateOrthogonalPath = (
             const lengthB = calculatePathLength(b)
             return lengthA - lengthB
         })
-        return strategies[0]
+
+        const selectedPath = strategies[0]
+        const turns = countTurns(selectedPath)
+        const length = calculatePathLength(selectedPath)
+
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Final Selection',
+                `Selected path with ${turns} turns and length ${length.toFixed(2)}`,
+                selectedPath,
+                false,
+                `Best path among ${strategies.length} candidates`
+            )
+            routingDebugService.endSession(
+                selectedPath,
+                `Strategy-based routing (${strategies.length} options evaluated)`
+            )
+        }
+
+        return selectedPath
     }
 
     // If no valid strategy found, return simple path (best effort)
+    if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.addStep(
+            'Fallback to Simple Path',
+            'No valid routing strategies found, using simple path as fallback',
+            simplePath,
+            false,
+            'Best effort - all strategies failed'
+        )
+        routingDebugService.endSession(simplePath, 'Simple Path (Fallback)')
+    }
     return simplePath
 }
 
@@ -733,7 +878,8 @@ const Link: React.FC<LinkProps> = ({
                 targetWidth,
                 targetHeight,
                 routeAround,
-                allCards
+                allCards,
+                id
             )
 
             // For arrow, use the last two segments

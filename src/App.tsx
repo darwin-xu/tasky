@@ -13,6 +13,7 @@ import {
     clearCurrentCanvasId,
     listCanvases,
 } from './services/canvasService'
+import { routingDebugService } from './services/routingDebugService'
 
 function App() {
     const canvasRef = useRef<InfiniteCanvasRef>(null)
@@ -33,6 +34,15 @@ function App() {
         canvasId?: string
     } | null>(null)
     const [debugMode, setDebugMode] = useState(false)
+
+    // Enable/disable routing debug service when debug mode changes
+    useEffect(() => {
+        if (debugMode) {
+            routingDebugService.enable()
+        } else {
+            routingDebugService.disable()
+        }
+    }, [debugMode])
 
     // Load the last canvas on mount
     useEffect(() => {

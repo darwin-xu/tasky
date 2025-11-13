@@ -131,17 +131,36 @@ const Taskbar: React.FC<TaskbarProps> = ({
                     )}
                 </div>
                 {onDebugModeToggle && (
-                    <label className="taskbar-debug-toggle">
-                        <input
-                            type="checkbox"
-                            checked={debugMode}
-                            onChange={(e) =>
-                                onDebugModeToggle(e.target.checked)
-                            }
-                            aria-label="Debug Mode"
-                        />
-                        <span>Debug Routing</span>
-                    </label>
+                    <>
+                        <label className="taskbar-debug-toggle">
+                            <input
+                                type="checkbox"
+                                checked={debugMode}
+                                onChange={(e) =>
+                                    onDebugModeToggle(e.target.checked)
+                                }
+                                aria-label="Debug Mode"
+                            />
+                            <span>Debug Routing</span>
+                        </label>
+                        <button
+                            className="taskbar-button debug-log-button"
+                            onClick={() => {
+                                const debugWindow = window.open(
+                                    '/debug-routing',
+                                    '_blank',
+                                    'width=1200,height=800'
+                                )
+                                if (debugWindow) {
+                                    debugWindow.focus()
+                                }
+                            }}
+                            aria-label="View Routing Debug Log"
+                            title="View routing algorithm steps"
+                        >
+                            🔍 View Debug Log
+                        </button>
+                    </>
                 )}
                 <button
                     className="taskbar-button create-task-button"

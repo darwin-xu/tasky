@@ -130,3 +130,16 @@
 .taskbar-debug-toggle span {
     font-weight: 500;
 }
+
+.debug-log-button {
+    background-color: #9c27b0;
+}
+
+.debug-log-button:hover {
+    background-color: #7b1fa2;
+}
+
+.debug-log-button:active {
+    background-color: #6a1b9a;
+}
+
