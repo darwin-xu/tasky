@@ -13,6 +13,7 @@ import {
     clearCurrentCanvasId,
     listCanvases,
 } from './services/canvasService'
+import { routingDebugService } from './services/routingDebugService'
 
 function App() {
     const canvasRef = useRef<InfiniteCanvasRef>(null)
@@ -32,6 +33,17 @@ function App() {
         action: 'load' | 'clear'
         canvasId?: string
     } | null>(null)
+    const [debugMode, setDebugMode] = useState(false)
+    const [showAlternativePaths, setShowAlternativePaths] = useState(false)
+
+    // Enable/disable routing debug service when debug mode changes
+    useEffect(() => {
+        if (debugMode) {
+            routingDebugService.enable()
+        } else {
+            routingDebugService.disable()
+        }
+    }, [debugMode])
 
     // Load the last canvas on mount
     useEffect(() => {
@@ -313,9 +325,17 @@ function App() {
                 onLoadCanvas={handleLoadCanvas}
                 onClearCanvas={handleClearCanvas}
                 onDeleteSavedCanvas={handleDeleteSavedCanvas}
+                debugMode={debugMode}
+                onDebugModeToggle={setDebugMode}
+                showAlternativePaths={showAlternativePaths}
+                onShowAlternativePathsToggle={setShowAlternativePaths}
             />
             <main className="App-main">
-                <InfiniteCanvas ref={canvasRef} />
+                <InfiniteCanvas
+                    ref={canvasRef}
+                    debugMode={debugMode}
+                    showAlternativePaths={showAlternativePaths}
+                />
             </main>
             <SaveCanvasModal
                 isOpen={saveModalOpen}

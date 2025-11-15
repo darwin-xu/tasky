@@ -110,3 +110,36 @@
     outline: 2px solid #2196f3;
     outline-offset: -2px;
 }
+
+.taskbar-debug-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #ffffff;
+    cursor: pointer;
+    user-select: none;
+}
+
+.taskbar-debug-toggle input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.taskbar-debug-toggle span {
+    font-weight: 500;
+}
+
+.debug-log-button {
+    background-color: #9c27b0;
+}
+
+.debug-log-button:hover {
+    background-color: #7b1fa2;
+}
+
+.debug-log-button:active {
+    background-color: #6a1b9a;
+}
+
