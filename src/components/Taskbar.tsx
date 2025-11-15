@@ -10,6 +10,8 @@ interface TaskbarProps {
     onDeleteSavedCanvas?: () => void
     debugMode?: boolean
     onDebugModeToggle?: (enabled: boolean) => void
+    showAlternativePaths?: boolean
+    onShowAlternativePathsToggle?: (enabled: boolean) => void
 }
 
 const Taskbar: React.FC<TaskbarProps> = ({
@@ -21,6 +23,8 @@ const Taskbar: React.FC<TaskbarProps> = ({
     onDeleteSavedCanvas,
     debugMode = false,
     onDebugModeToggle,
+    showAlternativePaths = false,
+    onShowAlternativePathsToggle,
 }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
@@ -143,6 +147,21 @@ const Taskbar: React.FC<TaskbarProps> = ({
                             />
                             <span>Debug Routing</span>
                         </label>
+                        {onShowAlternativePathsToggle && (
+                            <label className="taskbar-debug-toggle">
+                                <input
+                                    type="checkbox"
+                                    checked={showAlternativePaths}
+                                    onChange={(e) =>
+                                        onShowAlternativePathsToggle(
+                                            e.target.checked
+                                        )
+                                    }
+                                    aria-label="Show Alternative Paths"
+                                />
+                                <span>Show Alternatives</span>
+                            </label>
+                        )}
                         <button
                             className="taskbar-button debug-log-button"
                             onClick={() => {

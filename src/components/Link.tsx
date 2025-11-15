@@ -21,6 +21,7 @@ export interface LinkProps {
     onUpdateLinkStyle?: (id: string, style: 'free' | 'orthogonal') => void
     onUpdateRouteAround?: (id: string, routeAround: boolean) => void
     allCards?: Array<{ x: number; y: number; width: number; height: number }>
+    showAlternativePaths?: boolean
 }
 
 type RectLike = { x: number; y: number; width: number; height: number }
@@ -296,7 +297,7 @@ const calculateOrthogonalPath = (
     routeAround: boolean,
     allCards?: Array<{ x: number; y: number; width: number; height: number }>,
     linkId?: string
-): number[] => {
+): { selectedPath: number[]; alternativePaths: number[][] } => {
     const padding = LINK.OBSTACLE_PADDING
 
     // Always anchor to right-middle of source and left-middle of target
@@ -443,7 +444,7 @@ const calculateOrthogonalPath = (
                 'Simple Path (No Routing)'
             )
         }
-        return simplePath
+        return { selectedPath: simplePath, alternativePaths: [] }
     }
 
     // Check if simple path is clear
@@ -463,7 +464,7 @@ const calculateOrthogonalPath = (
             )
             routingDebugService.endSession(simplePath, 'Simple Path (Clear)')
         }
-        return simplePath
+        return { selectedPath: simplePath, alternativePaths: [] }
     }
 
     if (routingDebugService.isEnabled() && linkId) {
@@ -826,7 +827,9 @@ const calculateOrthogonalPath = (
             )
         }
 
-        return selectedPath
+        // Filter out the selected path from alternatives
+        const alternativePaths = strategies.filter((path) => path !== selectedPath)
+        return { selectedPath, alternativePaths }
     }
 
     // If no valid strategy found, return simple path (best effort)
@@ -840,7 +843,7 @@ const calculateOrthogonalPath = (
         )
         routingDebugService.endSession(simplePath, 'Simple Path (Fallback)')
     }
-    return simplePath
+    return { selectedPath: simplePath, alternativePaths: [] }
 }
 
 const Link: React.FC<LinkProps> = ({
@@ -860,15 +863,17 @@ const Link: React.FC<LinkProps> = ({
     onUpdateLinkStyle,
     onUpdateRouteAround,
     allCards = [],
+    showAlternativePaths = false,
 }) => {
     // Memoize path calculation to avoid expensive computations on every render
-    const { pathPoints, arrowPoints } = useMemo(() => {
+    const { pathPoints, arrowPoints, alternativePaths } = useMemo(() => {
         let pathPoints: number[]
         let arrowPoints: number[]
+        let alternativePaths: number[][] = []
 
         if (linkStyle === 'orthogonal') {
             // Calculate orthogonal path
-            pathPoints = calculateOrthogonalPath(
+            const result = calculateOrthogonalPath(
                 sourceX,
                 sourceY,
                 sourceWidth,
@@ -881,6 +886,8 @@ const Link: React.FC<LinkProps> = ({
                 allCards,
                 id
             )
+            pathPoints = result.selectedPath
+            alternativePaths = result.alternativePaths
 
             // For arrow, use the last two segments
             const len = pathPoints.length
@@ -970,7 +977,7 @@ const Link: React.FC<LinkProps> = ({
             }
         }
 
-        return { pathPoints, arrowPoints }
+        return { pathPoints, arrowPoints, alternativePaths }
     }, [
         sourceX,
         sourceY,
@@ -1018,6 +1025,20 @@ const Link: React.FC<LinkProps> = ({
 
     return (
         <>
+            {/* Render alternative paths if enabled */}
+            {showAlternativePaths &&
+                linkStyle === 'orthogonal' &&
+                alternativePaths.map((altPath, index) => (
+                    <Line
+                        key={`alt-${index}`}
+                        points={altPath}
+                        stroke="rgba(128, 128, 128, 0.3)"
+                        strokeWidth={1}
+                        dash={[5, 5]}
+                        listening={false}
+                    />
+                ))}
+
             {linkStyle === 'orthogonal' ? (
                 <>
                     <Line

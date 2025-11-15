@@ -18,6 +18,7 @@ export interface InfiniteCanvasProps {
     className?: string
     onCreateTask?: () => void
     debugMode?: boolean
+    showAlternativePaths?: boolean
 }
 
 export interface GridLayerProps {

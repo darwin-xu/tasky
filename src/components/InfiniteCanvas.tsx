@@ -48,7 +48,14 @@ export interface InfiniteCanvasRef {
 
 const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
     (
-        { width, height, className = '', onCreateTask, debugMode = false },
+        {
+            width,
+            height,
+            className = '',
+            onCreateTask,
+            debugMode = false,
+            showAlternativePaths = false,
+        },
         ref
     ) => {
         const stageRef = useRef<any>(null)
@@ -916,6 +923,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                                         handleUpdateRouteAround
                                     }
                                     allCards={allCards}
+                                    showAlternativePaths={showAlternativePaths}
                                 />
                             )
                         })}

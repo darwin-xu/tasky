@@ -34,6 +34,7 @@ function App() {
         canvasId?: string
     } | null>(null)
     const [debugMode, setDebugMode] = useState(false)
+    const [showAlternativePaths, setShowAlternativePaths] = useState(false)
 
     // Enable/disable routing debug service when debug mode changes
     useEffect(() => {
@@ -326,9 +327,15 @@ function App() {
                 onDeleteSavedCanvas={handleDeleteSavedCanvas}
                 debugMode={debugMode}
                 onDebugModeToggle={setDebugMode}
+                showAlternativePaths={showAlternativePaths}
+                onShowAlternativePathsToggle={setShowAlternativePaths}
             />
             <main className="App-main">
-                <InfiniteCanvas ref={canvasRef} debugMode={debugMode} />
+                <InfiniteCanvas
+                    ref={canvasRef}
+                    debugMode={debugMode}
+                    showAlternativePaths={showAlternativePaths}
+                />
             </main>
             <SaveCanvasModal
                 isOpen={saveModalOpen}
