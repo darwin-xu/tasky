@@ -68,52 +68,6 @@ class RoutingDebugService {
             height: number
         }>
     ) {
-        if (!this.enabled) return
-
-        this.currentSession = {
-            sourceId,
-            targetId,
-            timestamp: Date.now(),
-            startPoint,
-            endPoint,
-            obstacles: [...obstacles],
-            steps: [],
-            finalPath: [],
-            finalStrategy: '',
-        }
-    }
-
-    addStep(
-        description: string,
-        decision: string,
-        pathPoints?: number[],
-        rejected?: boolean,
-        reason?: string
-    ) {
-        if (!this.enabled || !this.currentSession) return
-
-        this.currentSession.steps.push({
-            step: this.currentSession.steps.length + 1,
-            description,
-            decision,
-            pathPoints,
-            rejected,
-            reason,
-        })
-    }
-
-    startSession(
-        sourceId: string,
-        targetId: string,
-        startPoint: { x: number; y: number },
-        endPoint: { x: number; y: number },
-        obstacles: Array<{
-            x: number
-            y: number
-            width: number
-            height: number
-        }>
-    ) {
         if (!this.isEnabled()) return
 
         this.currentSession = {

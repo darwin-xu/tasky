@@ -61,6 +61,12 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
             x: number
             y: number
         } | null>(null)
+        const [cursorPosition, setCursorPosition] = useState<{
+            screenX: number
+            screenY: number
+            canvasX: number
+            canvasY: number
+        } | null>(null)
 
         // Tasks state
         const [tasks, setTasks] = useState<Task[]>([])
@@ -155,21 +161,30 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
 
         const handleMouseMove = useCallback(
             (e: KonvaEventObject<MouseEvent>) => {
-                if (!viewport.isDragging || !lastPointerPosition) {
-                    return
-                }
-
                 const stage = e.target.getStage()
                 const pos = stage?.getPointerPosition()
 
                 if (pos) {
-                    const dx = pos.x - lastPointerPosition.x
-                    const dy = pos.y - lastPointerPosition.y
-
-                    // Update viewport position based on delta movement
-                    viewport.updatePosition(viewport.x + dx, viewport.y + dy)
-                    setLastPointerPosition(pos)
+                    const canvasX = (pos.x - viewport.x) / viewport.scale
+                    const canvasY = (pos.y - viewport.y) / viewport.scale
+                    setCursorPosition({
+                        screenX: pos.x,
+                        screenY: pos.y,
+                        canvasX,
+                        canvasY,
+                    })
                 }
+
+                if (!viewport.isDragging || !lastPointerPosition || !pos) {
+                    return
+                }
+
+                const dx = pos.x - lastPointerPosition.x
+                const dy = pos.y - lastPointerPosition.y
+
+                // Update viewport position based on delta movement
+                viewport.updatePosition(viewport.x + dx, viewport.y + dy)
+                setLastPointerPosition(pos)
             },
             [viewport, lastPointerPosition]
         )
@@ -182,6 +197,7 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
         const handleMouseLeave = useCallback(() => {
             viewport.setDragging(false)
             setLastPointerPosition(null)
+            setCursorPosition(null)
         }, [viewport])
 
         // Touch event handlers for mobile support
@@ -999,6 +1015,12 @@ const InfiniteCanvas = forwardRef<InfiniteCanvasRef, InfiniteCanvasProps>(
                         <div>Scale: {viewport.scale.toFixed(2)}</div>
                         <div>
                             Dragging: {viewport.isDragging ? 'Yes' : 'No'}
+                        </div>
+                        <div>
+                            Cursor:{' '}
+                            {cursorPosition
+                                ? `(${cursorPosition.canvasX.toFixed(1)}, ${cursorPosition.canvasY.toFixed(1)})`
+                                : 'Outside'}
                         </div>
                     </div>
                 )}
