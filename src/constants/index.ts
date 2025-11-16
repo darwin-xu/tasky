@@ -177,6 +177,7 @@ export const LINK = {
     ROUTE_AROUND_FONT_SIZE: 11,
 
     // Routing
+    EDGE_OFFSET: 20, // Offset from card edge before routing (matches GRID_SPACING)
     OBSTACLE_PADDING: 20,
     ROUTE_ABOVE_BELOW_OFFSET: 40,
     CLEARANCE_OFFSET_SMALL: 10,

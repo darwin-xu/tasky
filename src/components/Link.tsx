@@ -285,12 +285,17 @@ const calculateOrthogonalPath = (
     allCards?: Array<{ x: number; y: number; width: number; height: number }>
 ): number[] => {
     const padding = LINK.OBSTACLE_PADDING
+    const edgeOffset = LINK.EDGE_OFFSET
 
     // Always anchor to right-middle of source and left-middle of target
     const startX = sourceX + sourceWidth
     const startY = sourceY + sourceHeight / 2
     const endX = targetX
     const endY = targetY + targetHeight / 2
+
+    // Add edge offsets: move away from the edges before routing
+    const startOffsetX = startX + edgeOffset
+    const endOffsetX = endX - edgeOffset
 
     // Filter out source and target from obstacles
     const obstacles = (allCards || []).filter(
@@ -299,9 +304,19 @@ const calculateOrthogonalPath = (
             !(card.x === targetX && card.y === targetY)
     )
 
-    // Simple 3-segment path (right, down/up, right)
-    const midX = (startX + endX) / 2
-    const simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+    // Simple 3-segment path with edge offsets (right, down/up, right)
+    const simplePath = [
+        startX,
+        startY,
+        startOffsetX,
+        startY,
+        startOffsetX,
+        endY,
+        endOffsetX,
+        endY,
+        endX,
+        endY,
+    ]
 
     // If no obstacles or route around is disabled, return simple path
     if (!routeAround || obstacles.length === 0) {
@@ -329,18 +344,20 @@ const calculateOrthogonalPath = (
     // Go straight out past obstacles before turning up
     const clearRightX = Math.min(
         obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL,
-        startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
+        startOffsetX + LINK.ROUTE_ABOVE_BELOW_OFFSET
     )
     const pathAbove = [
         startX,
         startY,
-        clearRightX,
+        startOffsetX,
         startY,
-        clearRightX,
+        startOffsetX,
         routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
+        Math.max(endOffsetX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
         routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
+        Math.max(endOffsetX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
+        endY,
+        endOffsetX,
         endY,
         endX,
         endY,
@@ -360,13 +377,15 @@ const calculateOrthogonalPath = (
     const pathBelow = [
         startX,
         startY,
-        clearRightX,
+        startOffsetX,
         startY,
-        clearRightX,
+        startOffsetX,
         routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
+        Math.max(endOffsetX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
         routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
+        Math.max(endOffsetX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
+        endY,
+        endOffsetX,
         endY,
         endX,
         endY,
@@ -377,13 +396,15 @@ const calculateOrthogonalPath = (
 
     // Strategy 3: Route far to the right of all obstacles
     const farRight = obstacleRight + LINK.FAR_RIGHT_OFFSET
-    if (farRight < endX - LINK.CLEARANCE_OFFSET_LARGE) {
+    if (farRight < endOffsetX - LINK.CLEARANCE_OFFSET_LARGE) {
         const pathFarRight = [
             startX,
             startY,
-            farRight,
+            startOffsetX,
             startY,
-            farRight,
+            startOffsetX,
+            endY,
+            endOffsetX,
             endY,
             endX,
             endY,
@@ -401,28 +422,26 @@ const calculateOrthogonalPath = (
         const obsBottom = obstacle.y + obstacle.height + padding
 
         // Only consider obstacles that are actually in the way
-        if (obsRight > startX && obsLeft < endX) {
+        if (obsRight > startOffsetX && obsLeft < endOffsetX) {
             // Try routing above this obstacle
             const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
-            const beforeObsX = Math.max(
-                startX + LINK.OBSTACLE_PADDING,
-                obsLeft - LINK.AROUND_OBSTACLE_OFFSET
-            )
             const afterObsX = Math.min(
-                endX - LINK.OBSTACLE_PADDING,
+                endOffsetX - LINK.OBSTACLE_PADDING,
                 obsRight + LINK.AROUND_OBSTACLE_OFFSET
             )
 
             const pathAroundTop = [
                 startX,
                 startY,
-                beforeObsX,
+                startOffsetX,
                 startY,
-                beforeObsX,
+                startOffsetX,
                 aboveY,
                 afterObsX,
                 aboveY,
                 afterObsX,
+                endY,
+                endOffsetX,
                 endY,
                 endX,
                 endY,
@@ -436,13 +455,15 @@ const calculateOrthogonalPath = (
             const pathAroundBottom = [
                 startX,
                 startY,
-                beforeObsX,
+                startOffsetX,
                 startY,
-                beforeObsX,
+                startOffsetX,
                 belowY,
                 afterObsX,
                 belowY,
                 afterObsX,
+                endY,
+                endOffsetX,
                 endY,
                 endX,
                 endY,
@@ -456,13 +477,15 @@ const calculateOrthogonalPath = (
     }
 
     // Strategy 5: Direct vertical-horizontal path if very close
-    if (Math.abs(endX - startX) < LINK.DIRECT_PATH_THRESHOLD) {
+    if (Math.abs(endOffsetX - startOffsetX) < LINK.DIRECT_PATH_THRESHOLD) {
         const pathDirect = [
             startX,
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            startOffsetX + LINK.CLEARANCE_OFFSET_LARGE,
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            startOffsetX + LINK.CLEARANCE_OFFSET_LARGE,
+            endY,
+            endOffsetX,
             endY,
             endX,
             endY,

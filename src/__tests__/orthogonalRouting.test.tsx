@@ -93,8 +93,9 @@ describe('Orthogonal Routing Algorithm', () => {
                 ?.split(',')
                 .map(Number)
 
-            // Simple path has 8 values (4 points: start, mid1, mid2, end)
-            expect(points?.length).toBe(8)
+            // Simple path now has 10 values (5 points: start, startOffset, mid, endOffset, end)
+            // This is due to the edge offset being added
+            expect(points?.length).toBe(10)
         })
     })
 
@@ -258,7 +259,8 @@ describe('Orthogonal Routing Algorithm', () => {
                 .map(Number)
 
             // Should use simple path since source and target are excluded from obstacles
-            expect(points?.length).toBe(8)
+            // Simple path now has 10 values (5 points) due to edge offsets
+            expect(points?.length).toBe(10)
         })
     })
 
@@ -405,8 +407,8 @@ describe('Orthogonal Routing Algorithm', () => {
             expect(pointsStr).toBeTruthy()
 
             const points = JSON.parse(pointsStr!)
-            // Should use simple path
-            expect(points.length).toBe(8)
+            // Should use simple path with edge offsets (5 points = 10 values)
+            expect(points.length).toBe(10)
         })
 
         test('handles undefined allCards', () => {
@@ -638,6 +640,113 @@ describe('Orthogonal Routing Algorithm', () => {
                 const isVertical = x1 === x2
                 expect(isHorizontal || isVertical).toBe(true)
             }
+        })
+    })
+
+    describe('Edge Offset Behavior', () => {
+        test('adds 20px offset from source edge before routing', () => {
+            render(
+                <LinkComponent
+                    id="test-link"
+                    sourceX={0}
+                    sourceY={0}
+                    sourceWidth={200}
+                    sourceHeight={120}
+                    targetX={400}
+                    targetY={0}
+                    targetWidth={200}
+                    targetHeight={120}
+                    linkStyle="orthogonal"
+                    routeAround={false}
+                />
+            )
+
+            const lines = screen.queryAllByTestId('konva-line')
+            const line = lines[0]
+            const pointsStr = line.getAttribute('data-points')
+            expect(pointsStr).toBeTruthy()
+
+            const points = JSON.parse(pointsStr!)
+            // First point should be at right edge: (200, 60)
+            expect(points[0]).toBe(200)
+            expect(points[1]).toBe(60)
+
+            // Second point should be offset 20px from edge: (220, 60)
+            expect(points[2]).toBe(220)
+            expect(points[3]).toBe(60)
+        })
+
+        test('adds 20px offset before target edge', () => {
+            render(
+                <LinkComponent
+                    id="test-link"
+                    sourceX={0}
+                    sourceY={0}
+                    sourceWidth={200}
+                    sourceHeight={120}
+                    targetX={400}
+                    targetY={0}
+                    targetWidth={200}
+                    targetHeight={120}
+                    linkStyle="orthogonal"
+                    routeAround={false}
+                />
+            )
+
+            const lines = screen.queryAllByTestId('konva-line')
+            const line = lines[0]
+            const pointsStr = line.getAttribute('data-points')
+            expect(pointsStr).toBeTruthy()
+
+            const points = JSON.parse(pointsStr!)
+            // Second to last point should be offset 20px from target edge: (380, 60)
+            expect(points[points.length - 4]).toBe(380)
+            expect(points[points.length - 3]).toBe(60)
+
+            // Last point should be at target edge: (400, 60)
+            expect(points[points.length - 2]).toBe(400)
+            expect(points[points.length - 1]).toBe(60)
+        })
+
+        test('edge offsets improve visibility by creating space from card edges', () => {
+            // This test verifies that lines don't go straight down from the edge
+            // Example from issue: (260, 220) -> (260, 680) is BAD
+            // With offsets: (260, 220) -> (280, 220) -> ... is GOOD
+            render(
+                <LinkComponent
+                    id="test-link"
+                    sourceX={40}
+                    sourceY={160}
+                    sourceWidth={200}
+                    sourceHeight={120}
+                    targetX={40}
+                    targetY={620}
+                    targetWidth={200}
+                    targetHeight={120}
+                    linkStyle="orthogonal"
+                    routeAround={false}
+                />
+            )
+
+            const lines = screen.queryAllByTestId('konva-line')
+            const line = lines[0]
+            const pointsStr = line.getAttribute('data-points')
+            expect(pointsStr).toBeTruthy()
+
+            const points = JSON.parse(pointsStr!)
+
+            // Source edge is at x=240, y=220 (right-middle)
+            expect(points[0]).toBe(240) // sourceX + sourceWidth
+            expect(points[1]).toBe(220) // sourceY + sourceHeight/2
+
+            // Should move 20px right before changing direction
+            expect(points[2]).toBe(260) // sourceX + sourceWidth + 20
+            expect(points[3]).toBe(220) // same Y
+
+            // Verify it's not going straight down from the edge (the issue scenario)
+            // The second segment should not have the same X coordinate as the first
+            const firstSegmentIsHorizontal = points[1] === points[3]
+            expect(firstSegmentIsHorizontal).toBe(true)
         })
     })
 })
