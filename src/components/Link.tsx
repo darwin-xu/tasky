@@ -828,7 +828,9 @@ const calculateOrthogonalPath = (
         }
 
         // Filter out the selected path from alternatives
-        const alternativePaths = strategies.filter((path) => path !== selectedPath)
+        const alternativePaths = strategies.filter(
+            (path) => path !== selectedPath
+        )
         return { selectedPath, alternativePaths }
     }
 
@@ -913,7 +915,11 @@ const Link: React.FC<LinkProps> = ({
             }
 
             if (rectsOverlap(sourceRect, targetRect)) {
-                return { pathPoints: [], arrowPoints: [] }
+                return {
+                    pathPoints: [],
+                    arrowPoints: [],
+                    alternativePaths,
+                }
             }
 
             const connectionPairs: Array<{
