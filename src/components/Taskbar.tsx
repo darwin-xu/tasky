@@ -8,6 +8,10 @@ interface TaskbarProps {
     onLoadCanvas?: () => void
     onClearCanvas?: () => void
     onDeleteSavedCanvas?: () => void
+    debugMode?: boolean
+    onDebugModeToggle?: (enabled: boolean) => void
+    showAlternativePaths?: boolean
+    onShowAlternativePathsToggle?: (enabled: boolean) => void
 }
 
 const Taskbar: React.FC<TaskbarProps> = ({
@@ -17,6 +21,10 @@ const Taskbar: React.FC<TaskbarProps> = ({
     onLoadCanvas,
     onClearCanvas,
     onDeleteSavedCanvas,
+    debugMode = false,
+    onDebugModeToggle,
+    showAlternativePaths = false,
+    onShowAlternativePathsToggle,
 }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
@@ -126,6 +134,53 @@ const Taskbar: React.FC<TaskbarProps> = ({
                         </div>
                     )}
                 </div>
+                {onDebugModeToggle && (
+                    <>
+                        <label className="taskbar-debug-toggle">
+                            <input
+                                type="checkbox"
+                                checked={debugMode}
+                                onChange={(e) =>
+                                    onDebugModeToggle(e.target.checked)
+                                }
+                                aria-label="Debug Mode"
+                            />
+                            <span>Debug Routing</span>
+                        </label>
+                        {onShowAlternativePathsToggle && (
+                            <label className="taskbar-debug-toggle">
+                                <input
+                                    type="checkbox"
+                                    checked={showAlternativePaths}
+                                    onChange={(e) =>
+                                        onShowAlternativePathsToggle(
+                                            e.target.checked
+                                        )
+                                    }
+                                    aria-label="Show Alternative Paths"
+                                />
+                                <span>Show Alternatives</span>
+                            </label>
+                        )}
+                        <button
+                            className="taskbar-button debug-log-button"
+                            onClick={() => {
+                                const debugWindow = window.open(
+                                    '/debug-routing',
+                                    '_blank',
+                                    'width=1200,height=800'
+                                )
+                                if (debugWindow) {
+                                    debugWindow.focus()
+                                }
+                            }}
+                            aria-label="View Routing Debug Log"
+                            title="View routing algorithm steps"
+                        >
+                            🔍 View Debug Log
+                        </button>
+                    </>
+                )}
                 <button
                     className="taskbar-button create-task-button"
                     onClick={onCreateTask}

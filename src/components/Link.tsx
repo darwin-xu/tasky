@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { Arrow, Group, Rect, Text, Line } from 'react-konva'
 import { KonvaEventObject } from 'konva/lib/Node'
 import { LINK, COLORS, TEXT, SNAP_PREVIEW } from '../constants'
+import { routingDebugService } from '../services/routingDebugService'
 
 export interface LinkProps {
     id: string
@@ -20,6 +21,7 @@ export interface LinkProps {
     onUpdateLinkStyle?: (id: string, style: 'free' | 'orthogonal') => void
     onUpdateRouteAround?: (id: string, routeAround: boolean) => void
     allCards?: Array<{ x: number; y: number; width: number; height: number }>
+    showAlternativePaths?: boolean
 }
 
 type RectLike = { x: number; y: number; width: number; height: number }
@@ -271,6 +273,17 @@ const countTurns = (points: number[]): number => {
     return turns
 }
 
+// Calculate total path length
+const calculatePathLength = (points: number[]): number => {
+    let length = 0
+    for (let i = 0; i < points.length - 2; i += 2) {
+        const dx = points[i + 2] - points[i]
+        const dy = points[i + 3] - points[i + 1]
+        length += Math.abs(dx) + Math.abs(dy) // Manhattan distance for orthogonal paths
+    }
+    return length
+}
+
 // Calculate orthogonal path points using heuristic routing
 const calculateOrthogonalPath = (
     sourceX: number,
@@ -282,8 +295,9 @@ const calculateOrthogonalPath = (
     targetWidth: number,
     targetHeight: number,
     routeAround: boolean,
-    allCards?: Array<{ x: number; y: number; width: number; height: number }>
-): number[] => {
+    allCards?: Array<{ x: number; y: number; width: number; height: number }>,
+    linkId?: string
+): { selectedPath: number[]; alternativePaths: number[][] } => {
     const padding = LINK.OBSTACLE_PADDING
 
     // Always anchor to right-middle of source and left-middle of target
@@ -299,18 +313,168 @@ const calculateOrthogonalPath = (
             !(card.x === targetX && card.y === targetY)
     )
 
-    // Simple 3-segment path (right, down/up, right)
+    // Start debug session if enabled
+    if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.startSession(
+            linkId,
+            linkId,
+            { x: startX, y: startY },
+            { x: endX, y: endY },
+            obstacles
+        )
+        routingDebugService.addStep(
+            'Initialization',
+            `Starting pathfinding from (${startX}, ${startY}) to (${endX}, ${endY}) with ${obstacles.length} obstacles`,
+            undefined,
+            false
+        )
+    }
+
+    // Rule 4: Ensure we move away from source card outline
+    // Calculate minimum clearance to avoid tracing source outline
+    let minClearanceX = startX + LINK.CLEARANCE_OFFSET_LARGE
+
+    // Ensure minClearanceX doesn't intersect with any obstacle's padded area
+    for (const obs of obstacles) {
+        const obsPaddedRight = obs.x + obs.width + padding
+        if (
+            minClearanceX >= obs.x - padding &&
+            minClearanceX <= obsPaddedRight &&
+            ((startY >= obs.y - padding &&
+                startY <= obs.y + obs.height + padding) ||
+                (endY >= obs.y - padding &&
+                    endY <= obs.y + obs.height + padding))
+        ) {
+            // minClearanceX is inside an obstacle's padded X range and the Y ranges overlap
+            // Push it past the obstacle
+            minClearanceX = Math.max(minClearanceX, obsPaddedRight + 2)
+        }
+    }
+
+    // Rule 5: Create proper entry approach to target
+    // When approaching target, use left→down→right sequence
+    const targetApproachX = endX - LINK.CLEARANCE_OFFSET_LARGE
+
+    // Simple 3-segment path with proper clearances
     const midX = (startX + endX) / 2
-    const simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+    let simplePath: number[]
+
+    // Rule 4 & 5: Ensure first segment goes right, and proper target approach
+    // Check various scenarios based on relative positions
+
+    // Check if we're approaching target from above and from the right side
+    // In this case, we should use left→down→right approach (Rule 5)
+    const approachingFromAboveRight = startY < endY && startX > endX
+
+    // Check if target is directly or nearly directly below source (Rule 4 case)
+    const sourceRight = sourceX + sourceWidth
+    const targetDirectlyBelow =
+        targetX >= sourceX - LINK.CLEARANCE_OFFSET_LARGE &&
+        targetX <= sourceRight + LINK.CLEARANCE_OFFSET_LARGE
+
+    if (approachingFromAboveRight && !targetDirectlyBelow) {
+        // Source is above and to the right, target is offset horizontally
+        // Rule 5: Use left→down→right approach
+        simplePath = [
+            startX,
+            startY,
+            targetApproachX,
+            startY,
+            targetApproachX,
+            endY,
+            endX,
+            endY,
+        ]
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path (Rule 5)',
+                'Using left→down→right approach because source is above-right of target',
+                simplePath,
+                false
+            )
+        }
+    } else if (endX < startX) {
+        // Target is to the left - use extended path to go right first
+        simplePath = [
+            startX,
+            startY,
+            minClearanceX,
+            startY,
+            minClearanceX,
+            endY,
+            endX,
+            endY,
+        ]
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path (Rule 4)',
+                'Using extended path because target is to the left (going right first to avoid outline)',
+                simplePath,
+                false
+            )
+        }
+    } else {
+        // Standard 3-segment path
+        simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path (Standard)',
+                'Using standard 3-segment path (right → down/up → right)',
+                simplePath,
+                false
+            )
+        }
+    }
 
     // If no obstacles or route around is disabled, return simple path
     if (!routeAround || obstacles.length === 0) {
-        return simplePath
+        if (routingDebugService.isEnabled() && linkId) {
+            const reason = !routeAround
+                ? 'Route around is disabled'
+                : 'No obstacles detected'
+            routingDebugService.addStep(
+                'Early Return',
+                `Returning simple path: ${reason}`,
+                simplePath,
+                false,
+                reason
+            )
+            routingDebugService.endSession(
+                simplePath,
+                'Simple Path (No Routing)'
+            )
+        }
+        return { selectedPath: simplePath, alternativePaths: [] }
     }
 
     // Check if simple path is clear
-    if (!pathIntersectsObstacles(simplePath, obstacles, padding)) {
-        return simplePath
+    const simplePathClear = !pathIntersectsObstacles(
+        simplePath,
+        obstacles,
+        padding
+    )
+    if (simplePathClear) {
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Simple Path Clear',
+                'Simple path does not intersect any obstacles',
+                simplePath,
+                false,
+                'No obstacles in the way'
+            )
+            routingDebugService.endSession(simplePath, 'Simple Path (Clear)')
+        }
+        return { selectedPath: simplePath, alternativePaths: [] }
+    }
+
+    if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.addStep(
+            'Simple Path Blocked',
+            'Simple path intersects obstacles, trying alternative strategies',
+            simplePath,
+            true,
+            'Path blocked by obstacles'
+        )
     }
 
     // Try different routing strategies
@@ -322,31 +486,89 @@ const calculateOrthogonalPath = (
         ...obstacles.map((o) => o.x + o.width + padding)
     )
 
+    // Calculate approach X for target (used by multiple strategies)
+    const baseApproachX = endX - LINK.CLEARANCE_OFFSET_LARGE
+
     // Strategy 1: Route far above all obstacles
     const maxTop = Math.min(sourceY, targetY, ...obstacles.map((o) => o.y))
     const routeAbove = maxTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
 
-    // Go straight out past obstacles before turning up
-    const clearRightX = Math.min(
-        obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL,
-        startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
+    // Determine the X positions for routing
+    // If minClearanceX is already past obstacles, go up first then right
+    // Otherwise, go right to before obstacles, then up
+    let pathAbove: number[]
+    if (minClearanceX > obstacleRight) {
+        // minClearanceX is already past all obstacles
+        // Go right a bit, then up, then continue right
+        const initialX = startX + LINK.CLEARANCE_OFFSET_SMALL
+        pathAbove = [
+            startX,
+            startY,
+            initialX,
+            startY,
+            initialX,
+            routeAbove - 1,
+            baseApproachX,
+            routeAbove - 1,
+            baseApproachX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        // Normal case: go right past obstacles first
+        const clearRightX = Math.max(
+            minClearanceX + 1,
+            Math.min(
+                obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL - 1,
+                startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
+            )
+        )
+        const approachX =
+            endX > clearRightX + LINK.CLEARANCE_OFFSET_LARGE
+                ? baseApproachX - 1
+                : clearRightX
+
+        pathAbove = [
+            startX,
+            startY,
+            clearRightX,
+            startY,
+            clearRightX,
+            routeAbove - 1,
+            approachX,
+            routeAbove - 1,
+            approachX,
+            endY,
+            endX,
+            endY,
+        ]
+    }
+
+    const pathAboveWorks = !pathIntersectsObstacles(
+        pathAbove,
+        obstacles,
+        padding
     )
-    const pathAbove = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
-    if (!pathIntersectsObstacles(pathAbove, obstacles, padding)) {
+    if (pathAboveWorks) {
         strategies.push(pathAbove)
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Strategy 1: Route Above',
+                `Routing above all obstacles at y=${routeAbove - 1}`,
+                pathAbove,
+                false,
+                'Path clears all obstacles by going above'
+            )
+        }
+    } else if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.addStep(
+            'Strategy 1: Route Above',
+            `Attempted to route above obstacles at y=${routeAbove - 1}`,
+            pathAbove,
+            true,
+            'Path still intersects obstacles even when routing above'
+        )
     }
 
     // Strategy 2: Route far below all obstacles
@@ -357,26 +579,62 @@ const calculateOrthogonalPath = (
     )
     const routeBelow = maxBottom + padding + LINK.ROUTE_ABOVE_BELOW_OFFSET
 
-    const pathBelow = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
+    let pathBelow: number[]
+    if (minClearanceX > obstacleRight) {
+        // minClearanceX is already past all obstacles
+        const initialX = startX + LINK.CLEARANCE_OFFSET_SMALL
+        pathBelow = [
+            startX,
+            startY,
+            initialX,
+            startY,
+            initialX,
+            routeBelow + 1,
+            baseApproachX,
+            routeBelow + 1,
+            baseApproachX,
+            endY,
+            endX,
+            endY,
+        ]
+    } else {
+        const clearRightX = Math.max(
+            minClearanceX + 1,
+            Math.min(
+                obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL - 1,
+                startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
+            )
+        )
+        const approachX =
+            endX > clearRightX + LINK.CLEARANCE_OFFSET_LARGE
+                ? baseApproachX - 1
+                : clearRightX
+
+        pathBelow = [
+            startX,
+            startY,
+            clearRightX,
+            startY,
+            clearRightX,
+            routeBelow + 1,
+            approachX,
+            routeBelow + 1,
+            approachX,
+            endY,
+            endX,
+            endY,
+        ]
+    }
+
     if (!pathIntersectsObstacles(pathBelow, obstacles, padding)) {
         strategies.push(pathBelow)
     }
 
     // Strategy 3: Route far to the right of all obstacles
-    const farRight = obstacleRight + LINK.FAR_RIGHT_OFFSET
+    const farRight = Math.max(
+        obstacleRight + LINK.FAR_RIGHT_OFFSET + 1, // Add buffer
+        minClearanceX + 1
+    )
     if (farRight < endX - LINK.CLEARANCE_OFFSET_LARGE) {
         const pathFarRight = [
             startX,
@@ -393,26 +651,81 @@ const calculateOrthogonalPath = (
         }
     }
 
-    // Strategy 4: Route around individual obstacles (above and below)
+    // Strategy 4: Minimal adjustment - shift vertical segment around obstacles
+    // This tries to make the smallest change to the simple path
     for (const obstacle of obstacles) {
         const obsLeft = obstacle.x - padding
         const obsRight = obstacle.x + obstacle.width + padding
         const obsTop = obstacle.y - padding
         const obsBottom = obstacle.y + obstacle.height + padding
 
+        // Check if obstacle blocks the simple path's vertical segment
+        // Simple path goes: startX -> midX (horizontal), midX -> endY (vertical), midX -> endX (horizontal)
+        if (
+            midX >= obsLeft &&
+            midX <= obsRight &&
+            ((startY < endY && obsTop < endY && obsBottom > startY) ||
+                (startY > endY && obsTop < startY && obsBottom > endY))
+        ) {
+            // Obstacle blocks vertical segment at midX
+            // Try shifting to the left or right of obstacle, whichever is closer
+
+            // Option 1: Shift to the left of obstacle
+            const leftShiftX = obsLeft - LINK.CLEARANCE_OFFSET_SMALL
+            if (leftShiftX > startX) {
+                const pathShiftLeft = [
+                    startX,
+                    startY,
+                    leftShiftX,
+                    startY,
+                    leftShiftX,
+                    endY,
+                    endX,
+                    endY,
+                ]
+                if (
+                    !pathIntersectsObstacles(pathShiftLeft, obstacles, padding)
+                ) {
+                    strategies.push(pathShiftLeft)
+                }
+            }
+
+            // Option 2: Shift to the right of obstacle
+            const rightShiftX = obsRight + LINK.CLEARANCE_OFFSET_SMALL
+            if (rightShiftX < endX) {
+                const pathShiftRight = [
+                    startX,
+                    startY,
+                    rightShiftX,
+                    startY,
+                    rightShiftX,
+                    endY,
+                    endX,
+                    endY,
+                ]
+                if (
+                    !pathIntersectsObstacles(pathShiftRight, obstacles, padding)
+                ) {
+                    strategies.push(pathShiftRight)
+                }
+            }
+        }
+
+        // Also try routing around obstacles horizontally (above/below)
         // Only consider obstacles that are actually in the way
         if (obsRight > startX && obsLeft < endX) {
-            // Try routing above this obstacle
-            const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
+            // Rule 6: Keep close to obstacle while maintaining padding distance
             const beforeObsX = Math.max(
-                startX + LINK.OBSTACLE_PADDING,
-                obsLeft - LINK.AROUND_OBSTACLE_OFFSET
+                minClearanceX + 1,
+                obsLeft - LINK.CLEARANCE_OFFSET_SMALL - 1
             )
             const afterObsX = Math.min(
-                endX - LINK.OBSTACLE_PADDING,
-                obsRight + LINK.AROUND_OBSTACLE_OFFSET
+                targetApproachX - 1,
+                obsRight + LINK.CLEARANCE_OFFSET_SMALL + 1
             )
 
+            // Try routing above this obstacle
+            const aboveY = obsTop - LINK.CLEARANCE_OFFSET_SMALL - 1
             const pathAroundTop = [
                 startX,
                 startY,
@@ -432,7 +745,7 @@ const calculateOrthogonalPath = (
             }
 
             // Try routing below this obstacle
-            const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
+            const belowY = obsBottom + LINK.CLEARANCE_OFFSET_SMALL + 1
             const pathAroundBottom = [
                 startX,
                 startY,
@@ -460,9 +773,9 @@ const calculateOrthogonalPath = (
         const pathDirect = [
             startX,
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            minClearanceX + 1, // Add buffer
             startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
+            minClearanceX + 1,
             endY,
             endX,
             endY,
@@ -472,24 +785,67 @@ const calculateOrthogonalPath = (
         }
     }
 
-    // If we found valid strategies, pick the one with fewest turns
+    // If we found valid strategies, pick the one with fewest turns and shortest path
     if (strategies.length > 0) {
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Strategy Selection',
+                `Found ${strategies.length} valid strategies, selecting best one`,
+                undefined,
+                false,
+                'Sorting by turns, then by path length'
+            )
+        }
+
         strategies.sort((a, b) => {
             const turnsA = countTurns(a)
             const turnsB = countTurns(b)
             if (turnsA !== turnsB) {
                 return turnsA - turnsB
             }
-            // If same number of turns, prefer shorter path
-            const lengthA = a.length
-            const lengthB = b.length
+            // If same number of turns, prefer shorter actual distance
+            const lengthA = calculatePathLength(a)
+            const lengthB = calculatePathLength(b)
             return lengthA - lengthB
         })
-        return strategies[0]
+
+        const selectedPath = strategies[0]
+        const turns = countTurns(selectedPath)
+        const length = calculatePathLength(selectedPath)
+
+        if (routingDebugService.isEnabled() && linkId) {
+            routingDebugService.addStep(
+                'Final Selection',
+                `Selected path with ${turns} turns and length ${length.toFixed(2)}`,
+                selectedPath,
+                false,
+                `Best path among ${strategies.length} candidates`
+            )
+            routingDebugService.endSession(
+                selectedPath,
+                `Strategy-based routing (${strategies.length} options evaluated)`
+            )
+        }
+
+        // Filter out the selected path from alternatives
+        const alternativePaths = strategies.filter(
+            (path) => path !== selectedPath
+        )
+        return { selectedPath, alternativePaths }
     }
 
     // If no valid strategy found, return simple path (best effort)
-    return simplePath
+    if (routingDebugService.isEnabled() && linkId) {
+        routingDebugService.addStep(
+            'Fallback to Simple Path',
+            'No valid routing strategies found, using simple path as fallback',
+            simplePath,
+            false,
+            'Best effort - all strategies failed'
+        )
+        routingDebugService.endSession(simplePath, 'Simple Path (Fallback)')
+    }
+    return { selectedPath: simplePath, alternativePaths: [] }
 }
 
 const Link: React.FC<LinkProps> = ({
@@ -509,15 +865,17 @@ const Link: React.FC<LinkProps> = ({
     onUpdateLinkStyle,
     onUpdateRouteAround,
     allCards = [],
+    showAlternativePaths = false,
 }) => {
     // Memoize path calculation to avoid expensive computations on every render
-    const { pathPoints, arrowPoints } = useMemo(() => {
+    const { pathPoints, arrowPoints, alternativePaths } = useMemo(() => {
         let pathPoints: number[]
         let arrowPoints: number[]
+        let alternativePaths: number[][] = []
 
         if (linkStyle === 'orthogonal') {
             // Calculate orthogonal path
-            pathPoints = calculateOrthogonalPath(
+            const result = calculateOrthogonalPath(
                 sourceX,
                 sourceY,
                 sourceWidth,
@@ -527,8 +885,11 @@ const Link: React.FC<LinkProps> = ({
                 targetWidth,
                 targetHeight,
                 routeAround,
-                allCards
+                allCards,
+                id
             )
+            pathPoints = result.selectedPath
+            alternativePaths = result.alternativePaths
 
             // For arrow, use the last two segments
             const len = pathPoints.length
@@ -554,7 +915,11 @@ const Link: React.FC<LinkProps> = ({
             }
 
             if (rectsOverlap(sourceRect, targetRect)) {
-                return { pathPoints: [], arrowPoints: [] }
+                return {
+                    pathPoints: [],
+                    arrowPoints: [],
+                    alternativePaths,
+                }
             }
 
             const connectionPairs: Array<{
@@ -618,7 +983,7 @@ const Link: React.FC<LinkProps> = ({
             }
         }
 
-        return { pathPoints, arrowPoints }
+        return { pathPoints, arrowPoints, alternativePaths }
     }, [
         sourceX,
         sourceY,
@@ -631,6 +996,7 @@ const Link: React.FC<LinkProps> = ({
         linkStyle,
         routeAround,
         allCards,
+        id,
     ])
 
     // Early return if overlapping rectangles in free mode
@@ -665,6 +1031,20 @@ const Link: React.FC<LinkProps> = ({
 
     return (
         <>
+            {/* Render alternative paths if enabled */}
+            {showAlternativePaths &&
+                linkStyle === 'orthogonal' &&
+                alternativePaths.map((altPath, index) => (
+                    <Line
+                        key={`alt-${index}`}
+                        points={altPath}
+                        stroke="rgba(128, 128, 128, 0.3)"
+                        strokeWidth={1}
+                        dash={[5, 5]}
+                        listening={false}
+                    />
+                ))}
+
             {linkStyle === 'orthogonal' ? (
                 <>
                     <Line
