@@ -182,7 +182,7 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // -------------------------------------------------------
     // SIMPLE MID CORRIDOR (A fully left of B, vertical offset)
     // -------------------------------------------------------
-    if (Aright < Bleft && !yAligned) {
+    if (Aright < Bleft) {
         const midX = (S.x + E.x) / 2
         return [S, { x: midX, y: S.y }, { x: midX, y: E.y }, E]
     }
