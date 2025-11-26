@@ -153,7 +153,11 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // CASE 0 — Simple straight horizontal line (ideal case)
     // -------------------------------------------------------
 
-    if (S.y === E.y) {
+    // Use epsilon for floating point comparison
+    const epsilon = 0.001
+    const yAligned = Math.abs(S.y - E.y) < epsilon
+
+    if (yAligned) {
         const y = S.y
         const x1 = Math.min(S.x, E.x)
         const x2 = Math.max(S.x, E.x)
@@ -166,7 +170,7 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // -------------------------------------------------------
     // SIMPLE MID CORRIDOR (A fully left of B, vertical offset)
     // -------------------------------------------------------
-    if (Aright < Bleft && S.y !== E.y) {
+    if (Aright < Bleft && !yAligned) {
         const midX = (S.x + E.x) / 2
         return [S, { x: midX, y: S.y }, { x: midX, y: E.y }, E]
     }
