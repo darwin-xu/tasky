@@ -126,121 +126,140 @@ type Point = { x: number; y: number }
 type RoutingRect = { x: number; y: number; width: number; height: number }
 
 /**
- * Routes an orthogonal path from the right edge of rectangle A to the left edge of rectangle B.
+ * Routes an orthogonal path from the right edge of sourceRect to the left edge of targetRect.
  * The path consists of horizontal and vertical segments, avoiding overlap with the rectangles.
  *
- * @param {RoutingRect} A - The source rectangle (with x, y, width, height).
- * @param {RoutingRect} B - The target rectangle (with x, y, width, height).
- * @returns {Point[]} Array of points representing the orthogonal path from A to B.
+ * @param {RoutingRect} sourceRect - The source rectangle (with x, y, width, height).
+ * @param {RoutingRect} targetRect - The target rectangle (with x, y, width, height).
+ * @returns {Point[]} Array of points representing the orthogonal path from source to target.
  *
  * The algorithm:
- * - Starts at the center of the right edge of A.
- * - Ends at the center of the left edge of B.
- * - Calculates intermediate waypoints to ensure the path is orthogonal and does not intersect A or B.
+ * - Starts at the center of the right edge of sourceRect.
+ * - Ends at the center of the left edge of targetRect.
+ * - Calculates intermediate waypoints to ensure the path is orthogonal and does not intersect either rectangle.
  */
-function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
+function routeRightToLeft(
+    sourceRect: RoutingRect,
+    targetRect: RoutingRect
+): Point[] {
     // ---- 1. Ports ----
-    const S: Point = {
-        x: A.x + A.width,
-        y: A.y + A.height / 2,
+    const startPoint: Point = {
+        x: sourceRect.x + sourceRect.width,
+        y: sourceRect.y + sourceRect.height / 2,
     }
 
-    const E: Point = {
-        x: B.x,
-        y: B.y + B.height / 2,
+    const endPoint: Point = {
+        x: targetRect.x,
+        y: targetRect.y + targetRect.height / 2,
     }
 
-    // Helpful ranges
-    const Aleft = A.x
-    const Aright = A.x + A.width
-    const Atop = A.y
-    const Abottom = A.y + A.height
+    // Helpful ranges for source rectangle
+    const sourceLeft = sourceRect.x
+    const sourceRight = sourceRect.x + sourceRect.width
+    const sourceTop = sourceRect.y
+    const sourceBottom = sourceRect.y + sourceRect.height
 
-    const Bleft = B.x
-    const Bright = B.x + B.width
-    const Btop = B.y
-    const Bbottom = B.y + B.height
+    // Helpful ranges for target rectangle
+    const targetLeft = targetRect.x
+    const targetRight = targetRect.x + targetRect.width
+    const targetTop = targetRect.y
+    const targetBottom = targetRect.y + targetRect.height
 
     // -------------------------------------------------------
     // CASE 0 — Simple straight horizontal line (ideal case)
     // -------------------------------------------------------
 
-    const yAligned = Math.abs(S.y - E.y) < LINK.Y_ALIGNMENT_EPSILON
+    const yAligned =
+        Math.abs(startPoint.y - endPoint.y) < LINK.Y_ALIGNMENT_EPSILON
 
     if (yAligned) {
-        const y = S.y
-        const x1 = Math.min(S.x, E.x)
-        const x2 = Math.max(S.x, E.x)
+        const y = startPoint.y
+        const x1 = Math.min(startPoint.x, endPoint.x)
+        const x2 = Math.max(startPoint.x, endPoint.x)
         // Treat touching the boundary (>= right or <= left) as non-intersection
-        const hitsA = y > Atop && y < Abottom && !(x2 <= Aleft || x1 >= Aright)
-        const hitsB = y > Btop && y < Bbottom && !(x2 <= Bleft || x1 >= Bright)
-        if (!hitsA && !hitsB) return [S, E]
+        const hitsSource =
+            y > sourceTop &&
+            y < sourceBottom &&
+            !(x2 <= sourceLeft || x1 >= sourceRight)
+        const hitsTarget =
+            y > targetTop &&
+            y < targetBottom &&
+            !(x2 <= targetLeft || x1 >= targetRight)
+        if (!hitsSource && !hitsTarget) return [startPoint, endPoint]
     }
 
     // -------------------------------------------------------
-    // SIMPLE MID CORRIDOR (A fully left of B, vertical offset)
+    // SIMPLE MID CORRIDOR (source fully left of target, vertical offset)
     // -------------------------------------------------------
-    if (Aright < Bleft) {
-        const midX = (S.x + E.x) / 2
-        return [S, { x: midX, y: S.y }, { x: midX, y: E.y }, E]
-    }
-
-    // -------------------------------------------------------
-    // CASE 1 — Leave A horizontally (required)
-    // -------------------------------------------------------
-    const outX = S.x + LINK.ROUTING_OFFSET
-    const first = { x: outX, y: S.y }
-
-    // -------------------------------------------------------
-    // CASE 2 — Try to find a vertical corridor between A and B
-    // -------------------------------------------------------
-
-    // A above B (check if there's enough vertical gap)
-    if (Abottom + LINK.VERTICAL_GAP_THRESHOLD < Btop) {
-        const mid = (Abottom + Btop) / 2
-        const leftOfB = Bleft - LINK.ROUTING_OFFSET
-
+    if (sourceRight < targetLeft) {
+        const midX = (startPoint.x + endPoint.x) / 2
         return [
-            S,
-            first,
-            { x: outX, y: mid },
-            { x: leftOfB, y: mid },
-            { x: leftOfB, y: E.y },
-            E,
-        ]
-    }
-
-    // B above A (check if there's enough vertical gap)
-    if (Bbottom + LINK.VERTICAL_GAP_THRESHOLD < Atop) {
-        const mid = (Bbottom + Atop) / 2
-        const leftOfB = Bleft - LINK.ROUTING_OFFSET
-
-        return [
-            S,
-            first,
-            { x: outX, y: mid },
-            { x: leftOfB, y: mid },
-            { x: leftOfB, y: E.y },
-            E,
+            startPoint,
+            { x: midX, y: startPoint.y },
+            { x: midX, y: endPoint.y },
+            endPoint,
         ]
     }
 
     // -------------------------------------------------------
-    // SPECIAL — Start point lies inside B, escape quickly
+    // CASE 1 — Leave source horizontally (required)
     // -------------------------------------------------------
-    const startInsideB =
-        S.x > Bleft && S.x < Bright && S.y > Btop && S.y < Bbottom
-    if (startInsideB) {
-        const bottomMaxLocal = Math.max(Abottom, Bbottom)
+    const outX = startPoint.x + LINK.ROUTING_OFFSET
+    const first = { x: outX, y: startPoint.y }
+
+    // -------------------------------------------------------
+    // CASE 2 — Try to find a vertical corridor between source and target
+    // -------------------------------------------------------
+
+    // Source above target (check if there's enough vertical gap)
+    if (sourceBottom + LINK.VERTICAL_GAP_THRESHOLD < targetTop) {
+        const mid = (sourceBottom + targetTop) / 2
+        const leftOfTarget = targetLeft - LINK.ROUTING_OFFSET
+
+        return [
+            startPoint,
+            first,
+            { x: outX, y: mid },
+            { x: leftOfTarget, y: mid },
+            { x: leftOfTarget, y: endPoint.y },
+            endPoint,
+        ]
+    }
+
+    // Target above source (check if there's enough vertical gap)
+    if (targetBottom + LINK.VERTICAL_GAP_THRESHOLD < sourceTop) {
+        const mid = (targetBottom + sourceTop) / 2
+        const leftOfTarget = targetLeft - LINK.ROUTING_OFFSET
+
+        return [
+            startPoint,
+            first,
+            { x: outX, y: mid },
+            { x: leftOfTarget, y: mid },
+            { x: leftOfTarget, y: endPoint.y },
+            endPoint,
+        ]
+    }
+
+    // -------------------------------------------------------
+    // SPECIAL — Start point lies inside target, escape quickly
+    // -------------------------------------------------------
+    const startInsideTarget =
+        startPoint.x > targetLeft &&
+        startPoint.x < targetRight &&
+        startPoint.y > targetTop &&
+        startPoint.y < targetBottom
+    if (startInsideTarget) {
+        const bottomMaxLocal = Math.max(sourceBottom, targetBottom)
         const detourYLocal = bottomMaxLocal + LINK.ROUTING_OFFSET
-        const leftOfBLocal = Bleft - LINK.ROUTING_OFFSET
+        const leftOfTargetLocal = targetLeft - LINK.ROUTING_OFFSET
         return [
-            S,
+            startPoint,
             first,
             { x: outX, y: detourYLocal },
-            { x: leftOfBLocal, y: detourYLocal },
-            { x: leftOfBLocal, y: E.y },
-            E,
+            { x: leftOfTargetLocal, y: detourYLocal },
+            { x: leftOfTargetLocal, y: endPoint.y },
+            endPoint,
         ]
     }
 
@@ -248,37 +267,38 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // CASE 3 — No corridor; choose safe outer detour
     // -------------------------------------------------------
 
-    const rightMax = Math.max(Aright, Bright)
+    const rightMax = Math.max(sourceRight, targetRight)
     const detourX = rightMax + LINK.ROUTING_OFFSET
 
-    const bottomMax = Math.max(Abottom, Bbottom)
+    const bottomMax = Math.max(sourceBottom, targetBottom)
     const detourY = bottomMax + LINK.ROUTING_OFFSET
-    const leftOfB = Bleft - LINK.ROUTING_OFFSET
+    const leftOfTarget = targetLeft - LINK.ROUTING_OFFSET
 
-    // Prefer a tighter detour: go down at outX if that vertical segment stays outside B
-    // Check both vertical (S.y outside B's vertical range) and horizontal (outX outside B's horizontal range)
+    // Prefer a tighter detour: go down at outX if that vertical segment stays outside target
+    // Check both vertical (startPoint.y outside target's vertical range) and horizontal (outX outside target's horizontal range)
     const canTightDetour =
-        (S.y > Bbottom || S.y < Btop) && (outX < Bleft || outX > Bright)
+        (startPoint.y > targetBottom || startPoint.y < targetTop) &&
+        (outX < targetLeft || outX > targetRight)
     if (canTightDetour) {
         return [
-            S,
+            startPoint,
             first,
             { x: outX, y: detourY },
-            { x: leftOfB, y: detourY },
-            { x: leftOfB, y: E.y },
-            E,
+            { x: leftOfTarget, y: detourY },
+            { x: leftOfTarget, y: endPoint.y },
+            endPoint,
         ]
     }
 
     // Fallback: wide outer detour
     return [
-        S,
+        startPoint,
         first,
-        { x: detourX, y: S.y },
+        { x: detourX, y: startPoint.y },
         { x: detourX, y: detourY },
-        { x: leftOfB, y: detourY },
-        { x: leftOfB, y: E.y },
-        E,
+        { x: leftOfTarget, y: detourY },
+        { x: leftOfTarget, y: endPoint.y },
+        endPoint,
     ]
 }
 
@@ -301,21 +321,21 @@ const calculateOrthogonalPath = (
     _routeAround: boolean,
     _allCards?: Array<{ x: number; y: number; width: number; height: number }>
 ): number[] => {
-    const A: RoutingRect = {
+    const sourceRect: RoutingRect = {
         x: sourceX,
         y: sourceY,
         width: sourceWidth,
         height: sourceHeight,
     }
 
-    const B: RoutingRect = {
+    const targetRect: RoutingRect = {
         x: targetX,
         y: targetY,
         width: targetWidth,
         height: targetHeight,
     }
 
-    const points = routeRightToLeft(A, B)
+    const points = routeRightToLeft(sourceRect, targetRect)
     return pointsToFlatArray(points)
 }
 
