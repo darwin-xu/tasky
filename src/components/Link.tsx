@@ -258,7 +258,7 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     const leftOfB = Bleft - 20
 
     // Prefer a tighter detour: go down at outX if that vertical segment stays outside B.
-    const canTightDetour = S.y > Bbottom || S.y < Btop // vertical move at outX won't cross interior of B
+    const canTightDetour = (S.y > Bbottom || S.y < Btop) && (outX < Bleft || outX > Bright) // vertical move at outX won't cross interior of B
     if (canTightDetour) {
         return [
             S,
