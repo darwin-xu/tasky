@@ -165,9 +165,7 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // CASE 0 — Simple straight horizontal line (ideal case)
     // -------------------------------------------------------
 
-    // Use epsilon for floating point comparison
-    const epsilon = 0.001
-    const yAligned = Math.abs(S.y - E.y) < epsilon
+    const yAligned = Math.abs(S.y - E.y) < LINK.Y_ALIGNMENT_EPSILON
 
     if (yAligned) {
         const y = S.y
@@ -190,17 +188,17 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // -------------------------------------------------------
     // CASE 1 — Leave A horizontally (required)
     // -------------------------------------------------------
-    const outX = S.x + 20
+    const outX = S.x + LINK.ROUTING_OFFSET
     const first = { x: outX, y: S.y }
 
     // -------------------------------------------------------
     // CASE 2 — Try to find a vertical corridor between A and B
     // -------------------------------------------------------
 
-    // A above B
-    if (Abottom + 5 < Btop - 5) {
+    // A above B (check if there's enough vertical gap)
+    if (Abottom + LINK.VERTICAL_GAP_THRESHOLD < Btop) {
         const mid = (Abottom + Btop) / 2
-        const leftOfB = Bleft - 20
+        const leftOfB = Bleft - LINK.ROUTING_OFFSET
 
         return [
             S,
@@ -212,10 +210,10 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
         ]
     }
 
-    // B above A
-    if (Bbottom + 5 < Atop - 5) {
+    // B above A (check if there's enough vertical gap)
+    if (Bbottom + LINK.VERTICAL_GAP_THRESHOLD < Atop) {
         const mid = (Bbottom + Atop) / 2
-        const leftOfB = Bleft - 20
+        const leftOfB = Bleft - LINK.ROUTING_OFFSET
 
         return [
             S,
@@ -234,8 +232,8 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
         S.x > Bleft && S.x < Bright && S.y > Btop && S.y < Bbottom
     if (startInsideB) {
         const bottomMaxLocal = Math.max(Abottom, Bbottom)
-        const detourYLocal = bottomMaxLocal + 20
-        const leftOfBLocal = Bleft - 20
+        const detourYLocal = bottomMaxLocal + LINK.ROUTING_OFFSET
+        const leftOfBLocal = Bleft - LINK.ROUTING_OFFSET
         return [
             S,
             first,
@@ -251,14 +249,16 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // -------------------------------------------------------
 
     const rightMax = Math.max(Aright, Bright)
-    const detourX = rightMax + 20
+    const detourX = rightMax + LINK.ROUTING_OFFSET
 
     const bottomMax = Math.max(Abottom, Bbottom)
-    const detourY = bottomMax + 20
-    const leftOfB = Bleft - 20
+    const detourY = bottomMax + LINK.ROUTING_OFFSET
+    const leftOfB = Bleft - LINK.ROUTING_OFFSET
 
-    // Prefer a tighter detour: go down at outX if that vertical segment stays outside B.
-    const canTightDetour = (S.y > Bbottom || S.y < Btop) && (outX < Bleft || outX > Bright) // vertical move at outX won't cross interior of B
+    // Prefer a tighter detour: go down at outX if that vertical segment stays outside B
+    // Check both vertical (S.y outside B's vertical range) and horizontal (outX outside B's horizontal range)
+    const canTightDetour =
+        (S.y > Bbottom || S.y < Btop) && (outX < Bleft || outX > Bright)
     if (canTightDetour) {
         return [
             S,
@@ -284,14 +284,11 @@ function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
 
 // Convert Point[] to number[] for Konva
 function pointsToFlatArray(points: Point[]): number[] {
-    const result: number[] = []
-    for (const point of points) {
-        result.push(point.x, point.y)
-    }
-    return result
+    return points.flatMap((p) => [p.x, p.y])
 }
 
 // Calculate orthogonal path points using the routeRightToLeft algorithm
+// Note: _routeAround and _allCards parameters are kept for API compatibility with existing callers
 const calculateOrthogonalPath = (
     sourceX: number,
     sourceY: number,
