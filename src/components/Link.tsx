@@ -125,7 +125,19 @@ const calculateAnchorPoint = (
 type Point = { x: number; y: number }
 type RoutingRect = { x: number; y: number; width: number; height: number }
 
-// Route from right side of A to left side of B with orthogonal segments
+/**
+ * Routes an orthogonal path from the right edge of rectangle A to the left edge of rectangle B.
+ * The path consists of horizontal and vertical segments, avoiding overlap with the rectangles.
+ *
+ * @param {RoutingRect} A - The source rectangle (with x, y, width, height).
+ * @param {RoutingRect} B - The target rectangle (with x, y, width, height).
+ * @returns {Point[]} Array of points representing the orthogonal path from A to B.
+ *
+ * The algorithm:
+ * - Starts at the center of the right edge of A.
+ * - Ends at the center of the left edge of B.
+ * - Calculates intermediate waypoints to ensure the path is orthogonal and does not intersect A or B.
+ */
 function routeRightToLeft(A: RoutingRect, B: RoutingRect): Point[] {
     // ---- 1. Ports ----
     const S: Point = {
