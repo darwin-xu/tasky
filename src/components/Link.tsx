@@ -169,10 +169,7 @@ function routeRightToLeft(
     // CASE 0 — Simple straight horizontal line (ideal case)
     // -------------------------------------------------------
 
-    const yAligned =
-        Math.abs(startPoint.y - endPoint.y) < LINK.Y_ALIGNMENT_EPSILON
-
-    if (yAligned) {
+    if (startPoint.y === endPoint.y) {
         const y = startPoint.y
         const x1 = Math.min(startPoint.x, endPoint.x)
         const x2 = Math.max(startPoint.x, endPoint.x)
@@ -191,7 +188,7 @@ function routeRightToLeft(
     // -------------------------------------------------------
     // SIMPLE MID CORRIDOR (source fully left of target, vertical offset)
     // -------------------------------------------------------
-    if (sourceRight < targetLeft) {
+    if (sourceRight < targetLeft && startPoint.y !== endPoint.y) {
         const midX = (startPoint.x + endPoint.x) / 2
         return [
             startPoint,
@@ -272,20 +269,34 @@ function routeRightToLeft(
 
     const bottomMax = Math.max(sourceBottom, targetBottom)
     const detourY = bottomMax + LINK.ROUTING_OFFSET
-    const leftOfTarget = targetLeft - LINK.ROUTING_OFFSET
 
-    // Prefer a tighter detour: go down at outX if that vertical segment stays outside target
-    // Check both vertical (startPoint.y outside target's vertical range) and horizontal (outX outside target's horizontal range)
-    const canTightDetour =
-        (startPoint.y > targetBottom || startPoint.y < targetTop) &&
-        (outX < targetLeft || outX > targetRight)
+    // Logic for safeLeftX (target X for the return trip)
+    // Check if vertical segment at default leftOfTarget (from detourY to endPoint.y) hits source
+    let safeLeftX = targetLeft - LINK.ROUTING_OFFSET
+    const xInSource = safeLeftX > sourceLeft && safeLeftX < sourceRight
+    const yMin = Math.min(detourY, endPoint.y)
+    const yMax = Math.max(detourY, endPoint.y)
+    // Check overlap with source's y-range [sourceTop, sourceBottom]
+    const hitsSource = xInSource && yMax > sourceTop && yMin < sourceBottom
+
+    if (hitsSource) {
+        safeLeftX = Math.min(sourceLeft, targetLeft) - LINK.ROUTING_OFFSET
+    }
+
+    // Logic for canTightDetour (dropping down at outX)
+    // It hits target if outX is within target's x-range AND the segment [startPoint.y, detourY] overlaps target.
+    // Since detourY > targetBottom, overlap implies startPoint.y < targetBottom.
+    const outXInTarget = outX > targetLeft && outX < targetRight
+    const verticalHitTarget = outXInTarget && startPoint.y < targetBottom
+    const canTightDetour = !verticalHitTarget
+
     if (canTightDetour) {
         return [
             startPoint,
             first,
             { x: outX, y: detourY },
-            { x: leftOfTarget, y: detourY },
-            { x: leftOfTarget, y: endPoint.y },
+            { x: safeLeftX, y: detourY },
+            { x: safeLeftX, y: endPoint.y },
             endPoint,
         ]
     }
@@ -296,8 +307,8 @@ function routeRightToLeft(
         first,
         { x: detourX, y: startPoint.y },
         { x: detourX, y: detourY },
-        { x: leftOfTarget, y: detourY },
-        { x: leftOfTarget, y: endPoint.y },
+        { x: safeLeftX, y: detourY },
+        { x: safeLeftX, y: endPoint.y },
         endPoint,
     ]
 }

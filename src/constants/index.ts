@@ -188,7 +188,6 @@ export const LINK = {
     // Routing algorithm constants
     ROUTING_OFFSET: 20, // Offset used for path waypoints (leaving source, entering target, detours)
     VERTICAL_GAP_THRESHOLD: 10, // Minimum gap required between rectangles for vertical corridor routing
-    Y_ALIGNMENT_EPSILON: 0.001, // Tolerance for floating-point Y-alignment comparison
 }
 
 // ============================================================================
