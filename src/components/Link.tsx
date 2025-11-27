@@ -62,65 +62,6 @@ const squaredDistance = (
     return dx * dx + dy * dy
 }
 
-const pointInsideRect = (x: number, y: number, rect: RectLike): boolean => {
-    return (
-        x >= rect.x &&
-        x <= rect.x + rect.width &&
-        y >= rect.y &&
-        y <= rect.y + rect.height
-    )
-}
-
-const segmentsIntersect = (
-    ax1: number,
-    ay1: number,
-    ax2: number,
-    ay2: number,
-    bx1: number,
-    by1: number,
-    bx2: number,
-    by2: number
-): boolean => {
-    const orientation = (
-        px1: number,
-        py1: number,
-        px2: number,
-        py2: number,
-        px3: number,
-        py3: number
-    ): number => {
-        return (py2 - py1) * (px3 - px2) - (px2 - px1) * (py3 - py2)
-    }
-
-    const onSegment = (
-        px1: number,
-        py1: number,
-        px2: number,
-        py2: number,
-        px3: number,
-        py3: number
-    ): boolean => {
-        return (
-            Math.min(px1, px2) <= px3 &&
-            px3 <= Math.max(px1, px2) &&
-            Math.min(py1, py2) <= py3 &&
-            py3 <= Math.max(py1, py2)
-        )
-    }
-
-    const o1 = orientation(ax1, ay1, ax2, ay2, bx1, by1)
-    const o2 = orientation(ax1, ay1, ax2, ay2, bx2, by2)
-    const o3 = orientation(bx1, by1, bx2, by2, ax1, ay1)
-    const o4 = orientation(bx1, by1, bx2, by2, ax2, ay2)
-
-    if (o1 === 0 && onSegment(ax1, ay1, ax2, ay2, bx1, by1)) return true
-    if (o2 === 0 && onSegment(ax1, ay1, ax2, ay2, bx2, by2)) return true
-    if (o3 === 0 && onSegment(bx1, by1, bx2, by2, ax1, ay1)) return true
-    if (o4 === 0 && onSegment(bx1, by1, bx2, by2, ax2, ay2)) return true
-
-    return o1 > 0 !== o2 > 0 && o3 > 0 !== o4 > 0
-}
-
 // Calculate the best anchor point on the edge of a rectangle
 const calculateAnchorPoint = (
     sourceX: number,
@@ -180,98 +121,205 @@ const calculateAnchorPoint = (
     return { x: anchorX, y: anchorY }
 }
 
-// Helper function to check if a line segment intersects with a rectangle
-const lineSegmentIntersectsRect = (
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    rect: RectLike,
-    padding: number = LINK.OBSTACLE_PADDING
-): boolean => {
-    const paddedRect: RectLike = {
-        x: rect.x - padding,
-        y: rect.y - padding,
-        width: rect.width + padding * 2,
-        height: rect.height + padding * 2,
+// Types for the routing algorithm
+type Point = { x: number; y: number }
+type RoutingRect = { x: number; y: number; width: number; height: number }
+
+/**
+ * Routes an orthogonal path from the right edge of sourceRect to the left edge of targetRect.
+ * The path consists of horizontal and vertical segments, avoiding overlap with the rectangles.
+ *
+ * @param {RoutingRect} sourceRect - The source rectangle (with x, y, width, height).
+ * @param {RoutingRect} targetRect - The target rectangle (with x, y, width, height).
+ * @returns {Point[]} Array of points representing the orthogonal path from source to target.
+ *
+ * The algorithm:
+ * - Starts at the center of the right edge of sourceRect.
+ * - Ends at the center of the left edge of targetRect.
+ * - Calculates intermediate waypoints to ensure the path is orthogonal and does not intersect either rectangle.
+ */
+function routeRightToLeft(
+    sourceRect: RoutingRect,
+    targetRect: RoutingRect
+): Point[] {
+    // ---- 1. Ports ----
+    const startPoint: Point = {
+        x: sourceRect.x + sourceRect.width,
+        y: sourceRect.y + sourceRect.height / 2,
     }
 
-    const rectMaxX = paddedRect.x + paddedRect.width
-    const rectMaxY = paddedRect.y + paddedRect.height
-
-    const segMinX = Math.min(x1, x2)
-    const segMaxX = Math.max(x1, x2)
-    const segMinY = Math.min(y1, y2)
-    const segMaxY = Math.max(y1, y2)
-
-    if (
-        segMaxX < paddedRect.x ||
-        segMinX > rectMaxX ||
-        segMaxY < paddedRect.y ||
-        segMinY > rectMaxY
-    ) {
-        return false
+    const endPoint: Point = {
+        x: targetRect.x,
+        y: targetRect.y + targetRect.height / 2,
     }
 
-    if (
-        pointInsideRect(x1, y1, paddedRect) ||
-        pointInsideRect(x2, y2, paddedRect)
-    ) {
-        return true
+    // Helpful ranges for source rectangle
+    const sourceLeft = sourceRect.x
+    const sourceRight = sourceRect.x + sourceRect.width
+    const sourceTop = sourceRect.y
+    const sourceBottom = sourceRect.y + sourceRect.height
+
+    // Helpful ranges for target rectangle
+    const targetLeft = targetRect.x
+    const targetRight = targetRect.x + targetRect.width
+    const targetTop = targetRect.y
+    const targetBottom = targetRect.y + targetRect.height
+
+    // -------------------------------------------------------
+    // CASE 0 — Simple straight horizontal line (ideal case)
+    // -------------------------------------------------------
+
+    if (startPoint.y === endPoint.y) {
+        const y = startPoint.y
+        const x1 = Math.min(startPoint.x, endPoint.x)
+        const x2 = Math.max(startPoint.x, endPoint.x)
+        // Treat touching the boundary (>= right or <= left) as non-intersection
+        const hitsSource =
+            y > sourceTop &&
+            y < sourceBottom &&
+            !(x2 <= sourceLeft || x1 >= sourceRight)
+        const hitsTarget =
+            y > targetTop &&
+            y < targetBottom &&
+            !(x2 <= targetLeft || x1 >= targetRight)
+        if (!hitsSource && !hitsTarget) return [startPoint, endPoint]
     }
 
-    const edges: Array<[number, number, number, number]> = [
-        [paddedRect.x, paddedRect.y, rectMaxX, paddedRect.y],
-        [rectMaxX, paddedRect.y, rectMaxX, rectMaxY],
-        [rectMaxX, rectMaxY, paddedRect.x, rectMaxY],
-        [paddedRect.x, rectMaxY, paddedRect.x, paddedRect.y],
+    // -------------------------------------------------------
+    // SIMPLE MID CORRIDOR (source fully left of target, vertical offset)
+    // -------------------------------------------------------
+    if (sourceRight < targetLeft && startPoint.y !== endPoint.y) {
+        const midX = (startPoint.x + endPoint.x) / 2
+        return [
+            startPoint,
+            { x: midX, y: startPoint.y },
+            { x: midX, y: endPoint.y },
+            endPoint,
+        ]
+    }
+
+    // -------------------------------------------------------
+    // CASE 1 — Leave source horizontally (required)
+    // -------------------------------------------------------
+    const outX = startPoint.x + LINK.ROUTING_OFFSET
+    const first = { x: outX, y: startPoint.y }
+
+    // -------------------------------------------------------
+    // CASE 2 — Try to find a vertical corridor between source and target
+    // -------------------------------------------------------
+
+    // Source above target (check if there's enough vertical gap)
+    if (sourceBottom + LINK.VERTICAL_GAP_THRESHOLD < targetTop) {
+        const mid = (sourceBottom + targetTop) / 2
+        const leftOfTarget = targetLeft - LINK.ROUTING_OFFSET
+
+        return [
+            startPoint,
+            first,
+            { x: outX, y: mid },
+            { x: leftOfTarget, y: mid },
+            { x: leftOfTarget, y: endPoint.y },
+            endPoint,
+        ]
+    }
+
+    // Target above source (check if there's enough vertical gap)
+    if (targetBottom + LINK.VERTICAL_GAP_THRESHOLD < sourceTop) {
+        const mid = (targetBottom + sourceTop) / 2
+        const leftOfTarget = targetLeft - LINK.ROUTING_OFFSET
+
+        return [
+            startPoint,
+            first,
+            { x: outX, y: mid },
+            { x: leftOfTarget, y: mid },
+            { x: leftOfTarget, y: endPoint.y },
+            endPoint,
+        ]
+    }
+
+    // -------------------------------------------------------
+    // SPECIAL — Start point lies inside target, escape quickly
+    // -------------------------------------------------------
+    const startInsideTarget =
+        startPoint.x > targetLeft &&
+        startPoint.x < targetRight &&
+        startPoint.y > targetTop &&
+        startPoint.y < targetBottom
+    if (startInsideTarget) {
+        const bottomMaxLocal = Math.max(sourceBottom, targetBottom)
+        const detourYLocal = bottomMaxLocal + LINK.ROUTING_OFFSET
+        const leftOfTargetLocal = targetLeft - LINK.ROUTING_OFFSET
+        return [
+            startPoint,
+            first,
+            { x: outX, y: detourYLocal },
+            { x: leftOfTargetLocal, y: detourYLocal },
+            { x: leftOfTargetLocal, y: endPoint.y },
+            endPoint,
+        ]
+    }
+
+    // -------------------------------------------------------
+    // CASE 3 — No corridor; choose safe outer detour
+    // -------------------------------------------------------
+
+    const rightMax = Math.max(sourceRight, targetRight)
+    const detourX = rightMax + LINK.ROUTING_OFFSET
+
+    const bottomMax = Math.max(sourceBottom, targetBottom)
+    const detourY = bottomMax + LINK.ROUTING_OFFSET
+
+    // Logic for safeLeftX (target X for the return trip)
+    // Check if vertical segment at default leftOfTarget (from detourY to endPoint.y) hits source
+    let safeLeftX = targetLeft - LINK.ROUTING_OFFSET
+    const xInSource = safeLeftX > sourceLeft && safeLeftX < sourceRight
+    const yMin = Math.min(detourY, endPoint.y)
+    const yMax = Math.max(detourY, endPoint.y)
+    // Check overlap with source's y-range [sourceTop, sourceBottom]
+    const hitsSource = xInSource && yMax > sourceTop && yMin < sourceBottom
+
+    if (hitsSource) {
+        safeLeftX = Math.min(sourceLeft, targetLeft) - LINK.ROUTING_OFFSET
+    }
+
+    // Logic for canTightDetour (dropping down at outX)
+    // It hits target if outX is within target's x-range AND the segment [startPoint.y, detourY] overlaps target.
+    // Since detourY > targetBottom, overlap implies startPoint.y < targetBottom.
+    const outXInTarget = outX > targetLeft && outX < targetRight
+    const verticalHitTarget = outXInTarget && startPoint.y < targetBottom
+    const canTightDetour = !verticalHitTarget
+
+    if (canTightDetour) {
+        return [
+            startPoint,
+            first,
+            { x: outX, y: detourY },
+            { x: safeLeftX, y: detourY },
+            { x: safeLeftX, y: endPoint.y },
+            endPoint,
+        ]
+    }
+
+    // Fallback: wide outer detour
+    return [
+        startPoint,
+        first,
+        { x: detourX, y: startPoint.y },
+        { x: detourX, y: detourY },
+        { x: safeLeftX, y: detourY },
+        { x: safeLeftX, y: endPoint.y },
+        endPoint,
     ]
-
-    return edges.some(([ex1, ey1, ex2, ey2]) =>
-        segmentsIntersect(x1, y1, x2, y2, ex1, ey1, ex2, ey2)
-    )
 }
 
-// Helper function to check if a path (array of points) intersects any obstacles
-const pathIntersectsObstacles = (
-    points: number[],
-    obstacles: Array<{ x: number; y: number; width: number; height: number }>,
-    padding: number = LINK.OBSTACLE_PADDING
-): boolean => {
-    // Check each segment of the path
-    for (let i = 0; i < points.length - 2; i += 2) {
-        const x1 = points[i]
-        const y1 = points[i + 1]
-        const x2 = points[i + 2]
-        const y2 = points[i + 3]
-
-        for (const obstacle of obstacles) {
-            if (lineSegmentIntersectsRect(x1, y1, x2, y2, obstacle, padding)) {
-                return true
-            }
-        }
-    }
-    return false
+// Convert Point[] to number[] for Konva
+function pointsToFlatArray(points: Point[]): number[] {
+    return points.flatMap((p) => [p.x, p.y])
 }
 
-// Count the number of turns in a path
-const countTurns = (points: number[]): number => {
-    let turns = 0
-    for (let i = 0; i < points.length - 4; i += 2) {
-        const dx1 = points[i + 2] - points[i]
-        const dy1 = points[i + 3] - points[i + 1]
-        const dx2 = points[i + 4] - points[i + 2]
-        const dy2 = points[i + 5] - points[i + 3]
-
-        // Check if direction changed (turn occurred)
-        if ((dx1 === 0 && dy2 === 0) || (dy1 === 0 && dx2 === 0)) {
-            turns++
-        }
-    }
-    return turns
-}
-
-// Calculate orthogonal path points using heuristic routing
+// Calculate orthogonal path points using the routeRightToLeft algorithm
+// Note: _routeAround and _allCards parameters are kept for API compatibility with existing callers
 const calculateOrthogonalPath = (
     sourceX: number,
     sourceY: number,
@@ -281,215 +329,25 @@ const calculateOrthogonalPath = (
     targetY: number,
     targetWidth: number,
     targetHeight: number,
-    routeAround: boolean,
-    allCards?: Array<{ x: number; y: number; width: number; height: number }>
+    _routeAround: boolean,
+    _allCards?: Array<{ x: number; y: number; width: number; height: number }>
 ): number[] => {
-    const padding = LINK.OBSTACLE_PADDING
-
-    // Always anchor to right-middle of source and left-middle of target
-    const startX = sourceX + sourceWidth
-    const startY = sourceY + sourceHeight / 2
-    const endX = targetX
-    const endY = targetY + targetHeight / 2
-
-    // Filter out source and target from obstacles
-    const obstacles = (allCards || []).filter(
-        (card) =>
-            !(card.x === sourceX && card.y === sourceY) &&
-            !(card.x === targetX && card.y === targetY)
-    )
-
-    // Simple 3-segment path (right, down/up, right)
-    const midX = (startX + endX) / 2
-    const simplePath = [startX, startY, midX, startY, midX, endY, endX, endY]
-
-    // If no obstacles or route around is disabled, return simple path
-    if (!routeAround || obstacles.length === 0) {
-        return simplePath
+    const sourceRect: RoutingRect = {
+        x: sourceX,
+        y: sourceY,
+        width: sourceWidth,
+        height: sourceHeight,
     }
 
-    // Check if simple path is clear
-    if (!pathIntersectsObstacles(simplePath, obstacles, padding)) {
-        return simplePath
+    const targetRect: RoutingRect = {
+        x: targetX,
+        y: targetY,
+        width: targetWidth,
+        height: targetHeight,
     }
 
-    // Try different routing strategies
-    const strategies: number[][] = []
-
-    // Find the leftmost and rightmost obstacle bounds
-    const obstacleLeft = Math.min(...obstacles.map((o) => o.x - padding))
-    const obstacleRight = Math.max(
-        ...obstacles.map((o) => o.x + o.width + padding)
-    )
-
-    // Strategy 1: Route far above all obstacles
-    const maxTop = Math.min(sourceY, targetY, ...obstacles.map((o) => o.y))
-    const routeAbove = maxTop - padding - LINK.ROUTE_ABOVE_BELOW_OFFSET
-
-    // Go straight out past obstacles before turning up
-    const clearRightX = Math.min(
-        obstacleLeft - LINK.CLEARANCE_OFFSET_SMALL,
-        startX + LINK.ROUTE_ABOVE_BELOW_OFFSET
-    )
-    const pathAbove = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeAbove,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
-    if (!pathIntersectsObstacles(pathAbove, obstacles, padding)) {
-        strategies.push(pathAbove)
-    }
-
-    // Strategy 2: Route far below all obstacles
-    const maxBottom = Math.max(
-        sourceY + sourceHeight,
-        targetY + targetHeight,
-        ...obstacles.map((o) => o.y + o.height)
-    )
-    const routeBelow = maxBottom + padding + LINK.ROUTE_ABOVE_BELOW_OFFSET
-
-    const pathBelow = [
-        startX,
-        startY,
-        clearRightX,
-        startY,
-        clearRightX,
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        routeBelow,
-        Math.max(endX - LINK.CLEARANCE_OFFSET_LARGE, clearRightX),
-        endY,
-        endX,
-        endY,
-    ]
-    if (!pathIntersectsObstacles(pathBelow, obstacles, padding)) {
-        strategies.push(pathBelow)
-    }
-
-    // Strategy 3: Route far to the right of all obstacles
-    const farRight = obstacleRight + LINK.FAR_RIGHT_OFFSET
-    if (farRight < endX - LINK.CLEARANCE_OFFSET_LARGE) {
-        const pathFarRight = [
-            startX,
-            startY,
-            farRight,
-            startY,
-            farRight,
-            endY,
-            endX,
-            endY,
-        ]
-        if (!pathIntersectsObstacles(pathFarRight, obstacles, padding)) {
-            strategies.push(pathFarRight)
-        }
-    }
-
-    // Strategy 4: Route around individual obstacles (above and below)
-    for (const obstacle of obstacles) {
-        const obsLeft = obstacle.x - padding
-        const obsRight = obstacle.x + obstacle.width + padding
-        const obsTop = obstacle.y - padding
-        const obsBottom = obstacle.y + obstacle.height + padding
-
-        // Only consider obstacles that are actually in the way
-        if (obsRight > startX && obsLeft < endX) {
-            // Try routing above this obstacle
-            const aboveY = obsTop - LINK.AROUND_OBSTACLE_OFFSET
-            const beforeObsX = Math.max(
-                startX + LINK.OBSTACLE_PADDING,
-                obsLeft - LINK.AROUND_OBSTACLE_OFFSET
-            )
-            const afterObsX = Math.min(
-                endX - LINK.OBSTACLE_PADDING,
-                obsRight + LINK.AROUND_OBSTACLE_OFFSET
-            )
-
-            const pathAroundTop = [
-                startX,
-                startY,
-                beforeObsX,
-                startY,
-                beforeObsX,
-                aboveY,
-                afterObsX,
-                aboveY,
-                afterObsX,
-                endY,
-                endX,
-                endY,
-            ]
-            if (!pathIntersectsObstacles(pathAroundTop, obstacles, padding)) {
-                strategies.push(pathAroundTop)
-            }
-
-            // Try routing below this obstacle
-            const belowY = obsBottom + LINK.AROUND_OBSTACLE_OFFSET
-            const pathAroundBottom = [
-                startX,
-                startY,
-                beforeObsX,
-                startY,
-                beforeObsX,
-                belowY,
-                afterObsX,
-                belowY,
-                afterObsX,
-                endY,
-                endX,
-                endY,
-            ]
-            if (
-                !pathIntersectsObstacles(pathAroundBottom, obstacles, padding)
-            ) {
-                strategies.push(pathAroundBottom)
-            }
-        }
-    }
-
-    // Strategy 5: Direct vertical-horizontal path if very close
-    if (Math.abs(endX - startX) < LINK.DIRECT_PATH_THRESHOLD) {
-        const pathDirect = [
-            startX,
-            startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
-            startY,
-            startX + LINK.CLEARANCE_OFFSET_LARGE,
-            endY,
-            endX,
-            endY,
-        ]
-        if (!pathIntersectsObstacles(pathDirect, obstacles, padding)) {
-            strategies.push(pathDirect)
-        }
-    }
-
-    // If we found valid strategies, pick the one with fewest turns
-    if (strategies.length > 0) {
-        strategies.sort((a, b) => {
-            const turnsA = countTurns(a)
-            const turnsB = countTurns(b)
-            if (turnsA !== turnsB) {
-                return turnsA - turnsB
-            }
-            // If same number of turns, prefer shorter path
-            const lengthA = a.length
-            const lengthB = b.length
-            return lengthA - lengthB
-        })
-        return strategies[0]
-    }
-
-    // If no valid strategy found, return simple path (best effort)
-    return simplePath
+    const points = routeRightToLeft(sourceRect, targetRect)
+    return pointsToFlatArray(points)
 }
 
 const Link: React.FC<LinkProps> = ({

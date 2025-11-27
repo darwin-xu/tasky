@@ -184,6 +184,10 @@ export const LINK = {
     FAR_RIGHT_OFFSET: 40,
     AROUND_OBSTACLE_OFFSET: 30,
     DIRECT_PATH_THRESHOLD: 60,
+
+    // Routing algorithm constants
+    ROUTING_OFFSET: 20, // Offset used for path waypoints (leaving source, entering target, detours)
+    VERTICAL_GAP_THRESHOLD: 10, // Minimum gap required between rectangles for vertical corridor routing
 }
 
 // ============================================================================
